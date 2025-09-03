@@ -301,18 +301,24 @@ class FlashCardsApp {
         // Apply deck style and color
         const studyCard = document.getElementById('study-card');
         
-        // Remove existing style classes
+        // Remove existing style and animation classes
         studyCard.classList.remove('classic', 'modern', 'vintage', 'neon');
         studyCard.classList.remove('blue', 'green', 'purple', 'red', 'orange', 'teal');
+        studyCard.classList.remove('fall-correct', 'slide-incorrect', 'slide-out', 'slide-in', 'bounce-in', 'slide-in-top');
         
         // Apply deck's style and color (with fallbacks for older decks)
         const deckStyle = this.currentDeck.style || 'classic';
         const deckColor = this.currentDeck.color || 'blue';
         studyCard.classList.add(deckStyle, deckColor);
         
-        // Animate card entrance
-        studyCard.classList.remove('slide-out');
-        studyCard.classList.add('slide-in');
+        // Reset any inline styles from animations
+        studyCard.style.transform = '';
+        studyCard.style.opacity = '1';
+        
+        // Focus on answer input
+        setTimeout(() => {
+            document.getElementById('answer-input').focus();
+        }, 100);
     }
 
     checkAnswer() {
@@ -332,6 +338,9 @@ class FlashCardsApp {
             this.score++;
             this.showFeedback('Correct! Well done! 🎉', 'correct');
             
+            // Trigger fall animation for correct answer
+            this.animateCorrectAnswer();
+            
             // Remove correct card from deck
             this.currentCards.splice(this.currentCardIndex, 1);
             
@@ -341,6 +350,9 @@ class FlashCardsApp {
             }
         } else {
             this.showFeedback(`Incorrect. The correct answer is: "${currentCard.answer}"`, 'incorrect', currentCard.answer);
+            
+            // Trigger slide animation for incorrect answer
+            this.animateIncorrectAnswer();
             
             // Move incorrect card to back of deck
             const incorrectCard = this.currentCards.splice(this.currentCardIndex, 1)[0];
@@ -354,10 +366,66 @@ class FlashCardsApp {
 
         this.updateStudyHeader();
         
-        // Show next card after delay
+        // Show next card after animation completes
+        const animationDelay = isCorrect ? 1000 : 1400; // Different delays for different animations
         setTimeout(() => {
             this.nextCard();
-        }, 2000);
+        }, animationDelay);
+    }
+
+    animateCorrectAnswer() {
+        const studyCard = document.getElementById('study-card');
+        
+        // Clear any existing animation classes
+        studyCard.classList.remove('slide-out', 'slide-in', 'slide-incorrect', 'fall-correct', 'bounce-in');
+        
+        // Add fall animation
+        studyCard.classList.add('fall-correct');
+        
+        // Prepare next card preview
+        this.prepareNextCardPreview();
+    }
+
+    animateIncorrectAnswer() {
+        const studyCard = document.getElementById('study-card');
+        
+        // Clear any existing animation classes
+        studyCard.classList.remove('slide-out', 'slide-in', 'slide-incorrect', 'fall-correct', 'bounce-in');
+        
+        // Add slide to side animation
+        studyCard.classList.add('slide-incorrect');
+        
+        // Prepare next card preview
+        this.prepareNextCardPreview();
+    }
+
+    prepareNextCardPreview() {
+        const nextCardPreview = document.getElementById('next-card-preview');
+        
+        if (this.currentCards.length > 1) {
+            // Show preview of next card
+            const nextCardIndex = this.currentCardIndex < this.currentCards.length - 1 ? 
+                this.currentCardIndex + 1 : 0;
+            
+            // For incorrect answers, the "next" card is actually the current one going to the back
+            const isIncorrectAnswer = document.getElementById('study-card').classList.contains('slide-incorrect');
+            
+            if (isIncorrectAnswer && this.currentCards.length > 1) {
+                // Show the actual next card in deck
+                const nextCard = this.currentCards[nextCardIndex === this.currentCardIndex ? 
+                    (this.currentCardIndex + 1) % this.currentCards.length : nextCardIndex];
+                nextCardPreview.style.display = 'block';
+                nextCardPreview.style.opacity = '0.6';
+            } else if (!isIncorrectAnswer) {
+                // For correct answers, show the next card
+                if (this.currentCards.length > 1) {
+                    nextCardPreview.style.display = 'block';
+                    nextCardPreview.style.opacity = '0.6';
+                }
+            }
+        } else {
+            nextCardPreview.style.display = 'none';
+        }
     }
 
     nextCard() {
@@ -366,13 +434,29 @@ class FlashCardsApp {
             return;
         }
 
-        // Animate card exit
-        const studyCard = document.getElementById('study-card');
-        studyCard.classList.add('slide-out');
+        // Hide next card preview
+        const nextCardPreview = document.getElementById('next-card-preview');
+        nextCardPreview.style.display = 'none';
         
+        // Get the current card element
+        const studyCard = document.getElementById('study-card');
+        
+        // Clear all animation classes and reset the card
+        studyCard.classList.remove('fall-correct', 'slide-incorrect', 'slide-out', 'slide-in', 'bounce-in', 'slide-in-top');
+        
+        // Reset any transform styles that might be left over from animations
+        studyCard.style.transform = '';
+        studyCard.style.opacity = '';
+        
+        // Brief delay to ensure the DOM is clean, then show new card with entrance animation
         setTimeout(() => {
             this.showCurrentCard();
-        }, 300);
+            
+            // Add entrance animation
+            setTimeout(() => {
+                studyCard.classList.add('bounce-in');
+            }, 50);
+        }, 100);
     }
 
     showFeedback(message, type, correctAnswer = null) {
