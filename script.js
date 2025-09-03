@@ -7,12 +7,15 @@ class FlashCardsApp {
         this.currentCardIndex = 0;
         this.score = 0;
         this.cardCount = 0;
+        this.selectedStyle = 'classic';
+        this.selectedColor = 'blue';
         
         this.init();
     }
 
     init() {
         this.setupEventListeners();
+        this.setupCustomizationListeners();
         this.renderDecks();
         this.showView('home');
     }
@@ -41,6 +44,30 @@ class FlashCardsApp {
 
         // Add initial card when create view is shown
         this.addCard();
+    }
+
+    setupCustomizationListeners() {
+        // Style options
+        document.querySelectorAll('.style-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                document.querySelectorAll('.style-option').forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                this.selectedStyle = option.dataset.style;
+            });
+        });
+
+        // Color options
+        document.querySelectorAll('.color-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                this.selectedColor = option.dataset.color;
+            });
+        });
+
+        // Set default selections
+        document.querySelector('.style-option[data-style="classic"]')?.classList.add('selected');
+        document.querySelector('.color-option[data-color="blue"]')?.classList.add('selected');
     }
 
     showView(viewName) {
@@ -94,6 +121,8 @@ class FlashCardsApp {
             name,
             subject,
             cards,
+            style: this.selectedStyle,
+            color: this.selectedColor,
             createdAt: new Date().toISOString()
         };
 
@@ -125,6 +154,15 @@ class FlashCardsApp {
     clearForm() {
         document.getElementById('deck-form').reset();
         document.getElementById('cards-list').innerHTML = '';
+        
+        // Reset customization selections
+        document.querySelectorAll('.style-option').forEach(opt => opt.classList.remove('selected'));
+        document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+        document.querySelector('.style-option[data-style="classic"]')?.classList.add('selected');
+        document.querySelector('.color-option[data-color="blue"]')?.classList.add('selected');
+        this.selectedStyle = 'classic';
+        this.selectedColor = 'blue';
+        
         this.addCard();
     }
 
@@ -150,12 +188,23 @@ class FlashCardsApp {
         grid.style.display = 'grid';
         emptyState.style.display = 'none';
         
-        grid.innerHTML = this.decks.map(deck => `
-            <div class="deck-card" onclick="app.startStudy('${deck.id}')">
+        grid.innerHTML = this.decks.map(deck => {
+            const style = deck.style || 'classic';
+            const color = deck.color || 'blue';
+            const styleIcon = {
+                classic: '📄',
+                modern: '✨',
+                vintage: '📜',
+                neon: '💠'
+            }[style];
+            
+            return `
+            <div class="deck-card deck-${style} deck-${color}" onclick="app.startStudy('${deck.id}')">
                 <div class="deck-header">
                     <div>
                         <div class="deck-name">${this.escapeHtml(deck.name)}</div>
                         <div class="deck-subject">${this.escapeHtml(deck.subject)}</div>
+                        <div class="deck-style-indicator">${styleIcon} ${style.charAt(0).toUpperCase() + style.slice(1)}</div>
                     </div>
                     <button class="deck-delete" onclick="event.stopPropagation(); app.deleteDeck('${deck.id}')" title="Delete deck">
                         🗑️
@@ -168,7 +217,8 @@ class FlashCardsApp {
                     </button>
                 </div>
             </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     // Card Management
@@ -245,10 +295,22 @@ class FlashCardsApp {
         const card = this.currentCards[this.currentCardIndex];
         document.getElementById('card-question').textContent = card.question;
         document.getElementById('answer-input').value = '';
+        document.getElementById('card-number').textContent = `${this.cardCount + 1} / ${this.currentDeck.cards.length}`;
         this.hideFeedback();
         
-        // Animate card entrance
+        // Apply deck style and color
         const studyCard = document.getElementById('study-card');
+        
+        // Remove existing style classes
+        studyCard.classList.remove('classic', 'modern', 'vintage', 'neon');
+        studyCard.classList.remove('blue', 'green', 'purple', 'red', 'orange', 'teal');
+        
+        // Apply deck's style and color (with fallbacks for older decks)
+        const deckStyle = this.currentDeck.style || 'classic';
+        const deckColor = this.currentDeck.color || 'blue';
+        studyCard.classList.add(deckStyle, deckColor);
+        
+        // Animate card entrance
         studyCard.classList.remove('slide-out');
         studyCard.classList.add('slide-in');
     }

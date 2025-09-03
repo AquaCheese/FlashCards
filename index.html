@@ -68,6 +68,40 @@
                             <input type="text" id="deck-subject" placeholder="e.g., Languages, Science, History" required>
                         </div>
                         
+                        <div class="form-group">
+                            <label>Card Style</label>
+                            <div class="card-style-options">
+                                <div class="style-option" data-style="classic">
+                                    <div class="style-preview classic-preview"></div>
+                                    <span>Classic</span>
+                                </div>
+                                <div class="style-option" data-style="modern">
+                                    <div class="style-preview modern-preview"></div>
+                                    <span>Modern</span>
+                                </div>
+                                <div class="style-option" data-style="vintage">
+                                    <div class="style-preview vintage-preview"></div>
+                                    <span>Vintage</span>
+                                </div>
+                                <div class="style-option" data-style="neon">
+                                    <div class="style-preview neon-preview"></div>
+                                    <span>Neon</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Card Color Theme</label>
+                            <div class="color-options">
+                                <div class="color-option" data-color="blue" style="background: linear-gradient(135deg, #667eea, #764ba2)"></div>
+                                <div class="color-option" data-color="green" style="background: linear-gradient(135deg, #48bb78, #38a169)"></div>
+                                <div class="color-option" data-color="purple" style="background: linear-gradient(135deg, #9f7aea, #805ad5)"></div>
+                                <div class="color-option" data-color="red" style="background: linear-gradient(135deg, #f56565, #e53e3e)"></div>
+                                <div class="color-option" data-color="orange" style="background: linear-gradient(135deg, #ed8936, #dd6b20)"></div>
+                                <div class="color-option" data-color="teal" style="background: linear-gradient(135deg, #4fd1c7, #38b2ac)"></div>
+                            </div>
+                        </div>
+                        
                         <div class="cards-section">
                             <div class="section-header">
                                 <h3>Cards</h3>
@@ -119,11 +153,20 @@
                     
                     <!-- Study Card -->
                     <div class="study-card-container" id="study-card-container">
-                        <div class="study-card" id="study-card">
+                        <div class="study-card realistic-card" id="study-card">
+                            <div class="card-shadow"></div>
+                            <div class="card-border"></div>
+                            <div class="card-corner top-left"></div>
+                            <div class="card-corner top-right"></div>
+                            <div class="card-corner bottom-left"></div>
+                            <div class="card-corner bottom-right"></div>
                             <div class="card-content">
+                                <div class="card-header-badge">QUESTION</div>
                                 <div class="question-side">
-                                    <h3>Question</h3>
                                     <p id="card-question">Loading...</p>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="card-number" id="card-number">1 / 10</div>
                                 </div>
                             </div>
                         </div>
