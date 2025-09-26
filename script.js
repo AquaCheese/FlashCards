@@ -1,3 +1,191 @@
+// Global app instance
+let app = null;
+
+// Define global functions at the top level so they're immediately available
+function addCard() {
+    if (app && app.addCard) {
+        app.addCard();
+    } else {
+        setTimeout(() => addCard(), 100);
+    }
+}
+
+function addTitleCard() {
+    if (app && app.addTitleCard) {
+        app.addTitleCard();
+    } else {
+        setTimeout(() => addTitleCard(), 100);
+    }
+}
+
+function showView(view) {
+    if (app && app.showView) {
+        app.showView(view);
+    } else {
+        setTimeout(() => showView(view), 100);
+    }
+}
+
+function clearForm() {
+    if (app && app.clearForm) {
+        app.clearForm();
+    } else {
+        setTimeout(() => clearForm(), 100);
+    }
+}
+
+function checkAnswer() {
+    if (app && app.checkAnswer) {
+        app.checkAnswer();
+    } else {
+        setTimeout(() => checkAnswer(), 100);
+    }
+}
+
+function startStudy(deckId) {
+    if (app && app.startStudy) {
+        app.startStudy(deckId);
+    } else {
+        setTimeout(() => startStudy(deckId), 100);
+    }
+}
+
+function editDeck(deckId) {
+    if (app && app.editDeck) {
+        app.editDeck(deckId);
+    } else {
+        setTimeout(() => editDeck(deckId), 100);
+    }
+}
+
+function showDeckStats(deckId) {
+    if (app && app.showDeckStats) {
+        app.showDeckStats(deckId);
+    } else {
+        setTimeout(() => showDeckStats(deckId), 100);
+    }
+}
+
+function saveDeckToFile(deckId) {
+    if (app && app.saveDeckToFile) {
+        app.saveDeckToFile(deckId);
+    } else {
+        setTimeout(() => saveDeckToFile(deckId), 100);
+    }
+}
+
+function deleteDeck(deckId) {
+    if (app && app.deleteDeck) {
+        app.deleteDeck(deckId);
+    } else {
+        setTimeout(() => deleteDeck(deckId), 100);
+    }
+}
+
+function restartStudy() {
+    if (app && app.restartStudy) {
+        app.restartStudy();
+    } else {
+        setTimeout(() => restartStudy(), 100);
+    }
+}
+
+function exitStudy() {
+    if (app && app.exitStudy) {
+        app.exitStudy();
+    } else {
+        setTimeout(() => exitStudy(), 100);
+    }
+}
+
+function importDeck() {
+    if (app && app.importDeck) {
+        app.importDeck();
+    } else {
+        setTimeout(() => importDeck(), 100);
+    }
+}
+
+function showGenerationInsights() {
+    if (app && app.showGenerationInsights) {
+        app.showGenerationInsights();
+    } else {
+        setTimeout(() => showGenerationInsights(), 100);
+    }
+}
+
+function closeGenerationInsights() {
+    if (app && app.closeGenerationInsights) {
+        app.closeGenerationInsights();
+    } else {
+        setTimeout(() => closeGenerationInsights(), 100);
+    }
+}
+
+function confirmDelete() {
+    if (app && app.confirmDelete) {
+        app.confirmDelete();
+    } else {
+        setTimeout(() => confirmDelete(), 100);
+    }
+}
+
+function cancelDelete() {
+    if (app && app.cancelDelete) {
+        app.cancelDelete();
+    } else {
+        setTimeout(() => cancelDelete(), 100);
+    }
+}
+
+function closeStatsModal() {
+    if (app && app.closeStatsModal) {
+        app.closeStatsModal();
+    } else {
+        setTimeout(() => closeStatsModal(), 100);
+    }
+}
+
+function previousTitleCard() {
+    if (app && app.previousTitleCard) {
+        app.previousTitleCard();
+    } else {
+        setTimeout(() => previousTitleCard(), 100);
+    }
+}
+
+function nextTitleCard() {
+    if (app && app.nextTitleCard) {
+        app.nextTitleCard();
+    } else {
+        setTimeout(() => nextTitleCard(), 100);
+    }
+}
+
+function startActualStudy() {
+    if (app && app.startActualStudy) {
+        app.startActualStudy();
+    } else {
+        setTimeout(() => startActualStudy(), 100);
+    }
+}
+
+function skipToStudy() {
+    if (app && app.skipToStudy) {
+        app.skipToStudy();
+    } else {
+        setTimeout(() => skipToStudy(), 100);
+    }
+}
+
+function regenerateDecks() {
+    if (app && app.regenerateDecks) {
+        app.regenerateDecks();
+    } else {
+        setTimeout(() => regenerateDecks(), 100);
+    }
+}
+
 // FlashCards Application
 class FlashCardsApp {
     constructor() {
@@ -1789,13 +1977,13 @@ class FlashCardsApp {
                 </div>
                 
                 <div class="generated-deck-buttons">
-                    <button class="btn btn-ai btn-small" onclick="event.stopPropagation(); studyGeneratedDeck('${deck.id}')" title="Study this generated deck">
+                    <button class="btn btn-ai btn-small" onclick="event.stopPropagation(); window.flashCardsApp ? window.flashCardsApp.startStudy('${deck.id}', true) : console.log('App not ready')" title="Study this generated deck">
                         ▶️ Study
                     </button>
-                    <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); saveGeneratedDeck('${deck.id}')" title="Add to your decks">
+                    <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); window.flashCardsApp ? window.flashCardsApp.saveGeneratedDeck('${deck.id}') : console.log('App not ready')" title="Add to your decks">
                         💾 Save
                     </button>
-                    <button class="btn btn-info btn-small" onclick="event.stopPropagation(); previewGeneratedDeck('${deck.id}')" title="Preview cards">
+                    <button class="btn btn-info btn-small" onclick="event.stopPropagation(); window.flashCardsApp ? window.flashCardsApp.previewGeneratedDeck('${deck.id}') : console.log('App not ready')" title="Preview cards">
                         👁️ Preview
                     </button>
                 </div>
@@ -2722,245 +2910,7 @@ class FlashCardsApp {
     }
 }
 
-// Global functions for HTML onclick handlers
-function addCard() {
-    if (app && app.addCard) {
-        app.addCard();
-    } else {
-        console.log('App not ready yet, waiting...');
-        setTimeout(() => addCard(), 100);
-    }
-}
-
-function showView(view) {
-    if (app && app.showView) {
-        app.showView(view);
-    } else {
-        console.log('App not ready yet, waiting...');
-        setTimeout(() => showView(view), 100);
-    }
-}
-
-function clearForm() {
-    if (app && app.clearForm) {
-        app.clearForm();
-    } else {
-        console.log('App not ready yet, waiting...');
-        setTimeout(() => clearForm(), 100);
-    }
-}
-
-function checkAnswer() {
-    if (app && app.checkAnswer) {
-        app.checkAnswer();
-    } else {
-        console.log('App not ready yet, waiting...');
-        setTimeout(() => checkAnswer(), 100);
-    }
-}
-
-function restartStudy() {
-    if (app && app.restartStudy) {
-        app.restartStudy();
-    } else {
-        console.log('App not ready yet, waiting...');
-        setTimeout(() => restartStudy(), 100);
-    }
-}
-
-function exitStudy() {
-    if (app && app.exitStudy) {
-        app.exitStudy();
-    } else {
-        console.log('App not ready yet, waiting...');
-        setTimeout(() => exitStudy(), 100);
-    }
-}
-
-function editDeck(deckId) {
-    if (app && app.editDeck) {
-        app.editDeck(deckId);
-    } else {
-        console.log('App not ready yet, waiting...');
-        setTimeout(() => editDeck(deckId), 100);
-    }
-}
-
-function addTitleCard() {
-    if (app && app.addTitleCard) {
-        app.addTitleCard();
-    } else {
-        console.log('App not ready yet, waiting...');
-        setTimeout(() => addTitleCard(), 100);
-    }
-}
-
-// Additional global functions for app methods
-function importDeck() {
-    if (app && app.importDeck) {
-        app.importDeck();
-    } else {
-        console.log('App not ready yet, waiting for importDeck...');
-        setTimeout(() => importDeck(), 100);
-    }
-}
-
-function showGenerationInsights() {
-    if (app && app.showGenerationInsights) {
-        app.showGenerationInsights();
-    } else {
-        console.log('App not ready yet, waiting for showGenerationInsights...');
-        setTimeout(() => showGenerationInsights(), 100);
-    }
-}
-
-function regenerateDecks() {
-    if (app && app.regenerateDecks) {
-        app.regenerateDecks();
-    } else {
-        console.log('App not ready yet, waiting for regenerateDecks...');
-        setTimeout(() => regenerateDecks(), 100);
-    }
-}
-
-// Study navigation functions
-function previousTitleCard() {
-    if (app && app.previousTitleCard) {
-        app.previousTitleCard();
-    } else {
-        console.log('App not ready yet, waiting for previousTitleCard...');
-        setTimeout(() => previousTitleCard(), 100);
-    }
-}
-
-function nextTitleCard() {
-    if (app && app.nextTitleCard) {
-        app.nextTitleCard();
-    } else {
-        console.log('App not ready yet, waiting for nextTitleCard...');
-        setTimeout(() => nextTitleCard(), 100);
-    }
-}
-
-function startActualStudy() {
-    if (app && app.startActualStudy) {
-        app.startActualStudy();
-    } else {
-        console.log('App not ready yet, waiting for startActualStudy...');
-        setTimeout(() => startActualStudy(), 100);
-    }
-}
-
-function skipToStudy() {
-    if (app && app.skipToStudy) {
-        app.skipToStudy();
-    } else {
-        console.log('App not ready yet, waiting for skipToStudy...');
-        setTimeout(() => skipToStudy(), 100);
-    }
-}
-
-// Modal functions
-function closeGenerationInsights() {
-    if (app && app.closeGenerationInsights) {
-        app.closeGenerationInsights();
-    } else {
-        console.log('App not ready yet, waiting for closeGenerationInsights...');
-        setTimeout(() => closeGenerationInsights(), 100);
-    }
-}
-
-function confirmDelete() {
-    if (app && app.confirmDelete) {
-        app.confirmDelete();
-    } else {
-        console.log('App not ready yet, waiting for confirmDelete...');
-        setTimeout(() => confirmDelete(), 100);
-    }
-}
-
-function cancelDelete() {
-    if (app && app.cancelDelete) {
-        app.cancelDelete();
-    } else {
-        console.log('App not ready yet, waiting for cancelDelete...');
-        setTimeout(() => cancelDelete(), 100);
-    }
-}
-
-function closeStatsModal() {
-    if (app && app.closeStatsModal) {
-        app.closeStatsModal();
-    } else {
-        console.log('App not ready yet, waiting for closeStatsModal...');
-        setTimeout(() => closeStatsModal(), 100);
-    }
-}
-
-// Deck action functions
-function startStudy(deckId) {
-    if (app && app.startStudy) {
-        app.startStudy(deckId);
-    } else {
-        console.log('App not ready yet, waiting for startStudy...');
-        setTimeout(() => startStudy(deckId), 100);
-    }
-}
-
-function deleteDeck(deckId) {
-    if (app && app.deleteDeck) {
-        app.deleteDeck(deckId);
-    } else {
-        console.log('App not ready yet, waiting for deleteDeck...');
-        setTimeout(() => deleteDeck(deckId), 100);
-    }
-}
-
-function showDeckStats(deckId) {
-    if (app && app.showDeckStats) {
-        app.showDeckStats(deckId);
-    } else {
-        console.log('App not ready yet, waiting for showDeckStats...');
-        setTimeout(() => showDeckStats(deckId), 100);
-    }
-}
-
-function saveDeckToFile(deckId) {
-    if (app && app.saveDeckToFile) {
-        app.saveDeckToFile(deckId);
-    } else {
-        console.log('App not ready yet, waiting for saveDeckToFile...');
-        setTimeout(() => saveDeckToFile(deckId), 100);
-    }
-}
-
-// Generated deck functions
-function studyGeneratedDeck(deckId) {
-    if (app && app.startStudy) {
-        app.startStudy(deckId, true); // true indicates it's a generated deck
-    } else {
-        console.log('App not ready yet, waiting for studyGeneratedDeck...');
-        setTimeout(() => studyGeneratedDeck(deckId), 100);
-    }
-}
-
-function saveGeneratedDeck(deckId) {
-    if (app && app.saveGeneratedDeck) {
-        app.saveGeneratedDeck(deckId);
-    } else {
-        console.log('App not ready yet, waiting for saveGeneratedDeck...');
-        setTimeout(() => saveGeneratedDeck(deckId), 100);
-    }
-}
-
-function previewGeneratedDeck(deckId) {
-    if (app && app.previewGeneratedDeck) {
-        app.previewGeneratedDeck(deckId);
-    } else {
-        console.log('App not ready yet, waiting for previewGeneratedDeck...');
-        setTimeout(() => previewGeneratedDeck(deckId), 100);
-    }
-}
+// All global functions are now defined at the top of the file
 
 // CSS for notifications
 const notificationStyles = `
@@ -2980,7 +2930,6 @@ styleSheet.textContent = notificationStyles;
 document.head.appendChild(styleSheet);
 
 // Initialize app when DOM is loaded
-let app;
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, initializing FlashCards app...');
     try {
