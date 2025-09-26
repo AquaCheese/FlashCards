@@ -2693,82 +2693,177 @@ class FlashCardsApp {
 
 // Global functions for HTML onclick handlers
 function addCard() {
-    app.addCard();
+    if (app && app.addCard) {
+        app.addCard();
+    } else {
+        console.log('App not ready yet, waiting...');
+        setTimeout(() => addCard(), 100);
+    }
 }
 
 function showView(view) {
-    app.showView(view);
+    if (app && app.showView) {
+        app.showView(view);
+    } else {
+        console.log('App not ready yet, waiting...');
+        setTimeout(() => showView(view), 100);
+    }
 }
 
 function clearForm() {
-    app.clearForm();
+    if (app && app.clearForm) {
+        app.clearForm();
+    } else {
+        console.log('App not ready yet, waiting...');
+        setTimeout(() => clearForm(), 100);
+    }
 }
 
 function checkAnswer() {
-    app.checkAnswer();
+    if (app && app.checkAnswer) {
+        app.checkAnswer();
+    } else {
+        console.log('App not ready yet, waiting...');
+        setTimeout(() => checkAnswer(), 100);
+    }
 }
 
 function restartStudy() {
-    app.restartStudy();
+    if (app && app.restartStudy) {
+        app.restartStudy();
+    } else {
+        console.log('App not ready yet, waiting...');
+        setTimeout(() => restartStudy(), 100);
+    }
 }
 
 function exitStudy() {
-    app.exitStudy();
+    if (app && app.exitStudy) {
+        app.exitStudy();
+    } else {
+        console.log('App not ready yet, waiting...');
+        setTimeout(() => exitStudy(), 100);
+    }
 }
 
 function editDeck(deckId) {
-    app.editDeck(deckId);
+    if (app && app.editDeck) {
+        app.editDeck(deckId);
+    } else {
+        console.log('App not ready yet, waiting...');
+        setTimeout(() => editDeck(deckId), 100);
+    }
 }
 
 function addTitleCard() {
-    app.addTitleCard();
+    if (app && app.addTitleCard) {
+        app.addTitleCard();
+    } else {
+        console.log('App not ready yet, waiting...');
+        setTimeout(() => addTitleCard(), 100);
+    }
 }
 
 // Additional global functions for app methods
 function importDeck() {
-    if (app) app.importDeck();
+    if (app && app.importDeck) {
+        app.importDeck();
+    } else {
+        console.log('App not ready yet, waiting for importDeck...');
+        setTimeout(() => importDeck(), 100);
+    }
 }
 
 function showGenerationInsights() {
-    if (app) app.showGenerationInsights();
+    if (app && app.showGenerationInsights) {
+        app.showGenerationInsights();
+    } else {
+        console.log('App not ready yet, waiting for showGenerationInsights...');
+        setTimeout(() => showGenerationInsights(), 100);
+    }
 }
 
 function regenerateDecks() {
-    if (app) app.regenerateDecks();
+    if (app && app.regenerateDecks) {
+        app.regenerateDecks();
+    } else {
+        console.log('App not ready yet, waiting for regenerateDecks...');
+        setTimeout(() => regenerateDecks(), 100);
+    }
 }
 
 // Study navigation functions
 function previousTitleCard() {
-    if (app) app.previousTitleCard();
+    if (app && app.previousTitleCard) {
+        app.previousTitleCard();
+    } else {
+        console.log('App not ready yet, waiting for previousTitleCard...');
+        setTimeout(() => previousTitleCard(), 100);
+    }
 }
 
 function nextTitleCard() {
-    if (app) app.nextTitleCard();
+    if (app && app.nextTitleCard) {
+        app.nextTitleCard();
+    } else {
+        console.log('App not ready yet, waiting for nextTitleCard...');
+        setTimeout(() => nextTitleCard(), 100);
+    }
 }
 
 function startActualStudy() {
-    if (app) app.startActualStudy();
+    if (app && app.startActualStudy) {
+        app.startActualStudy();
+    } else {
+        console.log('App not ready yet, waiting for startActualStudy...');
+        setTimeout(() => startActualStudy(), 100);
+    }
 }
 
 function skipToStudy() {
-    if (app) app.skipToStudy();
+    if (app && app.skipToStudy) {
+        app.skipToStudy();
+    } else {
+        console.log('App not ready yet, waiting for skipToStudy...');
+        setTimeout(() => skipToStudy(), 100);
+    }
 }
 
 // Modal functions
 function closeGenerationInsights() {
-    if (app) app.closeGenerationInsights();
+    if (app && app.closeGenerationInsights) {
+        app.closeGenerationInsights();
+    } else {
+        console.log('App not ready yet, waiting for closeGenerationInsights...');
+        setTimeout(() => closeGenerationInsights(), 100);
+    }
 }
 
 function confirmDelete() {
-    if (app) app.confirmDelete();
+    if (app && app.confirmDelete) {
+        app.confirmDelete();
+    } else {
+        console.log('App not ready yet, waiting for confirmDelete...');
+        setTimeout(() => confirmDelete(), 100);
+    }
 }
 
 function cancelDelete() {
-    if (app) app.cancelDelete();
+    if (app && app.cancelDelete) {
+        app.cancelDelete();
+    } else {
+        console.log('App not ready yet, waiting for cancelDelete...');
+        setTimeout(() => cancelDelete(), 100);
+    }
 }
 
 function closeStatsModal() {
-    if (app) app.closeStatsModal();
+    if (app && app.closeStatsModal) {
+        app.closeStatsModal();
+    } else {
+        console.log('App not ready yet, waiting for closeStatsModal...');
+        setTimeout(() => closeStatsModal(), 100);
+    }
 }
 
 // CSS for notifications
@@ -2791,5 +2886,14 @@ document.head.appendChild(styleSheet);
 // Initialize app when DOM is loaded
 let app;
 document.addEventListener('DOMContentLoaded', () => {
-    app = new FlashCardsApp();
+    console.log('DOM loaded, initializing FlashCards app...');
+    try {
+        app = new FlashCardsApp();
+        console.log('FlashCards app initialized successfully!');
+        
+        // Make app globally available for debugging
+        window.flashCardsApp = app;
+    } catch (error) {
+        console.error('Error initializing FlashCards app:', error);
+    }
 });
