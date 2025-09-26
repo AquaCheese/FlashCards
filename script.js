@@ -54,6 +54,19 @@ function restartStudy() {
     if (app) app.restartStudy();
 }
 
+// Make all functions available on window object for onclick handlers
+window.addCard = addCard;
+window.addTitleCard = addTitleCard;
+window.showView = showView;
+window.clearForm = clearForm;
+window.checkAnswer = checkAnswer;
+window.startStudy = startStudy;
+window.editDeck = editDeck;
+window.showDeckStats = showDeckStats;
+window.saveDeckToFile = saveDeckToFile;
+window.deleteDeck = deleteDeck;
+window.restartStudy = restartStudy;
+
 function exitStudy() {
     if (app && app.exitStudy) {
         app.exitStudy();
@@ -141,6 +154,19 @@ function skipToStudy() {
         setTimeout(() => skipToStudy(), 100);
     }
 }
+
+// Make additional onclick functions available on window object  
+window.exitStudy = exitStudy;
+window.previousTitleCard = previousTitleCard;
+window.nextTitleCard = nextTitleCard;
+window.startActualStudy = startActualStudy;
+window.skipToStudy = skipToStudy;
+window.closeGenerationInsights = closeGenerationInsights;
+window.cancelDelete = cancelDelete;
+window.confirmDelete = confirmDelete;
+window.closeStatsModal = closeStatsModal;
+window.importDeck = importDeck;
+window.regenerateDecks = regenerateDecks;
 
 function regenerateDecks() {
     if (app && app.regenerateDecks) {
@@ -2902,6 +2928,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Make app globally available for debugging
         window.flashCardsApp = app;
+        
+        // Debug: Test if functions are accessible
+        console.log('Testing function accessibility:');
+        console.log('addCard function:', typeof addCard);
+        console.log('showView function:', typeof showView);
+        console.log('startStudy function:', typeof startStudy);
+        console.log('window.addCard:', typeof window.addCard);
+        console.log('app instance:', !!app);
         
         // Also make functions directly available on window
         window.showView = showView;
