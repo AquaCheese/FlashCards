@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FlashCards - Study Smart</title>
-    <!-- Cache bust: Updated at 2025-09-26 -->
-    <link rel="stylesheet" href="styles.css?v=20250927a">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="FlashCards Logo.png">
+    <link rel="apple-touch-icon" href="FlashCards Logo.png">
+    <!-- Cache bust: Updated at 2025-09-27 -->
+    <link rel="stylesheet" href="styles.css?v=20250927b">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -514,6 +517,169 @@
         </div>
     </div>
 
-    <script src="script.js?v=20250927a"></script>
+    <!-- First-Time User Onboarding Modal -->
+    <div id="onboarding-modal" class="onboarding-modal" style="display: none;">
+        <div class="onboarding-content">
+            <div class="onboarding-header">
+                <img src="FlashCards Logo.png" alt="FlashCards Logo" class="onboarding-logo">
+                <h2>Welcome to FlashCards AI! 🎓</h2>
+                <p>Let's personalize your learning experience</p>
+            </div>
+
+            <div class="onboarding-steps">
+                <!-- Step 1: Study Interests -->
+                <div class="onboarding-step" id="step-1">
+                    <h3>What subjects interest you? 📚</h3>
+                    <p>Select all that apply - this helps our AI create relevant content for you.</p>
+                    <div class="subject-grid">
+                        <div class="subject-card" data-subject="Mathematics">
+                            <div class="subject-icon">🔢</div>
+                            <div class="subject-name">Mathematics</div>
+                            <div class="subject-desc">Algebra, Geometry, Calculus</div>
+                        </div>
+                        <div class="subject-card" data-subject="Science">
+                            <div class="subject-icon">🔬</div>
+                            <div class="subject-name">Science</div>
+                            <div class="subject-desc">Biology, Chemistry, Physics</div>
+                        </div>
+                        <div class="subject-card" data-subject="Languages">
+                            <div class="subject-icon">🗣️</div>
+                            <div class="subject-name">Languages</div>
+                            <div class="subject-desc">Spanish, French, etc.</div>
+                        </div>
+                        <div class="subject-card" data-subject="History">
+                            <div class="subject-icon">📜</div>
+                            <div class="subject-name">History</div>
+                            <div class="subject-desc">World History, Events</div>
+                        </div>
+                        <div class="subject-card" data-subject="Literature">
+                            <div class="subject-icon">📖</div>
+                            <div class="subject-name">Literature</div>
+                            <div class="subject-desc">Classic & Modern Works</div>
+                        </div>
+                        <div class="subject-card" data-subject="Computer Science">
+                            <div class="subject-icon">💻</div>
+                            <div class="subject-name">Computer Science</div>
+                            <div class="subject-desc">Programming, Algorithms</div>
+                        </div>
+                        <div class="subject-card" data-subject="Art">
+                            <div class="subject-icon">🎨</div>
+                            <div class="subject-name">Art</div>
+                            <div class="subject-desc">History, Techniques, Artists</div>
+                        </div>
+                        <div class="subject-card" data-subject="Music">
+                            <div class="subject-icon">🎵</div>
+                            <div class="subject-name">Music</div>
+                            <div class="subject-desc">Theory, History, Instruments</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Confidence Levels -->
+                <div class="onboarding-step" id="step-2" style="display: none;">
+                    <h3>How confident do you feel in these subjects? 💪</h3>
+                    <p>This helps our AI choose the right difficulty level for you.</p>
+                    <div class="confidence-subjects" id="confidence-subjects">
+                        <!-- Dynamic content based on selected subjects -->
+                    </div>
+                </div>
+
+                <!-- Step 3: Study Preferences -->
+                <div class="onboarding-step" id="step-3" style="display: none;">
+                    <h3>What are your study preferences? ⏰</h3>
+                    <div class="preference-section">
+                        <label for="session-length">Preferred session length:</label>
+                        <div class="session-options">
+                            <button type="button" class="session-option" data-minutes="5">5 min</button>
+                            <button type="button" class="session-option" data-minutes="10">10 min</button>
+                            <button type="button" class="session-option active" data-minutes="15">15 min</button>
+                            <button type="button" class="session-option" data-minutes="20">20 min</button>
+                            <button type="button" class="session-option" data-minutes="30">30 min</button>
+                        </div>
+                    </div>
+
+                    <div class="preference-section">
+                        <label>When do you study best?</label>
+                        <div class="time-options">
+                            <button type="button" class="time-option" data-time="morning">🌅 Morning (6-12 AM)</button>
+                            <button type="button" class="time-option" data-time="afternoon">☀️ Afternoon (12-6 PM)</button>
+                            <button type="button" class="time-option" data-time="evening">🌆 Evening (6-10 PM)</button>
+                            <button type="button" class="time-option" data-time="night">🌙 Night (10 PM+)</button>
+                        </div>
+                    </div>
+
+                    <div class="preference-section">
+                        <label>Learning style preference:</label>
+                        <div class="style-options">
+                            <button type="button" class="style-option" data-style="visual">👁️ Visual (images, diagrams)</button>
+                            <button type="button" class="style-option" data-style="auditory">👂 Auditory (sounds, music)</button>
+                            <button type="button" class="style-option" data-style="kinesthetic">✋ Kinesthetic (hands-on)</button>
+                            <button type="button" class="style-option" data-style="reading">📚 Reading/Writing</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Goals -->
+                <div class="onboarding-step" id="step-4" style="display: none;">
+                    <h3>What's your main learning goal? 🎯</h3>
+                    <div class="goal-options">
+                        <button type="button" class="goal-option" data-goal="exam-prep">
+                            <div class="goal-icon">📝</div>
+                            <div class="goal-title">Exam Preparation</div>
+                            <div class="goal-desc">Studying for tests, quizzes, or certifications</div>
+                        </button>
+                        <button type="button" class="goal-option" data-goal="skill-building">
+                            <div class="goal-icon">🛠️</div>
+                            <div class="goal-title">Skill Building</div>
+                            <div class="goal-desc">Learning new skills for personal or professional growth</div>
+                        </button>
+                        <button type="button" class="goal-option" data-goal="review">
+                            <div class="goal-icon">🔄</div>
+                            <div class="goal-title">Knowledge Review</div>
+                            <div class="goal-desc">Refreshing and maintaining existing knowledge</div>
+                        </button>
+                        <button type="button" class="goal-option" data-goal="curiosity">
+                            <div class="goal-icon">🤔</div>
+                            <div class="goal-title">Pure Curiosity</div>
+                            <div class="goal-desc">Learning for the joy of learning</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Final Step -->
+                <div class="onboarding-step" id="step-final" style="display: none;">
+                    <div class="completion-content">
+                        <div class="completion-icon">✨</div>
+                        <h3>Perfect! Your AI is ready! 🤖</h3>
+                        <p>Based on your preferences, our AI will:</p>
+                        <ul class="ai-features">
+                            <li>🎯 Generate personalized study decks</li>
+                            <li>📊 Adapt difficulty to your confidence levels</li>
+                            <li>⏰ Suggest optimal study sessions</li>
+                            <li>🧠 Learn from your performance and improve</li>
+                        </ul>
+                        <div class="ai-preview" id="ai-preview">
+                            <!-- Dynamic AI insights preview -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="onboarding-navigation">
+                <button id="prev-step" class="btn btn-secondary" style="display: none;">← Previous</button>
+                <div class="step-indicators" id="step-indicators">
+                    <div class="step-dot active"></div>
+                    <div class="step-dot"></div>
+                    <div class="step-dot"></div>
+                    <div class="step-dot"></div>
+                    <div class="step-dot"></div>
+                </div>
+                <button id="next-step" class="btn btn-primary">Next →</button>
+                <button id="finish-onboarding" class="btn btn-success" style="display: none;">Start Learning! 🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js?v=20250927d"></script>
 </body>
 </html>

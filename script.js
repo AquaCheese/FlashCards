@@ -214,6 +214,33 @@ window.regenerateDecks = function() {
     }
 };
 
+window.viewGeneratedDeck = function(deckId) {
+    console.log('viewGeneratedDeck called with:', deckId);
+    if (app && app.viewGeneratedDeck) {
+        app.viewGeneratedDeck(deckId);
+    } else {
+        console.log('App not ready or viewGeneratedDeck method missing');
+    }
+};
+
+window.adoptDeck = function(deckId) {
+    console.log('adoptDeck called with:', deckId);
+    if (app && app.adoptDeck) {
+        app.adoptDeck(deckId);
+    } else {
+        console.log('App not ready or adoptDeck method missing');
+    }
+};
+
+window.deleteGeneratedDeck = function(deckId) {
+    console.log('deleteGeneratedDeck called with:', deckId);
+    if (app && app.deleteGeneratedDeck) {
+        app.deleteGeneratedDeck(deckId);
+    } else {
+        console.log('App not ready or deleteGeneratedDeck method missing');
+    }
+};
+
 // FlashCards Application
 class FlashCardsApp {
     constructor() {
@@ -253,9 +280,24 @@ class FlashCardsApp {
         console.log('setupCustomizationListeners() completed');
         this.renderDecks();
         console.log('renderDecks() completed');
+        
+        // Check for first-time user and show onboarding
+        if (this.isFirstTimeUser()) {
+            this.showOnboarding();
+        } else {
+            // Load and render generated decks
+            const generatedDecks = this.loadGeneratedDecks();
+            this.renderGeneratedDecks(generatedDecks);
+            console.log('Generated decks loaded and rendered');
+        }
+        
         this.updateAILockStatus();
         console.log('updateAILockStatus() completed');
         this.showView('home');
+        
+        // Start background AI monitoring
+        this.startBackgroundAIMonitoring();
+        
         console.log('init() completed');
     }
 
@@ -366,16 +408,16 @@ class FlashCardsApp {
                     isGenerated: true,
                     generatedAt: Date.now(),
                     cards: [
-                        { front: 'Hello', back: 'Hola', type: 'standard' },
-                        { front: 'Goodbye', back: 'Adiós', type: 'standard' },
-                        { front: 'Thank you', back: 'Gracias', type: 'standard' },
-                        { front: 'Please', back: 'Por favor', type: 'standard' },
-                        { front: 'Yes', back: 'Sí', type: 'standard' },
-                        { front: 'No', back: 'No', type: 'standard' },
-                        { front: 'Water', back: 'Agua', type: 'standard' },
-                        { front: 'Food', back: 'Comida', type: 'standard' },
-                        { front: 'House', back: 'Casa', type: 'standard' },
-                        { front: 'Family', back: 'Familia', type: 'standard' }
+                        { front: 'How do you say <strong>"Hello"</strong> in Spanish?', back: '<strong>Hola</strong><br><em>Pronunciation: OH-lah</em>', type: 'standard' },
+                        { front: 'What is the Spanish word for <strong>"Goodbye"</strong>?', back: '<strong>Adiós</strong><br><em>Pronunciation: ah-DYOHS</em>', type: 'standard' },
+                        { front: 'How do you say <strong>"Thank you"</strong> politely?', back: '<strong>Gracias</strong><br><em>Pronunciation: GRAH-thyahs</em>', type: 'standard' },
+                        { front: 'What word means <strong>"Please"</strong> in Spanish?', back: '<strong>Por favor</strong><br><em>Pronunciation: por fah-VOR</em>', type: 'standard' },
+                        { front: 'How do you say <strong>"Yes"</strong>?', back: '<strong>Sí</strong><br><em>Note: With accent mark!</em>', type: 'standard' },
+                        { front: 'What is the Spanish word for <strong>"No"</strong>?', back: '<strong>No</strong><br><em>Same as English!</em>', type: 'standard' },
+                        { front: 'What do you call <strong>"Water"</strong>?', back: '<strong>Agua</strong><br><em>Pronunciation: AH-gwah</em><br>🚰 Essential for survival!', type: 'standard' },
+                        { front: 'How do you say <strong>"Food"</strong>?', back: '<strong>Comida</strong><br><em>Pronunciation: koh-MEE-dah</em><br>🍽️ From the verb "comer" (to eat)', type: 'standard' },
+                        { front: 'What is a <strong>"House"</strong> called?', back: '<strong>Casa</strong><br><em>Pronunciation: KAH-sah</em><br>🏠 "Mi casa es su casa"', type: 'standard' },
+                        { front: 'How do you say <strong>"Family"</strong>?', back: '<strong>Familia</strong><br><em>Pronunciation: fah-MEE-lyah</em><br>👨‍👩‍👧‍👦 Very important in Hispanic culture!', type: 'standard' }
                     ],
                     titleCards: [
                         { title: 'Welcome to Spanish!', description: 'Master these essential words to start your Spanish journey.' }
@@ -389,14 +431,14 @@ class FlashCardsApp {
                     isGenerated: true,
                     generatedAt: Date.now(),
                     cards: [
-                        { front: 'What is 7 × 8?', back: '56', type: 'standard' },
-                        { front: 'What is 144 ÷ 12?', back: '12', type: 'standard' },
-                        { front: 'What is 15% of 200?', back: '30', type: 'standard' },
-                        { front: 'Solve: 2x + 5 = 13', back: 'x = 4', type: 'standard' },
-                        { front: 'What is the area of a circle with radius 3?', back: '9π or ≈28.27', type: 'standard' },
-                        { front: 'Convert 0.75 to a fraction', back: '3/4', type: 'standard' },
-                        { front: 'What is √64?', back: '8', type: 'standard' },
-                        { front: 'What is 2³?', back: '8', type: 'standard' }
+                        { front: 'Calculate: <strong>7 × 8</strong> = ?', back: '<strong>56</strong><br><em>Strategy: Think 7 × 8 = 7 × (10 - 2) = 70 - 14 = 56</em><br>✅ Check: 8 × 7 = 56', type: 'standard' },
+                        { front: 'Solve: <strong>144 ÷ 12</strong> = ?', back: '<strong>12</strong><br><em>Check: 12 × 12 = 144 ✓</em><br>💡 Tip: 144 is a perfect square (12²)', type: 'standard' },
+                        { front: 'Find: <strong>15% of 200</strong> = ?', back: '<strong>30</strong><br><em>Method: 15% = 0.15<br>0.15 × 200 = 30</em><br>💰 Quick tip: 10% of 200 = 20, so 15% = 20 + 10 = 30', type: 'standard' },
+                        { front: 'Solve for x: <strong>2x + 5 = 13</strong>', back: '<strong>x = 4</strong><br><em>Steps:<br>1) 2x + 5 = 13<br>2) 2x = 13 - 5 = 8<br>3) x = 8 ÷ 2 = 4</em><br>✅ Check: 2(4) + 5 = 13 ✓', type: 'standard' },
+                        { front: 'Area of circle with <strong>radius = 3</strong>?', back: '<strong>9π ≈ 28.27</strong><br><em>Formula: A = πr²<br>A = π × 3² = π × 9 = 9π</em><br>🔵 π ≈ 3.14159...', type: 'standard' },
+                        { front: 'Convert decimal <strong>0.75</strong> to fraction', back: '<strong>3/4</strong><br><em>Method: 0.75 = 75/100 = 3/4</em><br>📊 Also equals 75%', type: 'standard' },
+                        { front: 'Find: <strong>√64</strong> = ?', back: '<strong>8</strong><br><em>Because 8² = 8 × 8 = 64</em><br>🔢 Perfect square root', type: 'standard' },
+                        { front: 'Calculate: <strong>2³</strong> = ?', back: '<strong>8</strong><br><em>Meaning: 2 × 2 × 2 = 8</em><br>⚡ "2 to the power of 3" or "2 cubed"', type: 'standard' }
                     ],
                     titleCards: [
                         { title: 'Math Fundamentals', description: 'Practice essential math skills and build confidence with numbers.' }
@@ -410,14 +452,14 @@ class FlashCardsApp {
                     isGenerated: true,
                     generatedAt: Date.now(),
                     cards: [
-                        { front: 'What is the chemical symbol for water?', back: 'H₂O', type: 'standard' },
-                        { front: 'How many bones are in the human body?', back: '206 (adult)', type: 'standard' },
-                        { front: 'What gas do plants absorb during photosynthesis?', back: 'Carbon dioxide (CO₂)', type: 'standard' },
-                        { front: 'What is the speed of light?', back: '299,792,458 m/s', type: 'standard' },
-                        { front: 'What is the largest planet in our solar system?', back: 'Jupiter', type: 'standard' },
-                        { front: 'What force keeps us on the ground?', back: 'Gravity', type: 'standard' },
-                        { front: 'What is DNA an acronym for?', back: 'Deoxyribonucleic Acid', type: 'standard' },
-                        { front: 'At what temperature does water freeze?', back: '0°C or 32°F', type: 'standard' }
+                        { front: 'What is the chemical symbol for <strong>water</strong>?', back: '<strong>H₂O</strong><br><em>Meaning: 2 Hydrogen atoms + 1 Oxygen atom</em><br>💧 Essential for all life on Earth!', type: 'standard' },
+                        { front: 'How many <strong>bones</strong> are in the human body?', back: '<strong>206 bones</strong> (adult)<br><em>Fun fact: Babies are born with ~270 bones!</em><br>🦴 Many fuse together as we grow', type: 'standard' },
+                        { front: 'What gas do <strong>plants absorb</strong> during photosynthesis?', back: '<strong>Carbon dioxide (CO₂)</strong><br><em>Process: CO₂ + H₂O + sunlight → glucose + O₂</em><br>🌱 Plants "breathe in" CO₂, "breathe out" O₂', type: 'standard' },
+                        { front: 'What is the <strong>speed of light</strong>?', back: '<strong>299,792,458 m/s</strong><br><em>≈ 300,000 km/s or 186,000 miles/s</em><br>⚡ Fastest speed possible in the universe!', type: 'standard' },
+                        { front: 'What is the <strong>largest planet</strong> in our solar system?', back: '<strong>Jupiter</strong><br><em>Size: Could fit 1,300+ Earths inside!</em><br>🪐 Gas giant with Great Red Spot storm', type: 'standard' },
+                        { front: 'What <strong>force</strong> keeps us on the ground?', back: '<strong>Gravity</strong><br><em>Isaac Newton\'s discovery after apple fell</em><br>🍎 Everything with mass attracts other mass!', type: 'standard' },
+                        { front: 'What does <strong>DNA</strong> stand for?', back: '<strong>Deoxyribonucleic Acid</strong><br><em>Contains genetic instructions for life</em><br>🧬 Found in every cell nucleus - your "blueprint"!', type: 'standard' },
+                        { front: 'At what temperature does <strong>water freeze</strong>?', back: '<strong>0°C or 32°F</strong><br><em>At standard atmospheric pressure</em><br>❄️ Ice is less dense than water - that\'s why it floats!', type: 'standard' }
                     ],
                     titleCards: [
                         { title: 'Discover Science', description: 'Explore fascinating facts about our world and universe.' }
@@ -425,13 +467,66 @@ class FlashCardsApp {
                 }
             ];
 
-            // Add starter decks to the user's collection
-            this.decks = starterDecks;
-            this.saveDecks();
-            this.renderDecks();
+            // Save generated decks separately
+            this.saveGeneratedDecks(starterDecks);
+            this.renderGeneratedDecks(starterDecks);
             
             console.log('Generated 3 starter decks for new user');
         }
+    }
+
+    saveGeneratedDecks(decks) {
+        localStorage.setItem('flashcards-generated-decks', JSON.stringify(decks));
+    }
+
+    loadGeneratedDecks() {
+        const saved = localStorage.getItem('flashcards-generated-decks');
+        return saved ? JSON.parse(saved) : [];
+    }
+
+    renderGeneratedDecks(decks) {
+        const grid = document.getElementById('generated-decks-grid');
+        if (!grid) return;
+
+        grid.innerHTML = '';
+        
+        decks.forEach(deck => {
+            const deckCard = this.createGeneratedDeckCard(deck);
+            grid.appendChild(deckCard);
+        });
+    }
+
+    createGeneratedDeckCard(deck) {
+        const card = document.createElement('div');
+        card.className = 'deck-card generated-deck';
+        card.innerHTML = `
+            <div class="deck-header">
+                <div class="deck-info">
+                    <h4>${deck.name}</h4>
+                    <div class="deck-meta">
+                        <span class="subject-badge">${deck.subject}</span>
+                        <span class="difficulty-badge ${deck.difficulty.toLowerCase()}">${deck.difficulty}</span>
+                        <span class="ai-badge">🤖 AI Generated</span>
+                    </div>
+                    <p class="deck-description">${deck.cards.length} cards • Generated ${new Date(deck.generatedAt).toLocaleDateString()}</p>
+                </div>
+            </div>
+            <div class="deck-buttons">
+                <button class="btn btn-primary btn-small" onclick="event.stopPropagation(); startStudy('${deck.id}')" title="Study this deck">
+                    ▶️ Study
+                </button>
+                <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); viewGeneratedDeck('${deck.id}')" title="View deck contents">
+                    👁️ View
+                </button>
+                <button class="btn btn-accent btn-small" onclick="event.stopPropagation(); adoptDeck('${deck.id}')" title="Add to your personal collection">
+                    📥 Adopt
+                </button>
+                <button class="deck-delete" onclick="event.stopPropagation(); deleteGeneratedDeck('${deck.id}')" title="Remove generated deck">
+                    🗑️
+                </button>
+            </div>
+        `;
+        return card;
     }
 
     setupCustomizationListeners() {
@@ -615,7 +710,1152 @@ class FlashCardsApp {
         localStorage.setItem('ai-learning-profile', JSON.stringify(profile));
         
         console.log('AI Learning Profile updated:', profile);
+        
+        // Trigger background AI deck generation
+        this.triggerBackgroundAI(profile);
     }
+
+    // =================== REAL AI LEARNING SYSTEM ===================
+    
+    triggerBackgroundAI(profile) {
+        // Don't trigger too frequently (max once every 30 minutes)
+        const lastAIGeneration = localStorage.getItem('last-ai-generation') || 0;
+        const timeSinceLastGeneration = Date.now() - parseInt(lastAIGeneration);
+        
+        if (timeSinceLastGeneration < 30 * 60 * 1000) { // 30 minutes
+            console.log('AI generation cooling down...');
+            return;
+        }
+        
+        // Require minimum data for meaningful analysis
+        if (profile.preferences.accuracyTrends.length < 5) {
+            console.log('Insufficient data for AI generation');
+            return;
+        }
+        
+        console.log('🤖 AI Engine: Analyzing learning patterns...');
+        
+        // Delayed background processing to not block UI
+        setTimeout(() => {
+            this.runAIAnalysis(profile);
+        }, 2000);
+    }
+    
+    runAIAnalysis(profile) {
+        try {
+            // 1. Identify learning patterns
+            const patterns = this.analyzeUserPatterns(profile);
+            console.log('🧠 Learning patterns identified:', patterns);
+            
+            // 2. Generate personalized content
+            const shouldGenerate = this.shouldGenerateNewContent(patterns, profile);
+            
+            if (shouldGenerate.recommend) {
+                console.log('🎯 AI recommending new deck generation:', shouldGenerate.reason);
+                this.generatePersonalizedDeck(patterns, profile, shouldGenerate.type);
+            } else {
+                console.log('📊 AI analysis complete - no new content needed');
+            }
+            
+        } catch (error) {
+            console.error('AI Analysis error:', error);
+        }
+    }
+    
+    analyzeUserPatterns(profile) {
+        const trends = profile.preferences.accuracyTrends;
+        const recent = trends.slice(-10); // Last 10 sessions
+        
+        // Calculate learning velocity
+        let improvementTrend = 0;
+        if (recent.length > 3) {
+            const firstHalf = recent.slice(0, Math.floor(recent.length / 2));
+            const secondHalf = recent.slice(Math.floor(recent.length / 2));
+            const firstAvg = firstHalf.reduce((sum, t) => sum + t.accuracy, 0) / firstHalf.length;
+            const secondAvg = secondHalf.reduce((sum, t) => sum + t.accuracy, 0) / secondHalf.length;
+            improvementTrend = secondAvg - firstAvg;
+        }
+        
+        // Identify knowledge gaps
+        const subjectWeaknesses = Object.entries(profile.weaknesses)
+            .map(([subject, count]) => ({
+                subject,
+                weakness: count,
+                strength: profile.strengths[subject] || 0,
+                ratio: count / (profile.strengths[subject] || 1)
+            }))
+            .filter(item => item.ratio > 1.5) // Significantly more weaknesses than strengths
+            .sort((a, b) => b.ratio - a.ratio);
+        
+        // Find preferred learning style
+        const difficultyPrefs = profile.preferences.difficultyPreference;
+        const bestDifficulty = Object.entries(difficultyPrefs)
+            .map(([diff, data]) => ({
+                difficulty: diff,
+                accuracy: data.averageAccuracy || 0,
+                attempts: data.attempts || 0
+            }))
+            .filter(item => item.attempts > 2)
+            .sort((a, b) => b.accuracy - a.accuracy)[0];
+        
+        // Analyze study timing
+        const studyTimes = trends.map(t => new Date(t.timestamp).getHours());
+        const timePreference = this.findMostFrequentHour(studyTimes);
+        
+        return {
+            improvementTrend,
+            currentAccuracy: recent.length > 0 ? recent[recent.length - 1].accuracy : 0,
+            averageAccuracy: trends.reduce((sum, t) => sum + t.accuracy, 0) / trends.length,
+            knowledgeGaps: subjectWeaknesses,
+            preferredDifficulty: bestDifficulty?.difficulty || 'Intermediate',
+            optimalStudyHour: timePreference,
+            sessionCount: trends.length,
+            consistencyScore: this.calculateConsistencyScore(trends)
+        };
+    }
+    
+    shouldGenerateNewContent(patterns, profile) {
+        const reasons = [];
+        
+        // 1. Knowledge gap detection
+        if (patterns.knowledgeGaps.length > 0) {
+            const topGap = patterns.knowledgeGaps[0];
+            reasons.push({
+                type: 'weakness-reinforcement',
+                priority: 90,
+                reason: `Struggling with ${topGap.subject} (${topGap.weakness} weak sessions vs ${topGap.strength} strong)`,
+                subject: topGap.subject,
+                focus: 'remedial'
+            });
+        }
+        
+        // 2. Plateau detection
+        if (patterns.improvementTrend < -5) {
+            reasons.push({
+                type: 'plateau-breaker',
+                priority: 85,
+                reason: `Performance declining by ${Math.abs(patterns.improvementTrend).toFixed(1)}% - need variety`,
+                focus: 'challenge'
+            });
+        }
+        
+        // 3. Mastery advancement
+        if (patterns.currentAccuracy > 85 && patterns.improvementTrend > 5) {
+            const strongSubjects = Object.entries(profile.strengths)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 3);
+                
+            if (strongSubjects.length > 0) {
+                reasons.push({
+                    type: 'advancement',
+                    priority: 75,
+                    reason: `Excelling in ${strongSubjects[0][0]} (${strongSubjects[0][1]} strong sessions) - ready for advanced content`,
+                    subject: strongSubjects[0][0],
+                    focus: 'advanced'
+                });
+            }
+        }
+        
+        // 4. Consistency reward
+        if (patterns.consistencyScore > 0.8 && patterns.sessionCount > 10) {
+            reasons.push({
+                type: 'consistency-reward',
+                priority: 60,
+                reason: `High consistency score (${(patterns.consistencyScore * 100).toFixed(0)}%) - deserve specialized content`,
+                focus: 'specialized'
+            });
+        }
+        
+        // Select highest priority reason
+        const topReason = reasons.sort((a, b) => b.priority - a.priority)[0];
+        
+        return {
+            recommend: !!topReason,
+            reason: topReason?.reason || 'No generation needed',
+            type: topReason?.type || null,
+            subject: topReason?.subject || null,
+            focus: topReason?.focus || 'general'
+        };
+    }
+    
+    findMostFrequentHour(hours) {
+        const hourCounts = {};
+        hours.forEach(hour => {
+            hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+        });
+        
+        return Object.entries(hourCounts)
+            .sort(([,a], [,b]) => b - a)[0]?.[0] || 12;
+    }
+    
+    calculateConsistencyScore(trends) {
+        if (trends.length < 3) return 0;
+        
+        // Calculate variance in accuracy
+        const accuracies = trends.map(t => t.accuracy);
+        const mean = accuracies.reduce((sum, acc) => sum + acc, 0) / accuracies.length;
+        const variance = accuracies.reduce((sum, acc) => sum + Math.pow(acc - mean, 2), 0) / accuracies.length;
+        const standardDeviation = Math.sqrt(variance);
+        
+        // Lower standard deviation = higher consistency
+        // Convert to 0-1 scale where 1 = very consistent
+        return Math.max(0, 1 - (standardDeviation / 50));
+    }
+    
+    generatePersonalizedDeck(patterns, profile, generationType) {
+        console.log('🎨 Generating personalized deck:', generationType);
+        
+        // Mark generation timestamp
+        localStorage.setItem('last-ai-generation', Date.now().toString());
+        
+        const deckConfig = this.createDeckConfig(patterns, profile, generationType);
+        const cards = this.generateSmartCards(deckConfig, patterns, profile);
+        
+        if (cards.length === 0) {
+            console.log('No suitable cards generated');
+            return;
+        }
+        
+        const newDeck = {
+            id: 'ai_generated_' + Date.now(),
+            name: deckConfig.name,
+            subject: deckConfig.subject,
+            difficulty: deckConfig.difficulty,
+            isGenerated: true,
+            generatedAt: Date.now(),
+            generationType: generationType,
+            confidence: deckConfig.confidence,
+            reason: {
+                title: deckConfig.reasonTitle,
+                description: deckConfig.reasonDescription
+            },
+            cards: cards,
+            titleCards: [{
+                title: deckConfig.name,
+                description: deckConfig.description
+            }],
+            aiMetadata: {
+                targetWeakness: patterns.knowledgeGaps[0]?.subject || null,
+                userAccuracy: patterns.currentAccuracy,
+                improvementTrend: patterns.improvementTrend,
+                generatedFor: generationType,
+                profileSnapshot: {
+                    sessionCount: patterns.sessionCount,
+                    consistency: patterns.consistencyScore,
+                    preferredDifficulty: patterns.preferredDifficulty
+                }
+            }
+        };
+        
+        // Save to generated decks
+        this.saveNewGeneratedDeck(newDeck);
+        
+        console.log('✨ AI Generated new personalized deck:', newDeck.name);
+        
+        // Show notification to user
+        this.showAIGenerationNotification(newDeck);
+    }
+    
+    createDeckConfig(patterns, profile, generationType) {
+        const configs = {
+            'weakness-reinforcement': {
+                name: `${patterns.knowledgeGaps[0]?.subject || 'Focus'} - Targeted Practice`,
+                subject: patterns.knowledgeGaps[0]?.subject || 'General',
+                difficulty: 'Beginner', // Start easier for weak areas
+                confidence: 0.95,
+                reasonTitle: 'Weakness Detected',
+                reasonDescription: `AI identified struggles in ${patterns.knowledgeGaps[0]?.subject}. These cards focus on foundational concepts.`,
+                description: 'Personalized practice targeting your challenging areas.',
+                cardTypes: ['foundational', 'step-by-step', 'reinforcement']
+            },
+            'plateau-breaker': {
+                name: 'Challenge Booster - Break Through!',
+                subject: Object.keys(profile.preferences.favoriteSubjects)[0] || 'Mixed',
+                difficulty: 'Advanced',
+                confidence: 0.88,
+                reasonTitle: 'Performance Plateau',
+                reasonDescription: 'AI detected stagnation. These varied challenges will reignite your learning momentum.',
+                description: 'Diverse, engaging content to overcome learning plateaus.',
+                cardTypes: ['challenge', 'creative', 'application']
+            },
+            'advancement': {
+                name: `Advanced ${patterns.knowledgeGaps.length > 0 ? Object.keys(profile.strengths)[0] : 'Concepts'}`,
+                subject: Object.keys(profile.strengths)[0] || 'General',
+                difficulty: 'Advanced',
+                confidence: 0.92,
+                reasonTitle: 'Ready to Advance',
+                reasonDescription: `Excellent progress in ${Object.keys(profile.strengths)[0]}! Time for more sophisticated challenges.`,
+                description: 'Advanced concepts building on your demonstrated strengths.',
+                cardTypes: ['advanced', 'synthesis', 'expert-level']
+            },
+            'consistency-reward': {
+                name: 'Consistency Champion - Special Edition',
+                subject: 'Mixed',
+                difficulty: patterns.preferredDifficulty,
+                confidence: 0.90,
+                reasonTitle: 'Consistency Rewarded',
+                reasonDescription: `Your ${(patterns.consistencyScore * 100).toFixed(0)}% consistency deserves special content!`,
+                description: 'Curated premium content celebrating your dedication.',
+                cardTypes: ['premium', 'comprehensive', 'achievement']
+            },
+            'onboarding-welcome': {
+                name: `Welcome to ${patterns.knowledgeGaps[0]?.subject || 'Learning'}!`,
+                subject: Object.keys(profile.preferences.favoriteSubjects)[0] || 'General',
+                difficulty: patterns.preferredDifficulty,
+                confidence: 0.95,
+                reasonTitle: 'Welcome Gift',
+                reasonDescription: 'A personalized starter deck created just for you based on your preferences!',
+                description: 'Your first AI-generated deck, tailored to your interests and confidence level.',
+                cardTypes: ['foundational', 'welcome', 'comprehensive']
+            }
+        };
+        
+        return configs[generationType] || configs['consistency-reward'];
+    }
+    
+    generateSmartCards(deckConfig, patterns, profile) {
+        const cardTemplates = this.getCardTemplateLibrary();
+        const subjectTemplates = cardTemplates[deckConfig.subject.toLowerCase()] || cardTemplates['general'];
+        const difficultyLevel = this.getDifficultyMultiplier(deckConfig.difficulty);
+        
+        const generatedCards = [];
+        const targetCardCount = Math.min(12, Math.max(6, Math.floor(patterns.sessionCount / 2)));
+        
+        // Select appropriate templates based on card types
+        const selectedTemplates = deckConfig.cardTypes.flatMap(type => 
+            subjectTemplates.filter(template => template.types.includes(type))
+        );
+        
+        // Generate cards with personalization
+        for (let i = 0; i < targetCardCount && i < selectedTemplates.length * 2; i++) {
+            const template = selectedTemplates[i % selectedTemplates.length];
+            const personalizedCard = this.personalizeCard(template, patterns, profile, difficultyLevel);
+            
+            if (personalizedCard) {
+                generatedCards.push({
+                    ...personalizedCard,
+                    type: 'standard',
+                    aiGenerated: true,
+                    confidence: template.confidence * deckConfig.confidence,
+                    personalizedFor: {
+                        accuracy: patterns.currentAccuracy,
+                        weakness: patterns.knowledgeGaps[0]?.subject || null
+                    }
+                });
+            }
+        }
+        
+        return generatedCards;
+    }
+    
+    getCardTemplateLibrary() {
+        return {
+            math: [
+                {
+                    types: ['foundational', 'reinforcement'],
+                    template: 'Calculate: <strong>{operation}</strong> = ?',
+                    backTemplate: '<strong>{answer}</strong><br><em>Method: {method}</em><br>{tip}',
+                    confidence: 0.9,
+                    variants: [
+                        { operation: '7 × 9', answer: '63', method: '7 × 9 = 7 × (10 - 1) = 70 - 7 = 63', tip: '📝 Break down into easier calculations' },
+                        { operation: '15²', answer: '225', method: '15² = (10 + 5)² = 100 + 100 + 25 = 225', tip: '🔢 Use (a+b)² = a² + 2ab + b²' },
+                        { operation: '84 ÷ 12', answer: '7', method: '84 ÷ 12 = 84 ÷ 12 = 7', tip: '✅ Check: 7 × 12 = 84' }
+                    ]
+                },
+                {
+                    types: ['challenge', 'advanced'],
+                    template: 'Solve: <strong>{equation}</strong>',
+                    backTemplate: '<strong>{solution}</strong><br><em>Steps:</em><br>{steps}<br>✅ <strong>Check:</strong> {verification}',
+                    confidence: 0.85,
+                    variants: [
+                        { 
+                            equation: '3x + 7 = 22', 
+                            solution: 'x = 5',
+                            steps: '1) 3x + 7 = 22<br>2) 3x = 22 - 7 = 15<br>3) x = 15 ÷ 3 = 5',
+                            verification: '3(5) + 7 = 15 + 7 = 22 ✓'
+                        }
+                    ]
+                }
+            ],
+            science: [
+                {
+                    types: ['foundational', 'reinforcement'],
+                    template: 'What is <strong>{concept}</strong>?',
+                    backTemplate: '<strong>{answer}</strong><br><em>{explanation}</em><br>{funfact}',
+                    confidence: 0.88,
+                    variants: [
+                        { 
+                            concept: 'photosynthesis',
+                            answer: 'Process where plants convert CO₂ + H₂O + sunlight → glucose + O₂',
+                            explanation: 'Plants use chlorophyll to capture light energy and create food',
+                            funfact: '🌱 Plants produce the oxygen we breathe!'
+                        },
+                        {
+                            concept: 'gravity',
+                            answer: 'Force that attracts objects with mass toward each other',
+                            explanation: 'Discovered by Newton, explains why things fall down',
+                            funfact: '🍎 Earth\'s gravity is 9.8 m/s²'
+                        }
+                    ]
+                },
+                {
+                    types: ['advanced', 'expert-level'],
+                    template: 'Explain the relationship between <strong>{concept1}</strong> and <strong>{concept2}</strong>',
+                    backTemplate: '<strong>{relationship}</strong><br><em>Details:</em><br>{details}<br>🔬 <strong>Application:</strong> {application}',
+                    confidence: 0.82,
+                    variants: [
+                        {
+                            concept1: 'DNA',
+                            concept2: 'protein synthesis',
+                            relationship: 'DNA contains instructions for making proteins',
+                            details: 'DNA → mRNA → ribosomes → amino acid chain → protein folding',
+                            application: 'Understanding genetic diseases and treatments'
+                        }
+                    ]
+                }
+            ],
+            spanish: [
+                {
+                    types: ['foundational', 'reinforcement'],
+                    template: 'How do you say <strong>"{word}"</strong> in Spanish?',
+                    backTemplate: '<strong>{translation}</strong><br><em>Pronunciation: {pronunciation}</em><br>{context}',
+                    confidence: 0.92,
+                    variants: [
+                        { word: 'friend', translation: 'amigo/amiga', pronunciation: 'ah-MEE-go/ah-MEE-gah', context: '👫 Use "amigo" for male, "amiga" for female' },
+                        { word: 'library', translation: 'biblioteca', pronunciation: 'bee-blee-oh-TEH-kah', context: '📚 From Latin "bibliotheca"' }
+                    ]
+                },
+                {
+                    types: ['challenge', 'application'],
+                    template: 'Conjugate <strong>{verb}</strong> in {tense} for <strong>{pronoun}</strong>',
+                    backTemplate: '<strong>{conjugation}</strong><br><em>Full conjugation:</em><br>{fullConjugation}<br>💡 <strong>Example:</strong> {example}',
+                    confidence: 0.78,
+                    variants: [
+                        {
+                            verb: 'hablar (to speak)',
+                            tense: 'present tense',
+                            pronoun: 'yo (I)',
+                            conjugation: 'hablo',
+                            fullConjugation: 'yo hablo, tú hablas, él/ella habla, nosotros hablamos, vosotros habláis, ellos hablan',
+                            example: 'Yo hablo español (I speak Spanish)'
+                        }
+                    ]
+                }
+            ],
+            general: [
+                {
+                    types: ['premium', 'comprehensive'],
+                    template: 'Challenge: <strong>{challenge}</strong>',
+                    backTemplate: '<strong>{solution}</strong><br><em>Strategy:</em><br>{strategy}<br>🏆 <strong>Why this matters:</strong> {importance}',
+                    confidence: 0.85,
+                    variants: [
+                        {
+                            challenge: 'Name 3 learning strategies that improve retention',
+                            solution: '1) Spaced repetition 2) Active recall 3) Elaborative interrogation',
+                            strategy: 'Focus on techniques backed by cognitive science research',
+                            importance: 'These methods can double your learning efficiency'
+                        }
+                    ]
+                }
+            ]
+        };
+    }
+    
+    personalizeCard(template, patterns, profile, difficultyLevel) {
+        const variants = template.variants;
+        if (!variants || variants.length === 0) return null;
+        
+        // Select variant based on user's current performance level
+        let variantIndex = 0;
+        if (patterns.currentAccuracy > 80) {
+            // High performers get more challenging variants
+            variantIndex = Math.min(variants.length - 1, Math.floor(variants.length * 0.7));
+        } else if (patterns.currentAccuracy < 60) {
+            // Struggling users get foundational variants
+            variantIndex = 0;
+        } else {
+            // Mid-level performers get random selection
+            variantIndex = Math.floor(Math.random() * variants.length);
+        }
+        
+        const selectedVariant = variants[variantIndex];
+        
+        // Replace template placeholders with variant data
+        let front = template.template;
+        let back = template.backTemplate;
+        
+        Object.entries(selectedVariant).forEach(([key, value]) => {
+            const placeholder = `{${key}}`;
+            front = front.replace(new RegExp(placeholder, 'g'), value);
+            back = back.replace(new RegExp(placeholder, 'g'), value);
+        });
+        
+        // Add personalization based on user patterns
+        if (patterns.consistencyScore > 0.8) {
+            back += '<br>🌟 <em>Great consistency! Keep it up!</em>';
+        } else if (patterns.improvementTrend > 10) {
+            back += '<br>📈 <em>You\'re improving fast!</em>';
+        }
+        
+        return { front, back };
+    }
+    
+    getDifficultyMultiplier(difficulty) {
+        const multipliers = {
+            'Beginner': 0.7,
+            'Intermediate': 1.0,
+            'Advanced': 1.3,
+            'Expert': 1.6
+        };
+        return multipliers[difficulty] || 1.0;
+    }
+    
+    saveNewGeneratedDeck(newDeck) {
+        const existingDecks = this.loadGeneratedDecks();
+        
+        // Limit to 10 generated decks to prevent storage overflow
+        if (existingDecks.length >= 10) {
+            // Remove oldest deck
+            existingDecks.sort((a, b) => a.generatedAt - b.generatedAt);
+            existingDecks.shift();
+        }
+        
+        existingDecks.push(newDeck);
+        this.saveGeneratedDecks(existingDecks);
+        
+        // Update display
+        this.renderGeneratedDecks(existingDecks);
+        
+        console.log('💾 Saved new AI-generated deck:', newDeck.name);
+    }
+    
+    showAIGenerationNotification(deck) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = 'ai-notification';
+        notification.innerHTML = `
+            <div class="ai-notification-content">
+                <div class="ai-notification-header">
+                    <span class="ai-badge">🤖 AI Generated</span>
+                    <button class="ai-notification-close" onclick="this.parentElement.parentElement.parentElement.remove()">✕</button>
+                </div>
+                <h4>${deck.name}</h4>
+                <p>${deck.reason.description}</p>
+                <div class="ai-notification-actions">
+                    <button class="btn btn-ai btn-small" onclick="viewGeneratedDeck('${deck.id}'); this.parentElement.parentElement.parentElement.remove();">
+                        📖 Study Now
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="this.parentElement.parentElement.parentElement.remove();">
+                        Later
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Add styles
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            z-index: 10000;
+            max-width: 350px;
+            animation: slideIn 0.5s ease-out;
+        `;
+        
+        // Add animation keyframe if not exists
+        if (!document.getElementById('ai-notification-styles')) {
+            const style = document.createElement('style');
+            style.id = 'ai-notification-styles';
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                .ai-notification-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 10px;
+                }
+                .ai-badge {
+                    background: rgba(255,255,255,0.2);
+                    padding: 4px 8px;
+                    border-radius: 12px;
+                    font-size: 0.8em;
+                    font-weight: bold;
+                }
+                .ai-notification-close {
+                    background: none;
+                    border: none;
+                    color: white;
+                    font-size: 18px;
+                    cursor: pointer;
+                    padding: 0;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .ai-notification-close:hover {
+                    background: rgba(255,255,255,0.2);
+                }
+                .ai-notification-content h4 {
+                    margin: 10px 0;
+                    font-size: 1.1em;
+                }
+                .ai-notification-content p {
+                    margin: 10px 0;
+                    opacity: 0.9;
+                    line-height: 1.4;
+                }
+                .ai-notification-actions {
+                    display: flex;
+                    gap: 10px;
+                    margin-top: 15px;
+                }
+                .ai-notification-actions .btn {
+                    flex: 1;
+                    padding: 8px 12px;
+                    font-size: 0.85em;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 8 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.style.animation = 'slideIn 0.5s ease-out reverse';
+                setTimeout(() => notification.remove(), 500);
+            }
+        }, 8000);
+    }
+    
+    startBackgroundAIMonitoring() {
+        // Check for AI opportunities every 5 minutes during active use
+        setInterval(() => {
+            const profile = JSON.parse(localStorage.getItem('ai-learning-profile') || '{}');
+            if (profile.preferences && profile.preferences.accuracyTrends.length >= 5) {
+                // Only run if user is actively using the app (last activity within 10 minutes)
+                const lastActivity = parseInt(localStorage.getItem('last-user-activity') || '0');
+                const timeSinceActivity = Date.now() - lastActivity;
+                
+                if (timeSinceActivity < 10 * 60 * 1000) { // 10 minutes
+                    this.checkForAIOpportunities(profile);
+                }
+            }
+        }, 5 * 60 * 1000); // 5 minutes
+        
+        // Track user activity
+        this.trackUserActivity();
+    }
+    
+    trackUserActivity() {
+        const updateActivity = () => {
+            localStorage.setItem('last-user-activity', Date.now().toString());
+        };
+        
+        // Track various user interactions
+        ['click', 'keypress', 'scroll', 'mousemove'].forEach(event => {
+            document.addEventListener(event, updateActivity, { passive: true });
+        });
+        
+        updateActivity(); // Initial activity
+    }
+    
+    checkForAIOpportunities(profile) {
+        const patterns = this.analyzeUserPatterns(profile);
+        
+        // Check if user would benefit from new content
+        const recommendation = this.shouldGenerateNewContent(patterns, profile);
+        
+        if (recommendation.recommend && recommendation.type !== 'consistency-reward') {
+            console.log('🎯 Background AI detected opportunity:', recommendation.reason);
+            
+            // Generate content in background (no immediate notification)
+            setTimeout(() => {
+                this.generatePersonalizedDeck(patterns, profile, recommendation.type);
+            }, 1000);
+        }
+    }
+    
+    // =================== END AI LEARNING SYSTEM ===================
+    
+    // =================== ONBOARDING SYSTEM ===================
+    
+    isFirstTimeUser() {
+        const hasVisited = localStorage.getItem('flashcards-first-visit');
+        const hasProfile = localStorage.getItem('ai-learning-profile');
+        return !hasVisited || !hasProfile;
+    }
+    
+    showOnboarding() {
+        const modal = document.getElementById('onboarding-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+            this.initializeOnboarding();
+        }
+    }
+    
+    initializeOnboarding() {
+        this.onboardingData = {
+            subjects: [],
+            confidence: {},
+            preferences: {
+                sessionLength: 15,
+                studyTime: null,
+                learningStyle: null,
+                goal: null
+            }
+        };
+        
+        this.currentStep = 1;
+        this.totalSteps = 5;
+        
+        this.setupOnboardingListeners();
+        this.updateStepIndicators();
+    }
+    
+    setupOnboardingListeners() {
+        // Subject selection
+        document.querySelectorAll('.subject-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const subject = card.dataset.subject;
+                this.toggleSubjectSelection(card, subject);
+            });
+        });
+        
+        // Session length selection
+        document.querySelectorAll('.session-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.session-option').forEach(o => o.classList.remove('active'));
+                option.classList.add('active');
+                this.onboardingData.preferences.sessionLength = parseInt(option.dataset.minutes);
+            });
+        });
+        
+        // Study time selection
+        document.querySelectorAll('.time-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.time-option').forEach(o => o.classList.remove('active'));
+                option.classList.add('active');
+                this.onboardingData.preferences.studyTime = option.dataset.time;
+            });
+        });
+        
+        // Learning style selection
+        document.querySelectorAll('.style-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.style-option').forEach(o => o.classList.remove('active'));
+                option.classList.add('active');
+                this.onboardingData.preferences.learningStyle = option.dataset.style;
+            });
+        });
+        
+        // Goal selection
+        document.querySelectorAll('.goal-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.goal-option').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                this.onboardingData.preferences.goal = option.dataset.goal;
+            });
+        });
+        
+        // Navigation buttons
+        const nextBtn = document.getElementById('next-step');
+        const prevBtn = document.getElementById('prev-step');
+        const finishBtn = document.getElementById('finish-onboarding');
+        
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => this.nextStep());
+        }
+        
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => this.prevStep());
+        }
+        
+        if (finishBtn) {
+            finishBtn.addEventListener('click', () => this.completeOnboarding());
+        }
+    }
+    
+    toggleSubjectSelection(card, subject) {
+        if (card.classList.contains('selected')) {
+            card.classList.remove('selected');
+            this.onboardingData.subjects = this.onboardingData.subjects.filter(s => s !== subject);
+        } else {
+            card.classList.add('selected');
+            this.onboardingData.subjects.push(subject);
+        }
+    }
+    
+    nextStep() {
+        if (!this.validateCurrentStep()) {
+            return;
+        }
+        
+        if (this.currentStep === 1) {
+            this.generateConfidenceStep();
+        } else if (this.currentStep === 4) {
+            this.generateAIPreview();
+        }
+        
+        if (this.currentStep < this.totalSteps) {
+            this.showStep(this.currentStep + 1);
+        }
+    }
+    
+    prevStep() {
+        if (this.currentStep > 1) {
+            this.showStep(this.currentStep - 1);
+        }
+    }
+    
+    showStep(stepNumber) {
+        // Hide current step
+        const currentStepEl = document.getElementById(`step-${this.currentStep}`);
+        if (currentStepEl) currentStepEl.style.display = 'none';
+        
+        // Show new step
+        const newStepEl = document.getElementById(stepNumber === 5 ? 'step-final' : `step-${stepNumber}`);
+        if (newStepEl) newStepEl.style.display = 'block';
+        
+        this.currentStep = stepNumber;
+        this.updateStepIndicators();
+        this.updateNavigationButtons();
+    }
+    
+    updateStepIndicators() {
+        const indicators = document.querySelectorAll('.step-dot');
+        indicators.forEach((dot, index) => {
+            dot.classList.remove('active', 'completed');
+            if (index + 1 < this.currentStep) {
+                dot.classList.add('completed');
+            } else if (index + 1 === this.currentStep) {
+                dot.classList.add('active');
+            }
+        });
+    }
+    
+    updateNavigationButtons() {
+        const nextBtn = document.getElementById('next-step');
+        const prevBtn = document.getElementById('prev-step');
+        const finishBtn = document.getElementById('finish-onboarding');
+        
+        if (prevBtn) {
+            prevBtn.style.display = this.currentStep > 1 ? 'inline-block' : 'none';
+        }
+        
+        if (nextBtn && finishBtn) {
+            if (this.currentStep === this.totalSteps) {
+                nextBtn.style.display = 'none';
+                finishBtn.style.display = 'inline-block';
+            } else {
+                nextBtn.style.display = 'inline-block';
+                finishBtn.style.display = 'none';
+            }
+        }
+    }
+    
+    validateCurrentStep() {
+        switch (this.currentStep) {
+            case 1:
+                if (this.onboardingData.subjects.length === 0) {
+                    alert('Please select at least one subject that interests you.');
+                    return false;
+                }
+                return true;
+            case 2:
+                const hasAllConfidence = this.onboardingData.subjects.every(
+                    subject => this.onboardingData.confidence[subject] !== undefined
+                );
+                if (!hasAllConfidence) {
+                    alert('Please set your confidence level for all selected subjects.');
+                    return false;
+                }
+                return true;
+            case 3:
+                if (!this.onboardingData.preferences.studyTime || !this.onboardingData.preferences.learningStyle) {
+                    alert('Please complete all preference selections.');
+                    return false;
+                }
+                return true;
+            case 4:
+                if (!this.onboardingData.preferences.goal) {
+                    alert('Please select your main learning goal.');
+                    return false;
+                }
+                return true;
+            default:
+                return true;
+        }
+    }
+    
+    generateConfidenceStep() {
+        const container = document.getElementById('confidence-subjects');
+        if (!container) return;
+        
+        container.innerHTML = this.onboardingData.subjects.map(subject => `
+            <div class="confidence-subject">
+                <h4>
+                    ${this.getSubjectIcon(subject)} ${subject}
+                </h4>
+                <div class="confidence-levels">
+                    <button type="button" class="confidence-level" data-subject="${subject}" data-level="1">
+                        😰 Beginner<br><small>Just starting out</small>
+                    </button>
+                    <button type="button" class="confidence-level" data-subject="${subject}" data-level="2">
+                        🤔 Some Knowledge<br><small>Know the basics</small>
+                    </button>
+                    <button type="button" class="confidence-level" data-subject="${subject}" data-level="3">
+                        😊 Confident<br><small>Pretty comfortable</small>
+                    </button>
+                    <button type="button" class="confidence-level" data-subject="${subject}" data-level="4">
+                        🎓 Advanced<br><small>Very knowledgeable</small>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+        
+        // Add event listeners for confidence levels
+        container.querySelectorAll('.confidence-level').forEach(level => {
+            level.addEventListener('click', () => {
+                const subject = level.dataset.subject;
+                const confidence = parseInt(level.dataset.level);
+                
+                // Remove selection from siblings
+                const siblings = container.querySelectorAll(`[data-subject="${subject}"]`);
+                siblings.forEach(s => s.classList.remove('selected'));
+                
+                // Select this level
+                level.classList.add('selected');
+                this.onboardingData.confidence[subject] = confidence;
+            });
+        });
+    }
+    
+    getSubjectIcon(subject) {
+        const icons = {
+            'Mathematics': '🔢',
+            'Science': '🔬',
+            'Languages': '🗣️',
+            'History': '📜',
+            'Literature': '📖',
+            'Computer Science': '💻',
+            'Art': '🎨',
+            'Music': '🎵'
+        };
+        return icons[subject] || '📚';
+    }
+    
+    generateAIPreview() {
+        const container = document.getElementById('ai-preview');
+        if (!container) return;
+        
+        const insights = this.generatePersonalizedInsights();
+        
+        container.innerHTML = `
+            <h4>🤖 Your Personalized AI Profile</h4>
+            ${insights.map(insight => `
+                <div class="ai-preview-item">
+                    <span>${insight.icon}</span>
+                    <span>${insight.text}</span>
+                </div>
+            `).join('')}
+        `;
+    }
+    
+    generatePersonalizedInsights() {
+        const insights = [];
+        
+        // Subject focus
+        if (this.onboardingData.subjects.length > 0) {
+            insights.push({
+                icon: '🎯',
+                text: `Will focus on ${this.onboardingData.subjects.slice(0, 2).join(' and ')}${this.onboardingData.subjects.length > 2 ? ' and more' : ''}`
+            });
+        }
+        
+        // Difficulty adaptation
+        const avgConfidence = Object.values(this.onboardingData.confidence).reduce((a, b) => a + b, 0) / Object.values(this.onboardingData.confidence).length;
+        const difficultyLevel = avgConfidence <= 2 ? 'beginner-friendly' : avgConfidence >= 3.5 ? 'advanced' : 'intermediate';
+        insights.push({
+            icon: '📊',
+            text: `Starting with ${difficultyLevel} content based on your confidence levels`
+        });
+        
+        // Session timing
+        insights.push({
+            icon: '⏰',
+            text: `Optimized for ${this.onboardingData.preferences.sessionLength}-minute study sessions`
+        });
+        
+        // Learning style
+        if (this.onboardingData.preferences.learningStyle) {
+            const styleDescriptions = {
+                visual: 'rich visual content with diagrams and images',
+                auditory: 'content with pronunciation guides and audio cues',
+                kinesthetic: 'interactive and hands-on learning materials',
+                reading: 'comprehensive text-based explanations'
+            };
+            insights.push({
+                icon: '🧠',
+                text: `Tailored for ${styleDescriptions[this.onboardingData.preferences.learningStyle]}`
+            });
+        }
+        
+        // Goal-based approach
+        if (this.onboardingData.preferences.goal) {
+            const goalDescriptions = {
+                'exam-prep': 'Structured practice with test-taking strategies',
+                'skill-building': 'Progressive skill development with real-world applications',
+                'review': 'Spaced repetition for knowledge retention',
+                'curiosity': 'Diverse, engaging content to satisfy your curiosity'
+            };
+            insights.push({
+                icon: '🚀',
+                text: goalDescriptions[this.onboardingData.preferences.goal]
+            });
+        }
+        
+        return insights;
+    }
+    
+    completeOnboarding() {
+        // Create AI learning profile from onboarding data
+        const aiProfile = this.createInitialAIProfile();
+        
+        // Save profile and mark as visited
+        localStorage.setItem('ai-learning-profile', JSON.stringify(aiProfile));
+        localStorage.setItem('flashcards-first-visit', Date.now().toString());
+        localStorage.setItem('onboarding-completed', JSON.stringify(this.onboardingData));
+        
+        // Generate initial personalized decks based on preferences
+        this.generateInitialPersonalizedDecks(aiProfile);
+        
+        // Close modal
+        const modal = document.getElementById('onboarding-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+        
+        // Load and render generated decks
+        const generatedDecks = this.loadGeneratedDecks();
+        this.renderGeneratedDecks(generatedDecks);
+        
+        // Show success message
+        this.showWelcomeMessage();
+        
+        console.log('🎉 Onboarding completed!', this.onboardingData);
+    }
+    
+    createInitialAIProfile() {
+        return {
+            preferences: {
+                favoriteSubjects: this.onboardingData.subjects.reduce((acc, subject) => {
+                    acc[subject] = 1; // Initial interest
+                    return acc;
+                }, {}),
+                difficultyPreference: {},
+                studyTimePatterns: {
+                    preferredTime: this.onboardingData.preferences.studyTime,
+                    sessionLength: this.onboardingData.preferences.sessionLength
+                },
+                accuracyTrends: [],
+                learningStyle: this.onboardingData.preferences.learningStyle,
+                goal: this.onboardingData.preferences.goal
+            },
+            confidence: this.onboardingData.confidence,
+            weaknesses: {},
+            strengths: {},
+            studyHabits: {
+                preferredSessionLength: this.onboardingData.preferences.sessionLength,
+                bestPerformanceTime: this.mapStudyTimeToHour(this.onboardingData.preferences.studyTime),
+                consistencyScore: 0
+            },
+            lastUpdated: Date.now(),
+            onboardingCompleted: true
+        };
+    }
+    
+    mapStudyTimeToHour(timePreference) {
+        const mapping = {
+            'morning': 9,
+            'afternoon': 15,
+            'evening': 19,
+            'night': 22
+        };
+        return mapping[timePreference] || 12;
+    }
+    
+    generateInitialPersonalizedDecks(profile) {
+        // Generate a starter deck for the user's most confident subject
+        const mostConfidentSubject = Object.entries(this.onboardingData.confidence)
+            .sort(([,a], [,b]) => b - a)[0];
+        
+        if (mostConfidentSubject) {
+            const [subject, confidence] = mostConfidentSubject;
+            const patterns = {
+                currentAccuracy: confidence * 20 + 20, // Convert 1-4 to 40-100 range
+                knowledgeGaps: [],
+                preferredDifficulty: confidence >= 3 ? 'Advanced' : confidence >= 2 ? 'Intermediate' : 'Beginner',
+                sessionCount: 1,
+                consistencyScore: 1.0,
+                improvementTrend: 0
+            };
+            
+            setTimeout(() => {
+                this.generatePersonalizedDeck(patterns, profile, 'onboarding-welcome');
+            }, 2000);
+        }
+    }
+    
+    showWelcomeMessage() {
+        const notification = document.createElement('div');
+        notification.className = 'welcome-notification';
+        notification.innerHTML = `
+            <div class="welcome-content">
+                <h3>🎉 Welcome to FlashCards AI!</h3>
+                <p>Your personalized learning journey begins now. I'm already creating your first custom deck!</p>
+                <button onclick="this.parentElement.parentElement.remove()" class="btn btn-ai">Get Started!</button>
+            </div>
+        `;
+        
+        notification.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            z-index: 10001;
+            text-align: center;
+            max-width: 400px;
+            animation: bounceIn 0.6s ease-out;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+    
+    // =================== END ONBOARDING SYSTEM ===================
 
     getCardLearningData(deckId, cardIndex) {
         const cardId = `${deckId}-${cardIndex}`;
@@ -2130,9 +3370,13 @@ class FlashCardsApp {
     
     renderGeneratedDecks(generatedDecks) {
         const grid = document.getElementById('generated-decks-grid');
+        if (!grid) {
+            console.error('Generated decks grid not found');
+            return;
+        }
         
         grid.innerHTML = generatedDecks.map(deck => `
-            <div class="generated-deck-card" onclick="app.startStudy('${deck.id}', true)">
+            <div class="generated-deck-card">
                 <div class="generated-deck-header">
                     <div class="generated-deck-name">
                         ${this.escapeHtml(deck.name)}
@@ -2141,30 +3385,35 @@ class FlashCardsApp {
                     <div class="generated-deck-subject">${this.escapeHtml(deck.subject)}</div>
                 </div>
                 
+                ${deck.reason ? `
                 <div class="generation-reason">
                     <div class="reason-title">${deck.reason.title}</div>
                     <div class="reason-description">${deck.reason.description}</div>
                 </div>
+                ` : ''}
                 
                 <div class="generated-deck-info">
                     <span>${deck.cards.length} cards</span>
+                    <span class="difficulty-badge ${deck.difficulty.toLowerCase()}">${deck.difficulty}</span>
+                    ${deck.confidence ? `
                     <div class="confidence-score">
                         <span>Match: ${Math.round(deck.confidence * 100)}%</span>
                         <div class="confidence-bar">
                             <div class="confidence-fill" style="width: ${deck.confidence * 100}%"></div>
                         </div>
                     </div>
+                    ` : ''}
                 </div>
                 
                 <div class="generated-deck-buttons">
-                    <button class="btn btn-ai btn-small" onclick="event.stopPropagation(); window.flashCardsApp ? window.flashCardsApp.startStudy('${deck.id}', true) : console.log('App not ready')" title="Study this generated deck">
+                    <button class="btn btn-ai btn-small" onclick="event.stopPropagation(); viewGeneratedDeck('${deck.id}')" title="Study this generated deck">
                         ▶️ Study
                     </button>
-                    <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); window.flashCardsApp ? window.flashCardsApp.saveGeneratedDeck('${deck.id}') : console.log('App not ready')" title="Add to your decks">
-                        💾 Save
+                    <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); adoptDeck('${deck.id}')" title="Add to your personal decks">
+                        💾 Adopt
                     </button>
-                    <button class="btn btn-info btn-small" onclick="event.stopPropagation(); window.flashCardsApp ? window.flashCardsApp.previewGeneratedDeck('${deck.id}') : console.log('App not ready')" title="Preview cards">
-                        👁️ Preview
+                    <button class="btn btn-danger btn-small" onclick="event.stopPropagation(); deleteGeneratedDeck('${deck.id}')" title="Remove this deck">
+                        �️ Delete
                     </button>
                 </div>
             </div>
