@@ -6,6 +6,7 @@
     <title>FlashCards - Study Smart</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="app">
@@ -17,6 +18,7 @@
                     <button class="nav-btn active" data-view="home">Home</button>
                     <button class="nav-btn" data-view="create">Create Deck</button>
                     <button class="nav-btn" data-view="study">Study</button>
+                    <button class="nav-btn" data-view="stats">📊 Stats</button>
                 </nav>
             </div>
         </header>
@@ -51,6 +53,34 @@
                             <h3>No decks yet</h3>
                             <p>Create your first deck to get started!</p>
                             <button class="btn btn-primary" onclick="showView('create')">Create Deck</button>
+                        </div>
+                    </div>
+
+                    <!-- AI Generated Decks Section -->
+                    <div class="generated-decks-section" id="generated-decks-section" style="display: none;">
+                        <div class="section-header">
+                            <div>
+                                <h3>🤖 AI-Generated Decks</h3>
+                                <p class="section-subtitle">Personalized decks created just for you based on your study patterns</p>
+                            </div>
+                            <div class="header-buttons">
+                                <button class="btn btn-secondary" onclick="app.regenerateDecks()" id="regenerate-btn">
+                                    🔄 Regenerate
+                                </button>
+                                <button class="btn btn-info" onclick="app.showGenerationInsights()" title="How we generate your decks">
+                                    ❓ How it works
+                                </button>
+                            </div>
+                        </div>
+                        <div class="generation-status" id="generation-status">
+                            <div class="status-icon">🧠</div>
+                            <div class="status-content">
+                                <div class="status-title">Analyzing your learning patterns...</div>
+                                <div class="status-description">I'm studying how you learn to create perfect decks for you!</div>
+                            </div>
+                        </div>
+                        <div class="generated-decks-grid" id="generated-decks-grid">
+                            <!-- Generated decks will be populated here -->
                         </div>
                     </div>
                 </div>
@@ -231,12 +261,197 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Stats View -->
+                <div class="view" id="stats-view">
+                    <div class="stats-header">
+                        <h2>📊 Learning Analytics</h2>
+                        <div class="stats-controls">
+                            <select id="stats-time-range" class="stats-select">
+                                <option value="7">Last 7 days</option>
+                                <option value="30" selected>Last 30 days</option>
+                                <option value="90">Last 90 days</option>
+                                <option value="all">All time</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <!-- Overview Cards -->
+                        <div class="stats-overview">
+                            <div class="stat-card">
+                                <div class="stat-icon">🎯</div>
+                                <div class="stat-content">
+                                    <div class="stat-value" id="overall-accuracy-stat">0%</div>
+                                    <div class="stat-label">Overall Accuracy</div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card">
+                                <div class="stat-icon">📚</div>
+                                <div class="stat-content">
+                                    <div class="stat-value" id="total-cards-studied">0</div>
+                                    <div class="stat-label">Cards Studied</div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card">
+                                <div class="stat-icon">⏱️</div>
+                                <div class="stat-content">
+                                    <div class="stat-value" id="avg-response-time-stat">0s</div>
+                                    <div class="stat-label">Avg Response Time</div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card">
+                                <div class="stat-icon">🔥</div>
+                                <div class="stat-content">
+                                    <div class="stat-value" id="study-streak">0</div>
+                                    <div class="stat-label">Study Streak (days)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Charts Section -->
+                        <div class="charts-section">
+                            <!-- Accuracy Trend Chart -->
+                            <div class="chart-container">
+                                <h3>📈 Accuracy Trend</h3>
+                                <canvas id="accuracy-chart"></canvas>
+                            </div>
+
+                            <!-- Study Activity Chart -->
+                            <div class="chart-container">
+                                <h3>📅 Study Activity</h3>
+                                <canvas id="activity-chart"></canvas>
+                            </div>
+
+                            <!-- Difficulty Distribution -->
+                            <div class="chart-container">
+                                <h3>🎚️ Card Difficulty Distribution</h3>
+                                <canvas id="difficulty-chart"></canvas>
+                            </div>
+
+                            <!-- Response Time Trend -->
+                            <div class="chart-container">
+                                <h3>⚡ Response Time Trend</h3>
+                                <canvas id="response-time-chart"></canvas>
+                            </div>
+
+                            <!-- Deck Performance -->
+                            <div class="chart-container">
+                                <h3>🏆 Deck Performance Comparison</h3>
+                                <canvas id="deck-performance-chart"></canvas>
+                            </div>
+
+                            <!-- Learning Progress Heatmap -->
+                            <div class="chart-container">
+                                <h3>🔥 Study Heatmap</h3>
+                                <div id="heatmap-container"></div>
+                            </div>
+                        </div>
+
+                        <!-- Insights Section -->
+                        <div class="insights-section">
+                            <h3>🧠 Learning Insights</h3>
+                            <div id="learning-insights-list">
+                                <!-- Insights will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
     <!-- Hidden file input for importing decks -->
     <input type="file" id="import-file-input" accept=".flashdeck" style="display: none;">
+
+    <!-- AI Generation Insights Modal -->
+    <div class="modal-overlay" id="generation-insights-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🤖 How AI Deck Generation Works</h3>
+                <button class="modal-close" onclick="app.closeGenerationInsights()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="ai-explanation">
+                    <div class="ai-step">
+                        <div class="step-icon">📊</div>
+                        <div class="step-content">
+                            <h4>Pattern Analysis</h4>
+                            <p>We analyze your study sessions, accuracy rates, response times, and preferred subjects to understand your learning style.</p>
+                        </div>
+                    </div>
+                    <div class="ai-step">
+                        <div class="step-icon">🧠</div>
+                        <div class="step-content">
+                            <h4>Smart Content Creation</h4>
+                            <p>Based on your patterns, we generate questions that match your difficulty level and focus on areas where you need practice.</p>
+                        </div>
+                    </div>
+                    <div class="ai-step">
+                        <div class="step-icon">🎯</div>
+                        <div class="step-content">
+                            <h4>Personalized Recommendations</h4>
+                            <p>Each generated deck is tailored to your learning goals, preferred subjects, and optimal challenge level.</p>
+                        </div>
+                    </div>
+                    <div class="ai-step">
+                        <div class="step-icon">🔄</div>
+                        <div class="step-content">
+                            <h4>Continuous Learning</h4>
+                            <p>The more you study, the smarter our recommendations become. We constantly adapt to your evolving needs.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="privacy-note">
+                    <strong>🔒 Privacy First:</strong> All analysis happens locally on your device. Your data never leaves your computer.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Learning Stats Modal -->
+    <div class="modal-overlay" id="stats-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="stats-deck-name">Deck Statistics</h3>
+                <button class="modal-close" onclick="app.closeStatsModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="stats-summary">
+                    <div class="stat-item">
+                        <span class="stat-label">Total Sessions:</span>
+                        <span class="stat-value" id="total-sessions">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Overall Accuracy:</span>
+                        <span class="stat-value" id="overall-accuracy">0%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Average Response Time:</span>
+                        <span class="stat-value" id="avg-response-time">0s</span>
+                    </div>
+                </div>
+                
+                <h4>Card Difficulty Analysis</h4>
+                <div class="difficulty-legend">
+                    <span class="difficulty easy">🟢 Easy</span>
+                    <span class="difficulty normal">🟡 Normal</span>
+                    <span class="difficulty hard">🔴 Hard</span>
+                </div>
+                
+                <div class="cards-stats" id="cards-stats">
+                    <!-- Card statistics will be populated here -->
+                </div>
+                
+                <div class="learning-insights" id="learning-insights">
+                    <!-- AI insights will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>

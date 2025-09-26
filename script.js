@@ -13,6 +13,13 @@ class FlashCardsApp {
         this.editingDeckId = null;
         this.currentTitleCardIndex = 0;
         
+        // Adaptive Learning System
+        this.learningData = this.loadLearningData();
+        this.sessionStartTime = Date.now();
+        
+        // Chart instances for cleanup
+        this.chartInstances = {};
+        
         this.init();
     }
 
@@ -47,6 +54,19 @@ class FlashCardsApp {
 
         // Add initial card when create view is shown
         this.addCard();
+
+        // Modal event listeners
+        document.getElementById('stats-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'stats-modal') {
+                this.closeStatsModal();
+            }
+        });
+        
+        document.getElementById('generation-insights-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'generation-insights-modal') {
+                this.closeGenerationInsights();
+            }
+        });
     }
 
     setupCustomizationListeners() {
@@ -94,6 +114,11 @@ class FlashCardsApp {
         } else if (viewName === 'create' && !this.isEditMode) {
             // Reset to create mode if not already in edit mode
             this.updateUIForEditMode(false);
+        } else if (viewName === 'stats') {
+            // Initialize stats page with a small delay to ensure DOM is ready
+            setTimeout(() => {
+                this.initializeStatsPage();
+            }, 100);
         }
     }
 
@@ -105,6 +130,139 @@ class FlashCardsApp {
 
     saveDecks() {
         localStorage.setItem('flashcards-decks', JSON.stringify(this.decks));
+    }
+
+    // Adaptive Learning System
+    loadLearningData() {
+        const saved = localStorage.getItem('flashcards-learning-data');
+        return saved ? JSON.parse(saved) : {};
+    }
+
+    saveLearningData() {
+        localStorage.setItem('flashcards-learning-data', JSON.stringify(this.learningData));
+    }
+
+    // Study Session Tracking
+    loadSessionData() {
+        const saved = localStorage.getItem('flashcards-sessions');
+        return saved ? JSON.parse(saved) : [];
+    }
+
+    saveSessionData(sessions) {
+        localStorage.setItem('flashcards-sessions', JSON.stringify(sessions));
+    }
+
+    recordStudySession(deckId, cardsStudied, correctAnswers, totalTime) {
+        const sessions = this.loadSessionData();
+        const session = {
+            id: Date.now().toString(),
+            deckId: deckId,
+            date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+            timestamp: Date.now(),
+            cardsStudied: cardsStudied,
+            correctAnswers: correctAnswers,
+            accuracy: cardsStudied > 0 ? Math.round((correctAnswers / cardsStudied) * 100) : 0,
+            totalTime: totalTime,
+            averageTimePerCard: cardsStudied > 0 ? Math.round(totalTime / cardsStudied) : 0
+        };
+        
+        sessions.push(session);
+        this.saveSessionData(sessions);
+    }
+
+    getCardLearningData(deckId, cardIndex) {
+        const cardId = `${deckId}-${cardIndex}`;
+        if (!this.learningData[cardId]) {
+            this.learningData[cardId] = {
+                attempts: 0,
+                correctAttempts: 0,
+                incorrectAttempts: 0,
+                averageResponseTime: 0,
+                lastStudied: null,
+                difficultyScore: 1.0, // 1.0 = normal, >1.0 = harder, <1.0 = easier
+                repetitionLevel: 0, // Spaced repetition level
+                nextReviewDate: null,
+                totalStudyTime: 0
+            };
+        }
+        return this.learningData[cardId];
+    }
+
+    updateCardPerformance(deckId, cardIndex, isCorrect, responseTime) {
+        const cardData = this.getCardLearningData(deckId, cardIndex);
+        
+        // Update basic stats
+        cardData.attempts++;
+        cardData.lastStudied = Date.now();
+        cardData.totalStudyTime += responseTime;
+        cardData.averageResponseTime = cardData.totalStudyTime / cardData.attempts;
+        
+        if (isCorrect) {
+            cardData.correctAttempts++;
+            
+            // Improve difficulty score for correct answers
+            cardData.difficultyScore *= 0.95; // Slightly easier
+            cardData.repetitionLevel++;
+            
+            // Calculate next review date (spaced repetition)
+            const intervals = [1, 3, 7, 14, 30, 90]; // Days
+            const intervalDays = intervals[Math.min(cardData.repetitionLevel - 1, intervals.length - 1)];
+            cardData.nextReviewDate = Date.now() + (intervalDays * 24 * 60 * 60 * 1000);
+            
+        } else {
+            cardData.incorrectAttempts++;
+            
+            // Increase difficulty score for incorrect answers
+            cardData.difficultyScore *= 1.2; // Harder
+            cardData.repetitionLevel = Math.max(0, cardData.repetitionLevel - 1);
+            
+            // Reset to shorter interval for difficult cards
+            cardData.nextReviewDate = Date.now() + (1 * 24 * 60 * 60 * 1000); // Tomorrow
+        }
+        
+        // Keep difficulty score within reasonable bounds
+        cardData.difficultyScore = Math.max(0.1, Math.min(5.0, cardData.difficultyScore));
+        
+        this.saveLearningData();
+    }
+
+    calculateCardWeight(deckId, cardIndex) {
+        const cardData = this.getCardLearningData(deckId, cardIndex);
+        const now = Date.now();
+        
+        // Base weight is the difficulty score
+        let weight = cardData.difficultyScore;
+        
+        // If card is due for review (past next review date), increase weight significantly
+        if (cardData.nextReviewDate && now >= cardData.nextReviewDate) {
+            weight *= 3.0; // Much higher chance of appearing
+        }
+        
+        // If card was answered incorrectly recently, increase weight
+        const timeSinceLastStudy = cardData.lastStudied ? (now - cardData.lastStudied) / (1000 * 60 * 60) : 999; // Hours
+        if (cardData.incorrectAttempts > cardData.correctAttempts && timeSinceLastStudy < 24) {
+            weight *= 2.0; // Double weight for recently missed cards
+        }
+        
+        // Never let weight be zero
+        return Math.max(0.1, weight);
+    }
+
+    // Weighted shuffle algorithm - cards with higher weights appear more frequently
+    weightedShuffle(cards, deckId) {
+        const weightedCards = [];
+        
+        cards.forEach((card, index) => {
+            const weight = this.calculateCardWeight(deckId, index);
+            const copies = Math.ceil(weight * 2); // More copies = higher frequency
+            
+            for (let i = 0; i < copies; i++) {
+                weightedCards.push({ ...card, originalIndex: index });
+            }
+        });
+        
+        // Shuffle the weighted array
+        return weightedCards.sort(() => Math.random() - 0.5);
     }
 
     saveDeck() {
@@ -368,6 +526,1210 @@ class FlashCardsApp {
         fileInput.click();
     }
 
+    // Learning Statistics
+    showDeckStats(deckId) {
+        const deck = this.decks.find(d => d.id === deckId);
+        if (!deck) {
+            alert('Deck not found');
+            return;
+        }
+
+        // Populate modal with deck name
+        document.getElementById('stats-deck-name').textContent = `${deck.name} - Learning Statistics`;
+
+        // Calculate overall statistics
+        let totalAttempts = 0;
+        let totalCorrect = 0;
+        let totalResponseTime = 0;
+        let totalCards = deck.cards.length;
+        let studiedCards = 0;
+
+        const cardStats = [];
+
+        deck.cards.forEach((card, index) => {
+            const cardData = this.getCardLearningData(deckId, index);
+            
+            if (cardData.attempts > 0) {
+                studiedCards++;
+                totalAttempts += cardData.attempts;
+                totalCorrect += cardData.correctAttempts;
+                totalResponseTime += cardData.totalStudyTime;
+            }
+
+            // Determine difficulty level
+            let difficultyLevel = 'normal';
+            let difficultyColor = '🟡';
+            
+            if (cardData.difficultyScore < 0.8) {
+                difficultyLevel = 'easy';
+                difficultyColor = '🟢';
+            } else if (cardData.difficultyScore > 1.5) {
+                difficultyLevel = 'hard';
+                difficultyColor = '🔴';
+            }
+
+            cardStats.push({
+                question: card.question,
+                accuracy: cardData.attempts > 0 ? Math.round((cardData.correctAttempts / cardData.attempts) * 100) : 0,
+                attempts: cardData.attempts,
+                avgTime: cardData.attempts > 0 ? Math.round(cardData.averageResponseTime / 1000) : 0,
+                difficulty: difficultyLevel,
+                difficultyColor: difficultyColor,
+                difficultyScore: cardData.difficultyScore
+            });
+        });
+
+        // Update summary statistics
+        const overallAccuracy = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : 0;
+        const avgResponseTime = totalAttempts > 0 ? Math.round((totalResponseTime / totalAttempts) / 1000) : 0;
+
+        document.getElementById('total-sessions').textContent = studiedCards;
+        document.getElementById('overall-accuracy').textContent = `${overallAccuracy}%`;
+        document.getElementById('avg-response-time').textContent = `${avgResponseTime}s`;
+
+        // Populate card statistics
+        const cardsStatsContainer = document.getElementById('cards-stats');
+        cardsStatsContainer.innerHTML = cardStats.map(card => `
+            <div class="card-stat-item">
+                <div class="card-question">${this.escapeHtml(card.question)}</div>
+                <div class="card-stats-data">
+                    <span class="difficulty-indicator difficulty-${card.difficulty}">
+                        ${card.difficultyColor} ${card.difficulty}
+                    </span>
+                    <span>${card.accuracy}% (${card.attempts} attempts)</span>
+                    <span>${card.avgTime}s avg</span>
+                </div>
+            </div>
+        `).join('');
+
+        // Generate learning insights
+        this.generateLearningInsights(deckId, cardStats, overallAccuracy);
+
+        // Show modal
+        document.getElementById('stats-modal').style.display = 'flex';
+    }
+
+    generateLearningInsights(deckId, cardStats, overallAccuracy) {
+        const insights = [];
+        
+        // Accuracy insights
+        if (overallAccuracy >= 80) {
+            insights.push("🎉 Excellent work! You're mastering this deck.");
+        } else if (overallAccuracy >= 60) {
+            insights.push("📈 Good progress! Focus on the difficult cards to improve.");
+        } else if (overallAccuracy > 0) {
+            insights.push("🎯 Keep practicing! The adaptive system will help you improve.");
+        }
+
+        // Difficult cards insight
+        const hardCards = cardStats.filter(card => card.difficulty === 'hard').length;
+        if (hardCards > 0) {
+            insights.push(`🔴 ${hardCards} card${hardCards > 1 ? 's' : ''} need${hardCards === 1 ? 's' : ''} more practice - they'll appear more frequently.`);
+        }
+
+        // Easy cards insight
+        const easyCards = cardStats.filter(card => card.difficulty === 'easy').length;
+        if (easyCards > 0) {
+            insights.push(`🟢 ${easyCards} card${easyCards > 1 ? 's' : ''} mastered! They'll appear less frequently.`);
+        }
+
+        // Response time insight
+        const slowCards = cardStats.filter(card => card.avgTime > 10).length;
+        if (slowCards > 0) {
+            insights.push(`⏱️ ${slowCards} card${slowCards > 1 ? 's' : ''} taking longer to answer - practice for faster recall.`);
+        }
+
+        // Adaptive learning explanation
+        if (cardStats.some(card => card.attempts > 0)) {
+            insights.push("🧠 The app is learning your patterns and will show difficult cards more often!");
+        }
+
+        const insightsContainer = document.getElementById('learning-insights');
+        insightsContainer.innerHTML = `
+            <h4>📊 Learning Insights</h4>
+            ${insights.map(insight => `<div class="insight-item">${insight}</div>`).join('')}
+        `;
+    }
+
+    closeStatsModal() {
+        document.getElementById('stats-modal').style.display = 'none';
+        // Reset modal for normal stats view
+        document.querySelector('.stats-summary').style.display = 'grid';
+    }
+
+    // Stats Page Analytics
+    initializeStatsPage() {
+        if (document.querySelector('.view.active')?.id !== 'stats-view') return;
+        
+        // Set up event listeners
+        document.getElementById('stats-time-range').addEventListener('change', () => {
+            this.refreshStatsPage();
+        });
+        
+        this.refreshStatsPage();
+    }
+
+    refreshStatsPage() {
+        this.updateOverviewStats();
+        this.renderCharts();
+        this.generateAdvancedInsights();
+    }
+
+    getFilteredSessions() {
+        const timeRange = document.getElementById('stats-time-range').value;
+        const sessions = this.loadSessionData();
+        
+        if (timeRange === 'all') return sessions;
+        
+        const days = parseInt(timeRange);
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - days);
+        
+        return sessions.filter(session => new Date(session.timestamp) >= cutoffDate);
+    }
+
+    updateOverviewStats() {
+        const sessions = this.getFilteredSessions();
+        
+        // Calculate overall accuracy
+        let totalCards = 0;
+        let totalCorrect = 0;
+        let totalTime = 0;
+        
+        sessions.forEach(session => {
+            totalCards += session.cardsStudied;
+            totalCorrect += session.correctAnswers;
+            totalTime += session.totalTime;
+        });
+        
+        const overallAccuracy = totalCards > 0 ? Math.round((totalCorrect / totalCards) * 100) : 0;
+        const avgResponseTime = totalCards > 0 ? Math.round((totalTime / totalCards) / 1000) : 0;
+        
+        // Calculate study streak
+        const studyStreak = this.calculateStudyStreak();
+        
+        // Update DOM
+        document.getElementById('overall-accuracy-stat').textContent = `${overallAccuracy}%`;
+        document.getElementById('total-cards-studied').textContent = totalCards.toLocaleString();
+        document.getElementById('avg-response-time-stat').textContent = `${avgResponseTime}s`;
+        document.getElementById('study-streak').textContent = studyStreak;
+    }
+
+    calculateStudyStreak() {
+        const sessions = this.loadSessionData();
+        if (sessions.length === 0) return 0;
+        
+        // Get unique study dates, sorted by date
+        const studyDates = [...new Set(sessions.map(s => s.date))].sort().reverse();
+        
+        let streak = 0;
+        const today = new Date().toISOString().split('T')[0];
+        let currentDate = new Date(today);
+        
+        for (const studyDate of studyDates) {
+            const dateStr = currentDate.toISOString().split('T')[0];
+            
+            if (studyDate === dateStr) {
+                streak++;
+                currentDate.setDate(currentDate.getDate() - 1);
+            } else {
+                break;
+            }
+        }
+        
+        return streak;
+    }
+
+    renderCharts() {
+        // Destroy existing charts to prevent memory leaks
+        Object.keys(this.chartInstances).forEach(key => {
+            if (this.chartInstances[key]) {
+                this.chartInstances[key].destroy();
+            }
+        });
+        this.chartInstances = {};
+        
+        this.renderAccuracyChart();
+        this.renderActivityChart();
+        this.renderDifficultyChart();
+        this.renderResponseTimeChart();
+        this.renderDeckPerformanceChart();
+        this.renderStudyHeatmap();
+    }
+
+    renderAccuracyChart() {
+        const ctx = document.getElementById('accuracy-chart').getContext('2d');
+        const sessions = this.getFilteredSessions();
+        
+        // Group by date and calculate daily accuracy
+        const dailyStats = {};
+        sessions.forEach(session => {
+            if (!dailyStats[session.date]) {
+                dailyStats[session.date] = { total: 0, correct: 0 };
+            }
+            dailyStats[session.date].total += session.cardsStudied;
+            dailyStats[session.date].correct += session.correctAnswers;
+        });
+        
+        const dates = Object.keys(dailyStats).sort();
+        const accuracyData = dates.map(date => {
+            const stats = dailyStats[date];
+            return stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
+        });
+        
+        this.chartInstances.accuracyChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates.map(date => new Date(date).toLocaleDateString()),
+                datasets: [{
+                    label: 'Accuracy %',
+                    data: accuracyData,
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    renderActivityChart() {
+        const ctx = document.getElementById('activity-chart').getContext('2d');
+        const sessions = this.getFilteredSessions();
+        
+        // Group by date
+        const dailyActivity = {};
+        sessions.forEach(session => {
+            dailyActivity[session.date] = (dailyActivity[session.date] || 0) + session.cardsStudied;
+        });
+        
+        const dates = Object.keys(dailyActivity).sort();
+        const activityData = dates.map(date => dailyActivity[date]);
+        
+        this.chartInstances.activityChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: dates.map(date => new Date(date).toLocaleDateString()),
+                datasets: [{
+                    label: 'Cards Studied',
+                    data: activityData,
+                    backgroundColor: 'rgba(72, 187, 120, 0.8)',
+                    borderColor: '#48bb78',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    renderDifficultyChart() {
+        const ctx = document.getElementById('difficulty-chart').getContext('2d');
+        
+        // Analyze all cards across all decks
+        let easyCards = 0;
+        let normalCards = 0;
+        let hardCards = 0;
+        
+        this.decks.forEach(deck => {
+            deck.cards.forEach((_, index) => {
+                const cardData = this.getCardLearningData(deck.id, index);
+                if (cardData.attempts === 0) {
+                    normalCards++; // Unstudied cards are normal
+                } else if (cardData.difficultyScore < 0.8) {
+                    easyCards++;
+                } else if (cardData.difficultyScore > 1.5) {
+                    hardCards++;
+                } else {
+                    normalCards++;
+                }
+            });
+        });
+        
+        this.chartInstances.difficultyChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Easy', 'Normal', 'Hard'],
+                datasets: [{
+                    data: [easyCards, normalCards, hardCards],
+                    backgroundColor: [
+                        '#48bb78', // Green
+                        '#ed8936', // Orange
+                        '#f56565'  // Red
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    renderResponseTimeChart() {
+        const ctx = document.getElementById('response-time-chart').getContext('2d');
+        const sessions = this.getFilteredSessions();
+        
+        // Group by date and calculate average response time
+        const dailyResponseTime = {};
+        sessions.forEach(session => {
+            if (!dailyResponseTime[session.date]) {
+                dailyResponseTime[session.date] = { totalTime: 0, totalCards: 0 };
+            }
+            dailyResponseTime[session.date].totalTime += session.totalTime;
+            dailyResponseTime[session.date].totalCards += session.cardsStudied;
+        });
+        
+        const dates = Object.keys(dailyResponseTime).sort();
+        const responseTimeData = dates.map(date => {
+            const stats = dailyResponseTime[date];
+            return stats.totalCards > 0 ? Math.round((stats.totalTime / stats.totalCards) / 1000) : 0;
+        });
+        
+        this.chartInstances.responseTimeChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates.map(date => new Date(date).toLocaleDateString()),
+                datasets: [{
+                    label: 'Avg Response Time (s)',
+                    data: responseTimeData,
+                    borderColor: '#9f7aea',
+                    backgroundColor: 'rgba(159, 122, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value + 's';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    renderDeckPerformanceChart() {
+        const ctx = document.getElementById('deck-performance-chart').getContext('2d');
+        const sessions = this.getFilteredSessions();
+        
+        // Calculate performance per deck
+        const deckPerformance = {};
+        sessions.forEach(session => {
+            const deck = this.decks.find(d => d.id === session.deckId);
+            if (deck) {
+                if (!deckPerformance[deck.name]) {
+                    deckPerformance[deck.name] = { total: 0, correct: 0 };
+                }
+                deckPerformance[deck.name].total += session.cardsStudied;
+                deckPerformance[deck.name].correct += session.correctAnswers;
+            }
+        });
+        
+        const deckNames = Object.keys(deckPerformance);
+        const accuracyData = deckNames.map(name => {
+            const stats = deckPerformance[name];
+            return stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
+        });
+        
+        this.chartInstances.deckPerformanceChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: deckNames,
+                datasets: [{
+                    label: 'Accuracy %',
+                    data: accuracyData,
+                    backgroundColor: 'rgba(49, 130, 206, 0.8)',
+                    borderColor: '#3182ce',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    renderStudyHeatmap() {
+        const container = document.getElementById('heatmap-container');
+        const sessions = this.loadSessionData(); // Get all sessions for heatmap
+        
+        // Create activity map by date
+        const activityMap = {};
+        sessions.forEach(session => {
+            activityMap[session.date] = (activityMap[session.date] || 0) + session.cardsStudied;
+        });
+        
+        // Generate last 90 days
+        const heatmapHTML = [];
+        const today = new Date();
+        
+        for (let i = 89; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+            
+            const activity = activityMap[dateStr] || 0;
+            let level = 0;
+            
+            if (activity > 0) level = 1;
+            if (activity > 5) level = 2;
+            if (activity > 10) level = 3;
+            if (activity > 20) level = 4;
+            if (activity > 30) level = 5;
+            
+            heatmapHTML.push(`
+                <div class="heatmap-day level-${level}" 
+                     title="${dateStr}: ${activity} cards studied"
+                     data-date="${dateStr}">
+                </div>
+            `);
+        }
+        
+        heatmapHTML.push(`
+            <div class="heatmap-legend">
+                <span>Less</span>
+                <div class="legend-item">
+                    <div class="legend-color level-0"></div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color level-1"></div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color level-2"></div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color level-3"></div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color level-4"></div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color level-5"></div>
+                </div>
+                <span>More</span>
+            </div>
+        `);
+        
+        container.innerHTML = heatmapHTML.join('');
+    }
+
+    generateAdvancedInsights() {
+        const sessions = this.getFilteredSessions();
+        const insights = [];
+        
+        if (sessions.length === 0) {
+            insights.push({
+                icon: '👋',
+                title: 'Start Studying!',
+                description: 'Begin your learning journey by studying some flashcards. The more you practice, the better insights we can provide!'
+            });
+        } else {
+            // Performance trend analysis
+            const recentSessions = sessions.slice(-5);
+            const olderSessions = sessions.slice(0, -5);
+            
+            if (recentSessions.length >= 3 && olderSessions.length >= 3) {
+                const recentAccuracy = recentSessions.reduce((sum, s) => sum + s.accuracy, 0) / recentSessions.length;
+                const olderAccuracy = olderSessions.reduce((sum, s) => sum + s.accuracy, 0) / olderSessions.length;
+                
+                if (recentAccuracy > olderAccuracy + 5) {
+                    insights.push({
+                        icon: '📈',
+                        title: 'Improving Performance!',
+                        description: `Your accuracy has improved by ${Math.round(recentAccuracy - olderAccuracy)}% in recent sessions. Keep up the great work!`
+                    });
+                } else if (recentAccuracy < olderAccuracy - 5) {
+                    insights.push({
+                        icon: '🎯',
+                        title: 'Focus Opportunity',
+                        description: 'Your recent accuracy has decreased slightly. Consider reviewing difficult cards or taking breaks to maintain focus.'
+                    });
+                }
+            }
+            
+            // Study consistency
+            const studyStreak = this.calculateStudyStreak();
+            if (studyStreak >= 7) {
+                insights.push({
+                    icon: '🔥',
+                    title: 'Amazing Consistency!',
+                    description: `You've studied for ${studyStreak} days in a row! Consistent practice leads to better retention.`
+                });
+            } else if (studyStreak >= 3) {
+                insights.push({
+                    icon: '✨',
+                    title: 'Building Good Habits',
+                    description: `${studyStreak} days of consistent studying! Try to maintain this streak for optimal learning.`
+                });
+            }
+            
+            // Time of day analysis
+            const sessionsByHour = {};
+            sessions.forEach(session => {
+                const hour = new Date(session.timestamp).getHours();
+                if (!sessionsByHour[hour]) sessionsByHour[hour] = [];
+                sessionsByHour[hour].push(session);
+            });
+            
+            let bestHour = null;
+            let bestAccuracy = 0;
+            
+            Object.keys(sessionsByHour).forEach(hour => {
+                if (sessionsByHour[hour].length >= 3) { // Need at least 3 sessions
+                    const avgAccuracy = sessionsByHour[hour].reduce((sum, s) => sum + s.accuracy, 0) / sessionsByHour[hour].length;
+                    if (avgAccuracy > bestAccuracy) {
+                        bestAccuracy = avgAccuracy;
+                        bestHour = parseInt(hour);
+                    }
+                }
+            });
+            
+            if (bestHour !== null) {
+                const timeString = bestHour < 12 ? `${bestHour || 12}:00 AM` : `${bestHour > 12 ? bestHour - 12 : bestHour}:00 PM`;
+                insights.push({
+                    icon: '⏰',
+                    title: 'Optimal Study Time',
+                    description: `You perform best around ${timeString} with ${Math.round(bestAccuracy)}% accuracy. Consider scheduling study sessions at this time.`
+                });
+            }
+            
+            // Card difficulty insights
+            let hardCardCount = 0;
+            this.decks.forEach(deck => {
+                deck.cards.forEach((_, index) => {
+                    const cardData = this.getCardLearningData(deck.id, index);
+                    if (cardData.attempts > 0 && cardData.difficultyScore > 1.5) {
+                        hardCardCount++;
+                    }
+                });
+            });
+            
+            if (hardCardCount > 0) {
+                insights.push({
+                    icon: '🎓',
+                    title: 'Challenge Cards Identified',
+                    description: `You have ${hardCardCount} challenging cards that appear more frequently. The adaptive system is helping you master them!`
+                });
+            }
+        }
+        
+        // Render insights
+        const container = document.getElementById('learning-insights-list');
+        container.innerHTML = insights.map(insight => `
+            <div class="insight-card">
+                <div class="insight-icon">${insight.icon}</div>
+                <div class="insight-content">
+                    <div class="insight-title">${insight.title}</div>
+                    <div class="insight-description">${insight.description}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // AI Deck Generation System
+    analyzeUserPatterns() {
+        const sessions = this.loadSessionData();
+        const learningData = this.learningData;
+        
+        if (sessions.length < 3) {
+            return null; // Not enough data for analysis
+        }
+        
+        const analysis = {
+            preferredSubjects: {},
+            difficultyPreference: 0,
+            studyFrequency: 0,
+            accuracyTrend: 0,
+            responseTimePattern: 0,
+            challengeLevel: 'balanced',
+            studyTimePreference: 'short', // short, medium, long
+            improvementAreas: [],
+            strengths: [],
+            learningStyle: 'visual' // visual, analytical, mixed
+        };
+        
+        // Analyze preferred subjects
+        sessions.forEach(session => {
+            const deck = this.decks.find(d => d.id === session.deckId);
+            if (deck) {
+                analysis.preferredSubjects[deck.subject] = (analysis.preferredSubjects[deck.subject] || 0) + 1;
+            }
+        });
+        
+        // Calculate difficulty preference based on performance patterns
+        let totalDifficultyScore = 0;
+        let cardCount = 0;
+        
+        Object.keys(learningData).forEach(cardKey => {
+            const cardData = learningData[cardKey];
+            if (cardData.attempts > 0) {
+                totalDifficultyScore += cardData.difficultyScore;
+                cardCount++;
+            }
+        });
+        
+        analysis.difficultyPreference = cardCount > 0 ? totalDifficultyScore / cardCount : 1.0;
+        
+        // Determine challenge level preference
+        if (analysis.difficultyPreference > 1.3) {
+            analysis.challengeLevel = 'challenging';
+        } else if (analysis.difficultyPreference < 0.8) {
+            analysis.challengeLevel = 'easier';
+        }
+        
+        // Calculate study frequency (sessions per week)
+        const weeklyActivity = this.calculateWeeklyActivity(sessions);
+        analysis.studyFrequency = weeklyActivity;
+        
+        // Calculate accuracy trend
+        const recentSessions = sessions.slice(-10);
+        const olderSessions = sessions.slice(0, -10);
+        
+        if (recentSessions.length > 0 && olderSessions.length > 0) {
+            const recentAccuracy = recentSessions.reduce((sum, s) => sum + s.accuracy, 0) / recentSessions.length;
+            const olderAccuracy = olderSessions.reduce((sum, s) => sum + s.accuracy, 0) / olderSessions.length;
+            analysis.accuracyTrend = recentAccuracy - olderAccuracy;
+        }
+        
+        // Identify improvement areas and strengths
+        this.identifyLearningAreas(analysis);
+        
+        return analysis;
+    }
+    
+    calculateWeeklyActivity(sessions) {
+        if (sessions.length === 0) return 0;
+        
+        const firstSession = new Date(sessions[0].timestamp);
+        const lastSession = new Date(sessions[sessions.length - 1].timestamp);
+        const daysDiff = Math.max(1, (lastSession - firstSession) / (1000 * 60 * 60 * 24));
+        const weeksDiff = daysDiff / 7;
+        
+        return Math.round(sessions.length / weeksDiff * 10) / 10;
+    }
+    
+    identifyLearningAreas(analysis) {
+        const subjects = Object.keys(analysis.preferredSubjects);
+        
+        // Find strongest and weakest subjects based on accuracy
+        subjects.forEach(subject => {
+            const subjectSessions = this.loadSessionData().filter(session => {
+                const deck = this.decks.find(d => d.id === session.deckId);
+                return deck && deck.subject === subject;
+            });
+            
+            if (subjectSessions.length > 0) {
+                const avgAccuracy = subjectSessions.reduce((sum, s) => sum + s.accuracy, 0) / subjectSessions.length;
+                
+                if (avgAccuracy < 70) {
+                    analysis.improvementAreas.push(subject);
+                } else if (avgAccuracy > 85) {
+                    analysis.strengths.push(subject);
+                }
+            }
+        });
+    }
+
+    generateAIDecks() {
+        const analysis = this.analyzeUserPatterns();
+        
+        if (!analysis) {
+            return []; // Not enough data
+        }
+        
+        const generatedDecks = [];
+        
+        // Generate different types of decks based on user patterns
+        
+        // 1. Improvement Deck - Focus on weak areas
+        if (analysis.improvementAreas.length > 0) {
+            generatedDecks.push(this.generateImprovementDeck(analysis));
+        }
+        
+        // 2. Challenge Deck - Harder content for growth
+        if (analysis.challengeLevel !== 'challenging') {
+            generatedDecks.push(this.generateChallengeDeck(analysis));
+        }
+        
+        // 3. Review Deck - Reinforce strengths
+        if (analysis.strengths.length > 0) {
+            generatedDecks.push(this.generateReviewDeck(analysis));
+        }
+        
+        // 4. Mixed Subject Deck - Combine preferred subjects
+        if (Object.keys(analysis.preferredSubjects).length > 1) {
+            generatedDecks.push(this.generateMixedDeck(analysis));
+        }
+        
+        // 5. Quick Practice Deck - Short session based on study time preference
+        generatedDecks.push(this.generateQuickPracticeDeck(analysis));
+        
+        return generatedDecks.slice(0, 4); // Limit to 4 decks
+    }
+    
+    generateImprovementDeck(analysis) {
+        const improvementSubject = analysis.improvementAreas[0];
+        
+        return {
+            id: `ai-improvement-${Date.now()}`,
+            name: `${improvementSubject} - Focus Practice`,
+            subject: improvementSubject,
+            type: 'ai-generated',
+            generatedAt: Date.now(),
+            reason: {
+                title: 'Improvement Focus',
+                description: `Based on your recent performance, this deck focuses on ${improvementSubject} to help boost your confidence in this area.`
+            },
+            confidence: 0.85,
+            cards: this.generateCards('improvement', improvementSubject, analysis),
+            titleCards: [{
+                title: `${improvementSubject} Practice Session`,
+                content: `This deck is specifically designed to help you improve in ${improvementSubject}. Take your time and focus on understanding each concept.`
+            }],
+            style: this.getUserPreferredStyle(),
+            color: 'red' // Red for improvement areas
+        };
+    }
+    
+    generateChallengeDeck(analysis) {
+        const preferredSubjects = Object.keys(analysis.preferredSubjects);
+        const subject = preferredSubjects[Math.floor(Math.random() * preferredSubjects.length)];
+        
+        return {
+            id: `ai-challenge-${Date.now()}`,
+            name: `${subject} - Challenge Mode`,
+            subject: subject,
+            type: 'ai-generated',
+            generatedAt: Date.now(),
+            reason: {
+                title: 'Level Up Challenge',
+                description: `You're doing well! This advanced deck will push your ${subject} knowledge to the next level.`
+            },
+            confidence: 0.75,
+            cards: this.generateCards('challenge', subject, analysis),
+            titleCards: [{
+                title: `${subject} Challenge`,
+                content: `Ready for a challenge? These advanced questions will test your mastery of ${subject} concepts.`
+            }],
+            style: this.getUserPreferredStyle(),
+            color: 'orange' // Orange for challenges
+        };
+    }
+    
+    generateReviewDeck(analysis) {
+        const strengthSubject = analysis.strengths[0];
+        
+        return {
+            id: `ai-review-${Date.now()}`,
+            name: `${strengthSubject} - Mastery Review`,
+            subject: strengthSubject,
+            type: 'ai-generated',
+            generatedAt: Date.now(),
+            reason: {
+                title: 'Reinforce Mastery',
+                description: `Keep your ${strengthSubject} skills sharp with this review deck of key concepts you've already mastered.`
+            },
+            confidence: 0.92,
+            cards: this.generateCards('review', strengthSubject, analysis),
+            titleCards: [{
+                title: `${strengthSubject} Mastery Review`,
+                content: `Excellent work in ${strengthSubject}! This review will help maintain your high performance level.`
+            }],
+            style: this.getUserPreferredStyle(),
+            color: 'green' // Green for mastery
+        };
+    }
+    
+    generateMixedDeck(analysis) {
+        const subjects = Object.keys(analysis.preferredSubjects).slice(0, 3);
+        const subjectNames = subjects.join(', ');
+        
+        return {
+            id: `ai-mixed-${Date.now()}`,
+            name: `Mixed Practice: ${subjectNames}`,
+            subject: 'Mixed Topics',
+            type: 'ai-generated',
+            generatedAt: Date.now(),
+            reason: {
+                title: 'Cross-Subject Practice',
+                description: `Combine your favorite subjects (${subjectNames}) for varied practice that strengthens connections between topics.`
+            },
+            confidence: 0.80,
+            cards: this.generateCards('mixed', subjects, analysis),
+            titleCards: [{
+                title: 'Mixed Subject Practice',
+                content: `This deck combines questions from multiple subjects to help you make connections across different areas of knowledge.`
+            }],
+            style: this.getUserPreferredStyle(),
+            color: 'purple' // Purple for mixed content
+        };
+    }
+    
+    generateQuickPracticeDeck(analysis) {
+        const preferredSubjects = Object.keys(analysis.preferredSubjects);
+        const subject = preferredSubjects[0] || 'General Knowledge';
+        
+        return {
+            id: `ai-quick-${Date.now()}`,
+            name: `${subject} - Quick Session`,
+            subject: subject,
+            type: 'ai-generated',
+            generatedAt: Date.now(),
+            reason: {
+                title: 'Perfect for Short Sessions',
+                description: `A focused 5-10 minute practice session in ${subject}, perfect for your study schedule.`
+            },
+            confidence: 0.88,
+            cards: this.generateCards('quick', subject, analysis).slice(0, 8), // Shorter deck
+            titleCards: [{
+                title: `Quick ${subject} Practice`,
+                content: `A short but effective practice session. Perfect for when you have just a few minutes to study!`
+            }],
+            style: this.getUserPreferredStyle(),
+            color: 'teal' // Teal for quick sessions
+        };
+    }
+    
+    generateCards(type, subject, analysis) {
+        // This is a sophisticated card generation system
+        // In a real app, this could connect to educational APIs or use ML models
+        // For now, I'll create contextually appropriate cards based on user patterns
+        
+        const cardTemplates = this.getCardTemplates(type, subject, analysis);
+        const generatedCards = [];
+        
+        // Select appropriate number of cards based on type
+        const cardCount = type === 'quick' ? 8 : 12;
+        
+        for (let i = 0; i < cardCount && i < cardTemplates.length; i++) {
+            const template = cardTemplates[i];
+            generatedCards.push({
+                question: template.question,
+                answer: template.answer,
+                answerText: template.answer, // For comparison
+                generated: true
+            });
+        }
+        
+        return generatedCards;
+    }
+    
+    getCardTemplates(type, subject, analysis) {
+        // This would ideally use AI/ML to generate contextual questions
+        // For demo purposes, I'll create adaptive templates based on user patterns
+        
+        const baseTemplates = {
+            'Languages': [
+                { question: 'What does "Hello" mean in Spanish?', answer: 'Hola' },
+                { question: 'Translate "Thank you" to French', answer: 'Merci' },
+                { question: 'What is "Goodbye" in German?', answer: 'Auf Wiedersehen' },
+                { question: 'How do you say "Yes" in Italian?', answer: 'Sì' },
+                { question: 'What does "Por favor" mean?', answer: 'Please' },
+                { question: 'Translate "Water" to Spanish', answer: 'Agua' },
+                { question: 'What is "Book" in French?', answer: 'Livre' },
+                { question: 'How do you say "Red" in German?', answer: 'Rot' }
+            ],
+            'Science': [
+                { question: 'What is the chemical symbol for Gold?', answer: 'Au' },
+                { question: 'How many bones are in the human body?', answer: '206' },
+                { question: 'What is the speed of light?', answer: '299,792,458 m/s' },
+                { question: 'What gas do plants absorb during photosynthesis?', answer: 'Carbon Dioxide' },
+                { question: 'What is the largest planet in our solar system?', answer: 'Jupiter' },
+                { question: 'What is H2O commonly known as?', answer: 'Water' },
+                { question: 'How many chambers does a human heart have?', answer: '4' },
+                { question: 'What is the hardest natural substance?', answer: 'Diamond' }
+            ],
+            'History': [
+                { question: 'In what year did World War II end?', answer: '1945' },
+                { question: 'Who was the first President of the United States?', answer: 'George Washington' },
+                { question: 'What ancient wonder was located in Alexandria?', answer: 'The Lighthouse of Alexandria' },
+                { question: 'Which empire was ruled by Julius Caesar?', answer: 'Roman Empire' },
+                { question: 'In what year did the Berlin Wall fall?', answer: '1989' },
+                { question: 'Who painted the Mona Lisa?', answer: 'Leonardo da Vinci' },
+                { question: 'What year did the Titanic sink?', answer: '1912' },
+                { question: 'Which country gifted the Statue of Liberty to the US?', answer: 'France' }
+            ],
+            'Mathematics': [
+                { question: 'What is 15 × 8?', answer: '120' },
+                { question: 'What is the square root of 144?', answer: '12' },
+                { question: 'What is π (pi) approximately equal to?', answer: '3.14159' },
+                { question: 'What is 25% of 200?', answer: '50' },
+                { question: 'What is the area of a circle with radius 5? (use π = 3.14)', answer: '78.5' },
+                { question: 'What is 2³ (2 to the power of 3)?', answer: '8' },
+                { question: 'What is the sum of angles in a triangle?', answer: '180 degrees' },
+                { question: 'What is 144 ÷ 12?', answer: '12' }
+            ]
+        };
+        
+        // Get templates for the subject or use general knowledge
+        let templates = baseTemplates[subject] || [
+            { question: 'What is the capital of France?', answer: 'Paris' },
+            { question: 'How many continents are there?', answer: '7' },
+            { question: 'What is the largest ocean?', answer: 'Pacific Ocean' },
+            { question: 'Who wrote Romeo and Juliet?', answer: 'William Shakespeare' },
+            { question: 'What is the smallest country in the world?', answer: 'Vatican City' },
+            { question: 'In what year was the internet invented?', answer: '1969' }
+        ];
+        
+        // Modify difficulty based on user analysis
+        if (type === 'challenge' && analysis.challengeLevel !== 'challenging') {
+            // Add more complex variations for challenge decks
+            templates = templates.map(template => ({
+                ...template,
+                question: `Advanced: ${template.question} (Explain your reasoning)`
+            }));
+        } else if (type === 'improvement' && analysis.difficultyPreference > 1.2) {
+            // Simplify questions for improvement areas
+            templates = templates.map(template => ({
+                ...template,
+                question: `Review: ${template.question}`
+            }));
+        }
+        
+        // Shuffle and return
+        return templates.sort(() => Math.random() - 0.5);
+    }
+    
+    getUserPreferredStyle() {
+        // Analyze user's most used style from their decks
+        const styles = this.decks.map(deck => deck.style).filter(Boolean);
+        const styleCounts = {};
+        
+        styles.forEach(style => {
+            styleCounts[style] = (styleCounts[style] || 0) + 1;
+        });
+        
+        const mostUsedStyle = Object.keys(styleCounts).reduce((a, b) => 
+            styleCounts[a] > styleCounts[b] ? a : b, 'modern');
+            
+        return mostUsedStyle;
+    }
+    
+    // UI Management for Generated Decks
+    updateGeneratedDecksDisplay() {
+        const generatedSection = document.getElementById('generated-decks-section');
+        const statusElement = document.getElementById('generation-status');
+        const gridElement = document.getElementById('generated-decks-grid');
+        
+        // Check if we have enough data for generation
+        const sessions = this.loadSessionData();
+        
+        if (sessions.length < 3) {
+            generatedSection.style.display = 'none';
+            return;
+        }
+        
+        generatedSection.style.display = 'block';
+        statusElement.style.display = 'block';
+        
+        // Show generation process
+        setTimeout(() => {
+            const generatedDecks = this.generateAIDecks();
+            
+            if (generatedDecks.length > 0) {
+                statusElement.style.display = 'none';
+                this.renderGeneratedDecks(generatedDecks);
+            } else {
+                statusElement.innerHTML = `
+                    <div class="status-icon">🤖</div>
+                    <div class="status-content">
+                        <div class="status-title">Learning more about you...</div>
+                        <div class="status-description">Keep studying! We need a bit more data to create perfect decks for you.</div>
+                    </div>
+                `;
+            }
+        }, 1500); // Simulate AI processing time
+    }
+    
+    renderGeneratedDecks(generatedDecks) {
+        const grid = document.getElementById('generated-decks-grid');
+        
+        grid.innerHTML = generatedDecks.map(deck => `
+            <div class="generated-deck-card" onclick="app.startStudy('${deck.id}', true)">
+                <div class="generated-deck-header">
+                    <div class="generated-deck-name">
+                        ${this.escapeHtml(deck.name)}
+                        <span class="generation-badge">AI</span>
+                    </div>
+                    <div class="generated-deck-subject">${this.escapeHtml(deck.subject)}</div>
+                </div>
+                
+                <div class="generation-reason">
+                    <div class="reason-title">${deck.reason.title}</div>
+                    <div class="reason-description">${deck.reason.description}</div>
+                </div>
+                
+                <div class="generated-deck-info">
+                    <span>${deck.cards.length} cards</span>
+                    <div class="confidence-score">
+                        <span>Match: ${Math.round(deck.confidence * 100)}%</span>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: ${deck.confidence * 100}%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="generated-deck-buttons">
+                    <button class="btn btn-ai btn-small" onclick="event.stopPropagation();">
+                        ▶️ Study
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); app.saveGeneratedDeck('${deck.id}')" title="Add to your decks">
+                        💾 Save
+                    </button>
+                    <button class="btn btn-info btn-small" onclick="event.stopPropagation(); app.previewGeneratedDeck('${deck.id}')" title="Preview cards">
+                        👁️ Preview
+                    </button>
+                </div>
+            </div>
+        `).join('');
+        
+        // Store generated decks temporarily
+        this.generatedDecks = generatedDecks;
+    }
+    
+    saveGeneratedDeck(deckId) {
+        const generatedDeck = this.generatedDecks?.find(d => d.id === deckId);
+        if (!generatedDeck) return;
+        
+        // Convert to regular deck
+        const newDeck = {
+            id: Date.now().toString(),
+            name: generatedDeck.name + ' (AI Generated)',
+            subject: generatedDeck.subject,
+            cards: generatedDeck.cards,
+            titleCards: generatedDeck.titleCards,
+            style: generatedDeck.style,
+            color: generatedDeck.color,
+            createdAt: new Date().toISOString(),
+            originallyGenerated: true
+        };
+        
+        this.decks.push(newDeck);
+        this.saveDecks();
+        this.renderDecks();
+        
+        this.showNotification(`"${newDeck.name}" saved to your decks!`, 'success');
+    }
+    
+    previewGeneratedDeck(deckId) {
+        const deck = this.generatedDecks?.find(d => d.id === deckId);
+        if (!deck) return;
+        
+        // Show preview in the individual deck stats modal (reuse existing modal)
+        document.getElementById('stats-deck-name').textContent = `Preview: ${deck.name}`;
+        
+        // Show cards preview
+        const cardsStatsContainer = document.getElementById('cards-stats');
+        cardsStatsContainer.innerHTML = deck.cards.map((card, index) => `
+            <div class="card-stat-item">
+                <div class="card-question">${this.escapeHtml(card.question)}</div>
+                <div class="card-stats-data">
+                    <span style="color: #a855f7; font-weight: 500;">AI Generated</span>
+                </div>
+            </div>
+        `).join('');
+        
+        // Hide other sections and show preview info
+        document.querySelector('.stats-summary').style.display = 'none';
+        document.getElementById('learning-insights').innerHTML = `
+            <h4>🤖 Generated Deck Info</h4>
+            <div class="insight-item">${deck.reason.description}</div>
+            <div class="insight-item"><strong>Confidence Match:</strong> ${Math.round(deck.confidence * 100)}%</div>
+            <div class="insight-item"><strong>Generated:</strong> ${new Date(deck.generatedAt).toLocaleString()}</div>
+        `;
+        
+        document.getElementById('stats-modal').style.display = 'flex';
+    }
+    
+    regenerateDecks() {
+        document.getElementById('generation-status').style.display = 'block';
+        document.getElementById('generated-decks-grid').innerHTML = '';
+        
+        // Regenerate after a delay
+        setTimeout(() => {
+            this.updateGeneratedDecksDisplay();
+        }, 500);
+        
+        this.showNotification('Regenerating AI decks based on latest patterns...', 'info');
+    }
+    
+    showGenerationInsights() {
+        document.getElementById('generation-insights-modal').style.display = 'flex';
+    }
+    
+    closeGenerationInsights() {
+        document.getElementById('generation-insights-modal').style.display = 'none';
+    }
+
     editDeck(deckId) {
         const deck = this.decks.find(d => d.id === deckId);
         if (!deck) {
@@ -487,6 +1849,9 @@ class FlashCardsApp {
         grid.style.display = 'grid';
         emptyState.style.display = 'none';
         
+        // Update generated decks display
+        this.updateGeneratedDecksDisplay();
+        
         grid.innerHTML = this.decks.map(deck => {
             const style = deck.style || 'classic';
             const color = deck.color || 'blue';
@@ -497,11 +1862,20 @@ class FlashCardsApp {
                 neon: '💠'
             }[style];
             
+            // Check if this deck has been studied
+            const hasLearningData = deck.cards.some((_, index) => {
+                const cardData = this.getCardLearningData(deck.id, index);
+                return cardData.attempts > 0;
+            });
+
             return `
             <div class="deck-card deck-${style} deck-${color}" onclick="app.startStudy('${deck.id}')">
                 <div class="deck-header">
                     <div>
-                        <div class="deck-name">${this.escapeHtml(deck.name)}</div>
+                        <div class="deck-name">
+                            ${this.escapeHtml(deck.name)}
+                            ${hasLearningData ? '<span class="learning-indicator" title="Adaptive learning active">🧠</span>' : ''}
+                        </div>
                         <div class="deck-subject">${this.escapeHtml(deck.subject)}</div>
                         <div class="deck-style-indicator">${styleIcon} ${style.charAt(0).toUpperCase() + style.slice(1)}</div>
                     </div>
@@ -516,6 +1890,9 @@ class FlashCardsApp {
                     </button>
                     <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); app.editDeck('${deck.id}')" title="Edit deck">
                         ✏️ Edit
+                    </button>
+                    <button class="btn btn-info btn-small" onclick="event.stopPropagation(); app.showDeckStats('${deck.id}')" title="View learning progress">
+                        📊 Stats
                     </button>
                     <button class="btn btn-accent btn-small" onclick="event.stopPropagation(); app.saveDeckToFile('${deck.id}')" title="Save deck to file">
                         💾 Save
@@ -788,19 +2165,30 @@ class FlashCardsApp {
     }
 
     // Study Mode
-    startStudy(deckId) {
-        const deck = this.decks.find(d => d.id === deckId);
+    startStudy(deckId, isGenerated = false) {
+        let deck = null;
+        
+        if (isGenerated) {
+            deck = this.generatedDecks?.find(d => d.id === deckId);
+        } else {
+            deck = this.decks.find(d => d.id === deckId);
+        }
+        
         if (!deck || deck.cards.length === 0) {
             alert('This deck has no cards to study');
             return;
         }
 
         this.currentDeck = deck;
-        this.currentCards = [...deck.cards].sort(() => Math.random() - 0.5); // Shuffle
+        
+        // Use adaptive learning to prioritize difficult cards
+        this.currentCards = this.weightedShuffle([...deck.cards], deckId);
+        
         this.currentCardIndex = 0;
         this.score = 0;
         this.cardCount = 0;
         this.currentTitleCardIndex = 0;
+        this.sessionStartTime = Date.now();
         
         this.showView('study');
         this.updateStudyHeader();
@@ -946,6 +2334,18 @@ class FlashCardsApp {
         const correctAnswerText = (currentCard.answerText || currentCard.answer).toLowerCase();
         const isCorrect = userAnswer.toLowerCase() === correctAnswerText;
 
+        // Calculate response time for learning algorithm
+        const responseTime = Date.now() - this.sessionStartTime;
+        
+        // Update adaptive learning data
+        const cardIndex = currentCard.originalIndex !== undefined ? currentCard.originalIndex : 
+                         this.currentDeck.cards.findIndex(c => c === currentCard || 
+                         (c.question === currentCard.question && c.answer === currentCard.answer));
+        
+        if (cardIndex !== -1) {
+            this.updateCardPerformance(this.currentDeck.id, cardIndex, isCorrect, responseTime);
+        }
+
         this.cardCount++;
         
         if (isCorrect) {
@@ -968,9 +2368,19 @@ class FlashCardsApp {
             // Trigger slide animation for incorrect answer
             this.animateIncorrectAnswer();
             
-            // Move incorrect card to back of deck
+            // For adaptive learning: keep difficult cards in rotation longer
             const incorrectCard = this.currentCards.splice(this.currentCardIndex, 1)[0];
-            this.currentCards.push(incorrectCard);
+            
+            // Add the card back multiple times based on difficulty
+            const cardData = this.getCardLearningData(this.currentDeck.id, cardIndex);
+            const repetitions = Math.min(3, Math.ceil(cardData.difficultyScore));
+            
+            for (let i = 0; i < repetitions; i++) {
+                // Insert at random positions in the latter half of the deck
+                const insertPos = Math.floor(this.currentCards.length * 0.5) + 
+                                Math.floor(Math.random() * Math.ceil(this.currentCards.length * 0.5));
+                this.currentCards.splice(insertPos, 0, { ...incorrectCard });
+            }
             
             // Adjust index if needed
             if (this.currentCardIndex >= this.currentCards.length) {
@@ -979,6 +2389,9 @@ class FlashCardsApp {
         }
 
         this.updateStudyHeader();
+        
+        // Reset session timer for next card
+        this.sessionStartTime = Date.now();
         
         // Show next card after animation completes
         const animationDelay = isCorrect ? 1000 : 1400; // Different delays for different animations
@@ -1095,6 +2508,17 @@ class FlashCardsApp {
         document.getElementById('study-complete').classList.add('show');
         document.getElementById('final-score').textContent = 
             `${this.score} / ${this.currentDeck.cards.length}`;
+
+        // Record study session for analytics
+        if (this.currentDeck) {
+            const sessionDuration = Date.now() - this.sessionStartTime;
+            this.recordStudySession(
+                this.currentDeck.id,
+                this.cardCount,
+                this.score,
+                sessionDuration
+            );
+        }
     }
 
     hideStudyComplete() {
