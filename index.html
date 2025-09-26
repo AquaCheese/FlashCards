@@ -40,10 +40,10 @@
                         <div class="section-header">
                             <h3>Your Decks</h3>
                             <div class="header-buttons">
-                                <button class="btn btn-secondary" onclick="importDeck()">
+                                <button class="btn btn-secondary" id="import-deck-btn">
                                     📁 Import Deck
                                 </button>
-                                <button class="btn btn-primary" onclick="showView('create')">
+                                <button class="btn btn-primary" id="new-deck-btn">
                                     <span>+</span> New Deck
                                 </button>
                             </div>
@@ -55,7 +55,7 @@
                             <div class="empty-icon">📝</div>
                             <h3>No decks yet</h3>
                             <p>Create your first deck to get started!</p>
-                            <button class="btn btn-primary" onclick="showView('create')">Create Deck</button>
+                            <button class="btn btn-primary" id="create-deck-btn">Create Deck</button>
                         </div>
                     </div>
 
@@ -67,10 +67,10 @@
                                 <p class="section-subtitle">Personalized decks created just for you based on your study patterns</p>
                             </div>
                             <div class="header-buttons">
-                                <button class="btn btn-secondary" onclick="regenerateDecks()" id="regenerate-btn" disabled>
+                                <button class="btn btn-secondary" id="regenerate-btn" disabled>
                                     🔄 Regenerate
                                 </button>
-                                <button class="btn btn-info" onclick="showGenerationInsights()" title="How we generate your decks">
+                                <button class="btn btn-info" id="how-it-works-btn" title="How we generate your decks">
                                     ❓ How it works
                                 </button>
                             </div>
@@ -116,7 +116,7 @@
                 <div class="view" id="create-view">
                     <div class="create-header">
                         <h2>Create New Deck</h2>
-                        <button class="btn btn-secondary" onclick="showView('home')">← Back</button>
+                        <button class="btn btn-secondary" id="back-to-home-btn">← Back</button>
                     </div>
                     
                     <form class="deck-form" id="deck-form">

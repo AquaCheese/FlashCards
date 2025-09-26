@@ -74,6 +74,37 @@ class FlashCardsApp {
                 this.cancelDelete();
             }
         });
+
+        // Main action buttons
+        const importBtn = document.getElementById('import-deck-btn');
+        if (importBtn) {
+            importBtn.addEventListener('click', () => this.importDeck());
+        }
+
+        const newDeckBtn = document.getElementById('new-deck-btn');
+        if (newDeckBtn) {
+            newDeckBtn.addEventListener('click', () => this.showView('create'));
+        }
+
+        const createDeckBtn = document.getElementById('create-deck-btn');
+        if (createDeckBtn) {
+            createDeckBtn.addEventListener('click', () => this.showView('create'));
+        }
+
+        const howItWorksBtn = document.getElementById('how-it-works-btn');
+        if (howItWorksBtn) {
+            howItWorksBtn.addEventListener('click', () => this.showGenerationInsights());
+        }
+
+        const regenerateBtn = document.getElementById('regenerate-btn');
+        if (regenerateBtn) {
+            regenerateBtn.addEventListener('click', () => this.regenerateDecks());
+        }
+
+        const backToHomeBtn = document.getElementById('back-to-home-btn');
+        if (backToHomeBtn) {
+            backToHomeBtn.addEventListener('click', () => this.showView('home'));
+        }
     }
 
     updateAILockStatus() {
@@ -1758,13 +1789,13 @@ class FlashCardsApp {
                 </div>
                 
                 <div class="generated-deck-buttons">
-                    <button class="btn btn-ai btn-small" onclick="event.stopPropagation();">
+                    <button class="btn btn-ai btn-small" onclick="event.stopPropagation(); studyGeneratedDeck('${deck.id}')" title="Study this generated deck">
                         ▶️ Study
                     </button>
-                    <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); app.saveGeneratedDeck('${deck.id}')" title="Add to your decks">
+                    <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); saveGeneratedDeck('${deck.id}')" title="Add to your decks">
                         💾 Save
                     </button>
-                    <button class="btn btn-info btn-small" onclick="event.stopPropagation(); app.previewGeneratedDeck('${deck.id}')" title="Preview cards">
+                    <button class="btn btn-info btn-small" onclick="event.stopPropagation(); previewGeneratedDeck('${deck.id}')" title="Preview cards">
                         👁️ Preview
                     </button>
                 </div>
@@ -1998,22 +2029,22 @@ class FlashCardsApp {
                         <div class="deck-subject">${this.escapeHtml(deck.subject)}</div>
                         <div class="deck-style-indicator">${styleIcon} ${style.charAt(0).toUpperCase() + style.slice(1)}</div>
                     </div>
-                    <button class="deck-delete" onclick="event.stopPropagation(); app.deleteDeck('${deck.id}')" title="Delete deck">
+                    <button class="deck-delete" onclick="event.stopPropagation(); deleteDeck('${deck.id}')" title="Delete deck">
                         🗑️
                     </button>
                 </div>
                 <div class="deck-info">${deck.cards.length} cards</div>
                 <div class="deck-buttons">
-                    <button class="btn btn-primary btn-small">
+                    <button class="btn btn-primary btn-small" onclick="event.stopPropagation(); startStudy('${deck.id}')" title="Study this deck">
                         ▶️ Study
                     </button>
-                    <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); app.editDeck('${deck.id}')" title="Edit deck">
+                    <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); editDeck('${deck.id}')" title="Edit deck">
                         ✏️ Edit
                     </button>
-                    <button class="btn btn-info btn-small" onclick="event.stopPropagation(); app.showDeckStats('${deck.id}')" title="View learning progress">
+                    <button class="btn btn-info btn-small" onclick="event.stopPropagation(); showDeckStats('${deck.id}')" title="View learning progress">
                         📊 Stats
                     </button>
-                    <button class="btn btn-accent btn-small" onclick="event.stopPropagation(); app.saveDeckToFile('${deck.id}')" title="Save deck to file">
+                    <button class="btn btn-accent btn-small" onclick="event.stopPropagation(); saveDeckToFile('${deck.id}')" title="Save deck to file">
                         💾 Save
                     </button>
                 </div>
@@ -2866,6 +2897,71 @@ function closeStatsModal() {
     }
 }
 
+// Deck action functions
+function startStudy(deckId) {
+    if (app && app.startStudy) {
+        app.startStudy(deckId);
+    } else {
+        console.log('App not ready yet, waiting for startStudy...');
+        setTimeout(() => startStudy(deckId), 100);
+    }
+}
+
+function deleteDeck(deckId) {
+    if (app && app.deleteDeck) {
+        app.deleteDeck(deckId);
+    } else {
+        console.log('App not ready yet, waiting for deleteDeck...');
+        setTimeout(() => deleteDeck(deckId), 100);
+    }
+}
+
+function showDeckStats(deckId) {
+    if (app && app.showDeckStats) {
+        app.showDeckStats(deckId);
+    } else {
+        console.log('App not ready yet, waiting for showDeckStats...');
+        setTimeout(() => showDeckStats(deckId), 100);
+    }
+}
+
+function saveDeckToFile(deckId) {
+    if (app && app.saveDeckToFile) {
+        app.saveDeckToFile(deckId);
+    } else {
+        console.log('App not ready yet, waiting for saveDeckToFile...');
+        setTimeout(() => saveDeckToFile(deckId), 100);
+    }
+}
+
+// Generated deck functions
+function studyGeneratedDeck(deckId) {
+    if (app && app.startStudy) {
+        app.startStudy(deckId, true); // true indicates it's a generated deck
+    } else {
+        console.log('App not ready yet, waiting for studyGeneratedDeck...');
+        setTimeout(() => studyGeneratedDeck(deckId), 100);
+    }
+}
+
+function saveGeneratedDeck(deckId) {
+    if (app && app.saveGeneratedDeck) {
+        app.saveGeneratedDeck(deckId);
+    } else {
+        console.log('App not ready yet, waiting for saveGeneratedDeck...');
+        setTimeout(() => saveGeneratedDeck(deckId), 100);
+    }
+}
+
+function previewGeneratedDeck(deckId) {
+    if (app && app.previewGeneratedDeck) {
+        app.previewGeneratedDeck(deckId);
+    } else {
+        console.log('App not ready yet, waiting for previewGeneratedDeck...');
+        setTimeout(() => previewGeneratedDeck(deckId), 100);
+    }
+}
+
 // CSS for notifications
 const notificationStyles = `
 @keyframes slideInRight {
@@ -2893,6 +2989,16 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Make app globally available for debugging
         window.flashCardsApp = app;
+        
+        // Also make functions directly available on window
+        window.showView = showView;
+        window.importDeck = importDeck;
+        window.showGenerationInsights = showGenerationInsights;
+        window.addCard = addCard;
+        window.addTitleCard = addTitleCard;
+        window.clearForm = clearForm;
+        
+        console.log('Global functions attached to window object');
     } catch (error) {
         console.error('Error initializing FlashCards app:', error);
     }
