@@ -615,7 +615,20 @@ class FlashCardsApp {
 
     recordStudySession(deckId, cardsStudied, correctAnswers, totalTime) {
         const sessions = this.loadSessionData();
-        const deck = this.decks.find(d => d.id === deckId);
+        
+        // Look for deck in both regular decks and generated decks
+        let deck = this.decks.find(d => d.id === deckId);
+        let isGeneratedDeck = false;
+        
+        if (!deck) {
+            // Check generated decks
+            const generatedDecks = this.loadGeneratedDecks();
+            deck = generatedDecks.find(d => d.id === deckId);
+            isGeneratedDeck = !!deck;
+        } else {
+            // Check if it's an adopted deck (originated from AI)
+            isGeneratedDeck = !!deck.adoptedFrom;
+        }
         
         const session = {
             id: Date.now().toString(),
@@ -628,9 +641,15 @@ class FlashCardsApp {
             totalTime: totalTime,
             averageTimePerCard: cardsStudied > 0 ? Math.round(totalTime / cardsStudied) : 0,
             // Enhanced AI learning data
-            deckType: deck?.isGenerated ? 'generated' : 'custom',
+            deckType: isGeneratedDeck ? 'generated' : 'custom',
             subject: deck?.subject || 'Unknown',
-            difficulty: deck?.difficulty || 'Unknown'
+            difficulty: deck?.difficulty || 'Unknown',
+            // Additional AI metadata for generated decks
+            ...(isGeneratedDeck && deck.aiMetadata ? {
+                generationType: deck.generationType,
+                aiConfidence: deck.confidence,
+                targetWeakness: deck.aiMetadata.targetWeakness
+            } : {})
         };
         
         sessions.push(session);
@@ -3447,8 +3466,113 @@ class FlashCardsApp {
         this.showNotification(`"${newDeck.name}" saved to your decks!`, 'success');
     }
     
+    // Make AI-generated decks fully functional for studying
+    viewGeneratedDeck(deckId) {
+        const generatedDecks = this.loadGeneratedDecks();
+        const deck = generatedDecks.find(d => d.id === deckId);
+        
+        if (!deck) {
+            console.error('Generated deck not found:', deckId);
+            return;
+        }
+        
+        // Start study session with the generated deck
+        this.startStudy(deckId, true); // true indicates it's a generated deck
+    }
+    
+    adoptDeck(deckId) {
+        const generatedDecks = this.loadGeneratedDecks();
+        const deck = generatedDecks.find(d => d.id === deckId);
+        
+        if (!deck) {
+            console.error('Generated deck not found for adoption:', deckId);
+            return;
+        }
+        
+        // Create a new regular deck from the generated deck
+        const adoptedDeck = {
+            id: 'adopted_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+            name: deck.name + ' (Adopted)',
+            subject: deck.subject,
+            difficulty: deck.difficulty,
+            cards: deck.cards.map(card => ({
+                front: card.front,
+                back: card.back,
+                type: card.type || 'standard'
+            })),
+            titleCards: deck.titleCards || [],
+            style: 'modern',
+            color: 'purple', // Special color for adopted decks
+            createdAt: Date.now(),
+            adoptedFrom: {
+                originalId: deck.id,
+                generationType: deck.generationType,
+                adoptedAt: Date.now(),
+                aiMetadata: deck.aiMetadata
+            }
+        };
+        
+        // Add to user's personal decks
+        this.decks.push(adoptedDeck);
+        this.saveData();
+        this.renderDecks();
+        
+        // Show success message
+        this.showAdoptionSuccessMessage(adoptedDeck);
+        
+        console.log('✅ Adopted AI-generated deck:', adoptedDeck.name);
+    }
+    
+    showAdoptionSuccessMessage(adoptedDeck) {
+        const notification = document.createElement('div');
+        notification.className = 'adoption-notification';
+        notification.innerHTML = `
+            <div class="adoption-content">
+                <div class="adoption-icon">📚</div>
+                <h4>Deck Adopted Successfully! 🎉</h4>
+                <p><strong>"${adoptedDeck.name}"</strong> has been added to your personal collection.</p>
+                <button onclick="this.parentElement.parentElement.remove()" class="btn btn-ai btn-small">Awesome!</button>
+            </div>
+        `;
+        
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
+            z-index: 10000;
+            max-width: 350px;
+            animation: slideIn 0.5s ease-out;
+            text-align: center;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.style.animation = 'slideIn 0.5s ease-out reverse';
+                setTimeout(() => notification.remove(), 500);
+            }
+        }, 4000);
+    }
+    
+    deleteGeneratedDeck(deckId) {
+        const generatedDecks = this.loadGeneratedDecks();
+        const filteredDecks = generatedDecks.filter(d => d.id !== deckId);
+        
+        this.saveGeneratedDecks(filteredDecks);
+        this.renderGeneratedDecks(filteredDecks);
+        
+        console.log('🗑️ Deleted generated deck:', deckId);
+    }
+    
     previewGeneratedDeck(deckId) {
-        const deck = this.generatedDecks?.find(d => d.id === deckId);
+        const generatedDecks = this.loadGeneratedDecks();
+        const deck = generatedDecks.find(d => d.id === deckId);
         if (!deck) return;
         
         // Show preview in the individual deck stats modal (reuse existing modal)
@@ -3936,7 +4060,9 @@ class FlashCardsApp {
         let deck = null;
         
         if (isGenerated) {
-            deck = this.generatedDecks?.find(d => d.id === deckId);
+            // Load generated decks from localStorage
+            const generatedDecks = this.loadGeneratedDecks();
+            deck = generatedDecks.find(d => d.id === deckId);
         } else {
             deck = this.decks.find(d => d.id === deckId);
         }
@@ -3945,6 +4071,9 @@ class FlashCardsApp {
             alert('This deck has no cards to study');
             return;
         }
+        
+        // Mark if this is a generated deck for analytics
+        deck.isGeneratedStudy = isGenerated;
 
         this.currentDeck = deck;
         
