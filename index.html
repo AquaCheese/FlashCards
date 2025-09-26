@@ -436,6 +436,40 @@
         </div>
     </div>
 
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="delete-confirmation-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚠️ Delete Deck</h3>
+                <button class="modal-close" onclick="app.cancelDelete()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="delete-warning">
+                    <div class="warning-icon">🗑️</div>
+                    <div class="warning-content">
+                        <h4>Are you sure you want to delete this deck?</h4>
+                        <p id="delete-deck-name">Deck Name</p>
+                        <p class="warning-text">This action cannot be undone. All cards and learning progress will be permanently lost.</p>
+                    </div>
+                </div>
+                
+                <div class="confirmation-input">
+                    <label for="delete-confirmation-input">Type the deck name to confirm deletion:</label>
+                    <input type="text" id="delete-confirmation-input" placeholder="Enter deck name exactly as shown above" autocomplete="off">
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="btn btn-danger" id="confirm-delete-btn" onclick="app.confirmDelete()" disabled>
+                        🗑️ Delete Deck
+                    </button>
+                    <button class="btn btn-secondary" onclick="app.cancelDelete()">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Learning Stats Modal -->
     <div class="modal-overlay" id="stats-modal" style="display: none;">
         <div class="modal-content">

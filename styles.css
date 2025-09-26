@@ -1117,6 +1117,113 @@ button:disabled:hover {
     text-align: center;
 }
 
+/* Delete Confirmation Modal */
+.delete-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-radius: 8px;
+}
+
+.warning-icon {
+    font-size: 2rem;
+    color: #dc2626;
+}
+
+.warning-content h4 {
+    margin: 0 0 0.5rem 0;
+    color: #991b1b;
+    font-size: 1.1rem;
+}
+
+.warning-content p {
+    margin: 0.25rem 0;
+    color: #7f1d1d;
+}
+
+#delete-deck-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #991b1b;
+    background: rgba(220, 38, 38, 0.1);
+    padding: 0.5rem;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.warning-text {
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+.confirmation-input {
+    margin-bottom: 2rem;
+}
+
+.confirmation-input label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.confirmation-input input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.confirmation-input input:focus {
+    outline: none;
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.confirmation-input input.valid {
+    border-color: #10b981;
+}
+
+.input-hint {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: #6b7280;
+    font-style: italic;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.btn-danger {
+    background: #dc2626;
+    color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: #b91c1c;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.btn-danger:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.btn-danger:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
 /* Responsive adjustments for generated decks */
 @media (max-width: 768px) {
     .generated-decks-section {

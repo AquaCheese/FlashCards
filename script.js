@@ -68,6 +68,12 @@ class FlashCardsApp {
                 this.closeGenerationInsights();
             }
         });
+
+        document.getElementById('delete-confirmation-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'delete-confirmation-modal') {
+                this.cancelDelete();
+            }
+        });
     }
 
     updateAILockStatus() {
@@ -444,12 +450,86 @@ class FlashCardsApp {
     }
 
     deleteDeck(deckId) {
-        if (confirm('Are you sure you want to delete this deck?')) {
-            this.decks = this.decks.filter(deck => deck.id !== deckId);
-            this.saveDecks();
-            this.renderDecks();
-            this.showNotification('Deck deleted', 'info');
+        const deck = this.decks.find(d => d.id === deckId);
+        if (!deck) {
+            alert('Deck not found');
+            return;
         }
+
+        // Store the deck to delete for confirmation
+        this.deckToDelete = deck;
+        
+        // Show confirmation modal
+        document.getElementById('delete-deck-name').textContent = deck.name;
+        document.getElementById('delete-confirmation-input').value = '';
+        document.getElementById('confirm-delete-btn').disabled = true;
+        document.getElementById('delete-confirmation-modal').style.display = 'flex';
+        
+        // Focus on the input field
+        setTimeout(() => {
+            document.getElementById('delete-confirmation-input').focus();
+        }, 100);
+        
+        // Set up input validation
+        this.setupDeleteConfirmation();
+    }
+
+    setupDeleteConfirmation() {
+        const input = document.getElementById('delete-confirmation-input');
+        const confirmBtn = document.getElementById('confirm-delete-btn');
+        
+        // Remove any existing event listeners
+        input.replaceWith(input.cloneNode(true));
+        const newInput = document.getElementById('delete-confirmation-input');
+        
+        newInput.addEventListener('input', (e) => {
+            const inputValue = e.target.value.trim();
+            const deckName = this.deckToDelete.name;
+            
+            // Check if input matches deck name exactly or is "dev" (developer shortcut)
+            const isValid = inputValue === deckName || inputValue === 'dev';
+            
+            if (isValid) {
+                confirmBtn.disabled = false;
+                newInput.classList.add('valid');
+            } else {
+                confirmBtn.disabled = true;
+                newInput.classList.remove('valid');
+            }
+        });
+        
+        // Allow Enter key to confirm if valid
+        newInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !confirmBtn.disabled) {
+                this.confirmDelete();
+            }
+        });
+    }
+
+    confirmDelete() {
+        if (!this.deckToDelete) return;
+        
+        // Delete the deck
+        this.decks = this.decks.filter(deck => deck.id !== this.deckToDelete.id);
+        this.saveDecks();
+        this.renderDecks();
+        this.updateAILockStatus();
+        
+        // Show notification
+        this.showNotification(`"${this.deckToDelete.name}" deleted successfully`, 'info');
+        
+        // Close modal and cleanup
+        this.cancelDelete();
+    }
+
+    cancelDelete() {
+        document.getElementById('delete-confirmation-modal').style.display = 'none';
+        this.deckToDelete = null;
+        
+        // Reset form
+        document.getElementById('delete-confirmation-input').value = '';
+        document.getElementById('confirm-delete-btn').disabled = true;
+        document.getElementById('delete-confirmation-input').classList.remove('valid');
     }
 
     saveDeckToFile(deckId) {
