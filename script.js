@@ -1,9 +1,8 @@
 // Global app instance
 let app = null;
 
-// Debug: Test if script is loading
+// FlashCards App - AI-Enhanced Learning System
 console.log('FlashCards script loading...');
-alert('FlashCards script loaded!');
 
 // Immediately available global functions for onclick handlers
 window.addCard = function() {
@@ -52,13 +51,11 @@ window.checkAnswer = function() {
 };
 
 window.startStudy = function(deckId) {
-    console.log('startStudy called with:', deckId, 'app:', !!app);
-    alert('startStudy called with: ' + deckId); // Temporary debug
+    console.log('startStudy called with:', deckId);
     if (app && app.startStudy) {
         app.startStudy(deckId);
     } else {
         console.log('App not ready or startStudy method missing');
-        alert('startStudy - App not ready! app=' + !!app);
     }
 };
 
@@ -90,13 +87,11 @@ window.saveDeckToFile = function(deckId) {
 };
 
 window.deleteDeck = function(deckId) {
-    console.log('deleteDeck called with:', deckId, 'app:', !!app);
-    alert('deleteDeck called with: ' + deckId); // Temporary debug
+    console.log('deleteDeck called with:', deckId);
     if (app && app.deleteDeck) {
         app.deleteDeck(deckId);
     } else {
         console.log('App not ready or deleteDeck method missing');
-        alert('deleteDeck - App not ready! app=' + !!app);
     }
 };
 
@@ -139,13 +134,11 @@ window.showGenerationInsights = function() {
 };
 
 window.closeGenerationInsights = function() {
-    console.log('closeGenerationInsights called, app:', !!app);
-    alert('closeGenerationInsights called!'); // Temporary debug
+    console.log('closeGenerationInsights called');
     if (app && app.closeGenerationInsights) {
         app.closeGenerationInsights();
     } else {
         console.log('App not ready or closeGenerationInsights method missing');
-        alert('closeGenerationInsights - App not ready! app=' + !!app);
     }
 };
 
@@ -343,47 +336,101 @@ class FlashCardsApp {
     }
 
     updateAILockStatus() {
-        const sessions = this.loadSessionData();
-        const sessionCount = sessions.length;
-        const requiredSessions = 3;
+        // AI Generator is always available - no more lock system
         const lockOverlay = document.getElementById('ai-lock-overlay');
         const regenerateBtn = document.getElementById('regenerate-btn');
-        const progressFill = document.getElementById('unlock-progress');
-        const progressText = document.getElementById('progress-text');
-        const sessionsNeeded = document.getElementById('sessions-needed');
 
-        // Check if elements exist before accessing them
-        if (!lockOverlay || !regenerateBtn || !progressFill || !progressText || !sessionsNeeded) {
-            console.log('Some AI lock elements not found, skipping update');
-            return;
+        // Hide lock overlay and enable regenerate button
+        if (lockOverlay) {
+            lockOverlay.style.display = 'none';
+        }
+        if (regenerateBtn) {
+            regenerateBtn.disabled = false;
         }
 
-        if (sessionCount >= requiredSessions) {
-            // AI is unlocked
-            lockOverlay.style.display = 'none';
-            regenerateBtn.disabled = false;
-        } else {
-            // AI is locked
-            lockOverlay.style.display = 'block';
-            regenerateBtn.disabled = true;
-            
-            // Update progress
-            const progress = (sessionCount / requiredSessions) * 100;
-            progressFill.style.width = `${progress}%`;
-            progressText.textContent = `${sessionCount} / ${requiredSessions} sessions completed`;
-            sessionsNeeded.textContent = requiredSessions - sessionCount;
+        // Generate starter decks on first visit
+        this.generateStarterDecks();
+    }
 
-            // Add encouraging message based on progress
-            const lockInfo = lockOverlay.querySelector('p');
-            if (lockInfo) {
-                if (sessionCount === 0) {
-                    lockInfo.innerHTML = `Complete <strong>${requiredSessions}</strong> study sessions to unlock personalized AI-generated decks!`;
-                } else if (sessionCount === 1) {
-                    lockInfo.innerHTML = `Great start! Complete <strong>${requiredSessions - sessionCount}</strong> more study sessions to unlock AI decks!`;
-                } else if (sessionCount === 2) {
-                    lockInfo.innerHTML = `Almost there! Just <strong>1</strong> more study session to unlock your AI deck generator!`;
+    generateStarterDecks() {
+        // Check if this is the user's first time (no decks exist)
+        if (this.decks.length === 0) {
+            console.log('First time user - generating starter decks...');
+            
+            const starterDecks = [
+                {
+                    id: 'starter_' + Date.now() + '_1',
+                    name: 'Essential Spanish Vocabulary',
+                    subject: 'Spanish',
+                    difficulty: 'Beginner',
+                    isGenerated: true,
+                    generatedAt: Date.now(),
+                    cards: [
+                        { front: 'Hello', back: 'Hola', type: 'standard' },
+                        { front: 'Goodbye', back: 'Adiós', type: 'standard' },
+                        { front: 'Thank you', back: 'Gracias', type: 'standard' },
+                        { front: 'Please', back: 'Por favor', type: 'standard' },
+                        { front: 'Yes', back: 'Sí', type: 'standard' },
+                        { front: 'No', back: 'No', type: 'standard' },
+                        { front: 'Water', back: 'Agua', type: 'standard' },
+                        { front: 'Food', back: 'Comida', type: 'standard' },
+                        { front: 'House', back: 'Casa', type: 'standard' },
+                        { front: 'Family', back: 'Familia', type: 'standard' }
+                    ],
+                    titleCards: [
+                        { title: 'Welcome to Spanish!', description: 'Master these essential words to start your Spanish journey.' }
+                    ]
+                },
+                {
+                    id: 'starter_' + Date.now() + '_2',
+                    name: 'Basic Math Concepts',
+                    subject: 'Mathematics',
+                    difficulty: 'Intermediate',
+                    isGenerated: true,
+                    generatedAt: Date.now(),
+                    cards: [
+                        { front: 'What is 7 × 8?', back: '56', type: 'standard' },
+                        { front: 'What is 144 ÷ 12?', back: '12', type: 'standard' },
+                        { front: 'What is 15% of 200?', back: '30', type: 'standard' },
+                        { front: 'Solve: 2x + 5 = 13', back: 'x = 4', type: 'standard' },
+                        { front: 'What is the area of a circle with radius 3?', back: '9π or ≈28.27', type: 'standard' },
+                        { front: 'Convert 0.75 to a fraction', back: '3/4', type: 'standard' },
+                        { front: 'What is √64?', back: '8', type: 'standard' },
+                        { front: 'What is 2³?', back: '8', type: 'standard' }
+                    ],
+                    titleCards: [
+                        { title: 'Math Fundamentals', description: 'Practice essential math skills and build confidence with numbers.' }
+                    ]
+                },
+                {
+                    id: 'starter_' + Date.now() + '_3',
+                    name: 'Science Facts & Concepts',
+                    subject: 'Science',
+                    difficulty: 'Intermediate',
+                    isGenerated: true,
+                    generatedAt: Date.now(),
+                    cards: [
+                        { front: 'What is the chemical symbol for water?', back: 'H₂O', type: 'standard' },
+                        { front: 'How many bones are in the human body?', back: '206 (adult)', type: 'standard' },
+                        { front: 'What gas do plants absorb during photosynthesis?', back: 'Carbon dioxide (CO₂)', type: 'standard' },
+                        { front: 'What is the speed of light?', back: '299,792,458 m/s', type: 'standard' },
+                        { front: 'What is the largest planet in our solar system?', back: 'Jupiter', type: 'standard' },
+                        { front: 'What force keeps us on the ground?', back: 'Gravity', type: 'standard' },
+                        { front: 'What is DNA an acronym for?', back: 'Deoxyribonucleic Acid', type: 'standard' },
+                        { front: 'At what temperature does water freeze?', back: '0°C or 32°F', type: 'standard' }
+                    ],
+                    titleCards: [
+                        { title: 'Discover Science', description: 'Explore fascinating facts about our world and universe.' }
+                    ]
                 }
-            }
+            ];
+
+            // Add starter decks to the user's collection
+            this.decks = starterDecks;
+            this.saveDecks();
+            this.renderDecks();
+            
+            console.log('Generated 3 starter decks for new user');
         }
     }
 
@@ -473,6 +520,8 @@ class FlashCardsApp {
 
     recordStudySession(deckId, cardsStudied, correctAnswers, totalTime) {
         const sessions = this.loadSessionData();
+        const deck = this.decks.find(d => d.id === deckId);
+        
         const session = {
             id: Date.now().toString(),
             deckId: deckId,
@@ -482,11 +531,90 @@ class FlashCardsApp {
             correctAnswers: correctAnswers,
             accuracy: cardsStudied > 0 ? Math.round((correctAnswers / cardsStudied) * 100) : 0,
             totalTime: totalTime,
-            averageTimePerCard: cardsStudied > 0 ? Math.round(totalTime / cardsStudied) : 0
+            averageTimePerCard: cardsStudied > 0 ? Math.round(totalTime / cardsStudied) : 0,
+            // Enhanced AI learning data
+            deckType: deck?.isGenerated ? 'generated' : 'custom',
+            subject: deck?.subject || 'Unknown',
+            difficulty: deck?.difficulty || 'Unknown'
         };
         
         sessions.push(session);
         this.saveSessionData(sessions);
+        
+        // Update AI learning patterns
+        this.updateAILearningPatterns(session);
+    }
+
+    updateAILearningPatterns(session) {
+        // Get or create user learning profile
+        let profile = JSON.parse(localStorage.getItem('ai-learning-profile') || '{}');
+        
+        // Initialize profile if new
+        if (!profile.preferences) {
+            profile = {
+                preferences: {
+                    favoriteSubjects: {},
+                    difficultyPreference: {},
+                    studyTimePatterns: {},
+                    accuracyTrends: []
+                },
+                weaknesses: {},
+                strengths: {},
+                studyHabits: {
+                    preferredSessionLength: 0,
+                    bestPerformanceTime: 'unknown',
+                    consistencyScore: 0
+                },
+                lastUpdated: Date.now()
+            };
+        }
+
+        // Update favorite subjects
+        if (!profile.preferences.favoriteSubjects[session.subject]) {
+            profile.preferences.favoriteSubjects[session.subject] = 0;
+        }
+        profile.preferences.favoriteSubjects[session.subject]++;
+
+        // Update difficulty preferences based on accuracy
+        if (!profile.preferences.difficultyPreference[session.difficulty]) {
+            profile.preferences.difficultyPreference[session.difficulty] = { attempts: 0, totalAccuracy: 0 };
+        }
+        const diffPref = profile.preferences.difficultyPreference[session.difficulty];
+        diffPref.attempts++;
+        diffPref.totalAccuracy += session.accuracy;
+        diffPref.averageAccuracy = Math.round(diffPref.totalAccuracy / diffPref.attempts);
+
+        // Track accuracy trends
+        profile.preferences.accuracyTrends.push({
+            timestamp: session.timestamp,
+            accuracy: session.accuracy,
+            subject: session.subject,
+            deckType: session.deckType
+        });
+        
+        // Keep only last 50 accuracy records
+        if (profile.preferences.accuracyTrends.length > 50) {
+            profile.preferences.accuracyTrends = profile.preferences.accuracyTrends.slice(-50);
+        }
+
+        // Identify strengths and weaknesses
+        if (session.accuracy >= 80) {
+            if (!profile.strengths[session.subject]) profile.strengths[session.subject] = 0;
+            profile.strengths[session.subject]++;
+        } else if (session.accuracy < 60) {
+            if (!profile.weaknesses[session.subject]) profile.weaknesses[session.subject] = 0;
+            profile.weaknesses[session.subject]++;
+        }
+
+        // Update study habits
+        profile.studyHabits.preferredSessionLength = Math.round(
+            (profile.studyHabits.preferredSessionLength + session.totalTime) / 2
+        );
+
+        profile.lastUpdated = Date.now();
+        localStorage.setItem('ai-learning-profile', JSON.stringify(profile));
+        
+        console.log('AI Learning Profile updated:', profile);
     }
 
     getCardLearningData(deckId, cardIndex) {
@@ -1974,22 +2102,11 @@ class FlashCardsApp {
         const gridElement = document.getElementById('generated-decks-grid');
         const lockOverlay = document.getElementById('ai-lock-overlay');
         
-        // Always show the section
-        generatedSection.style.display = 'block';
-        
-        // Check if we have enough data for generation
-        const sessions = this.loadSessionData();
-        
-        if (sessions.length < 3) {
-            // Show lock overlay, hide generation content
-            lockOverlay.style.display = 'block';
-            if (statusElement) statusElement.style.display = 'none';
-            if (gridElement) gridElement.style.display = 'none';
-            return;
-        }
-        
-        // Hide lock overlay, show generation content
-        lockOverlay.style.display = 'none';
+        // Always show the section and content - no more restrictions
+        if (generatedSection) generatedSection.style.display = 'block';
+        if (lockOverlay) lockOverlay.style.display = 'none';
+        if (statusElement) statusElement.style.display = 'block';
+        if (gridElement) gridElement.style.display = 'block';
         statusElement.style.display = 'block';
         
         // Show generation process
@@ -2995,13 +3112,9 @@ document.head.appendChild(styleSheet);
 // Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, initializing FlashCards app...');
-    alert('DOM loaded, starting app initialization...');
     try {
-        console.log('Creating FlashCardsApp instance...');
-        alert('About to create FlashCardsApp...');
         app = new FlashCardsApp();
-        console.log('FlashCards app initialized successfully!', app);
-        alert('FlashCardsApp created successfully!');
+        console.log('FlashCards app initialized successfully!');
         
         // Make app globally available for debugging
         window.flashCardsApp = app;
@@ -3014,9 +3127,8 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('app instance:', !!app);
         
         console.log('FlashCards app initialized and functions are available on window object');
-        alert('App initialization completed! app=' + !!app);
+        console.log('App initialization completed successfully');
     } catch (error) {
         console.error('Error initializing FlashCards app:', error);
-        alert('ERROR creating app: ' + error.message);
     }
 });
