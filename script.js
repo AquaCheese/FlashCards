@@ -2975,22 +2975,24 @@ document.head.appendChild(styleSheet);
 // Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, initializing FlashCards app...');
+    alert('DOM loaded, starting app initialization...');
     try {
+        console.log('Creating FlashCardsApp instance...');
         app = new FlashCardsApp();
-        console.log('FlashCards app initialized successfully!');
+        console.log('FlashCards app initialized successfully!', app);
         
         // Make app globally available for debugging
         window.flashCardsApp = app;
         
         // Debug: Test if functions are accessible
         console.log('Testing function accessibility:');
-        console.log('addCard function:', typeof addCard);
-        console.log('showView function:', typeof showView);
-        console.log('startStudy function:', typeof startStudy);
         console.log('window.addCard:', typeof window.addCard);
+        console.log('window.showView:', typeof window.showView);
+        console.log('window.startStudy:', typeof window.startStudy);
         console.log('app instance:', !!app);
         
         console.log('FlashCards app initialized and functions are available on window object');
+        alert('App initialization completed! app=' + !!app);
     } catch (error) {
         console.error('Error initializing FlashCards app:', error);
     }
