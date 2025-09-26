@@ -255,6 +255,119 @@ class FlashCardsApp {
         }
     }
 
+    saveDeckToFile(deckId) {
+        const deck = this.decks.find(d => d.id === deckId);
+        if (!deck) {
+            alert('Deck not found');
+            return;
+        }
+
+        // Create deck data with metadata for file format validation
+        const deckData = {
+            version: '1.0',
+            type: 'flashcards-deck',
+            exportedAt: new Date().toISOString(),
+            deck: {
+                ...deck,
+                // Remove the ID to generate new one on import
+                id: undefined
+            }
+        };
+
+        // Convert to JSON string
+        const jsonString = JSON.stringify(deckData, null, 2);
+        
+        // Create blob and download
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        // Create download link
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${deck.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.flashdeck`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up the URL object
+        URL.revokeObjectURL(url);
+        
+        this.showNotification('Deck saved to file!', 'success');
+    }
+
+    importDeck() {
+        const fileInput = document.getElementById('import-file-input');
+        
+        // Set up the file input change handler
+        fileInput.onchange = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Check file extension
+            if (!file.name.endsWith('.flashdeck')) {
+                alert('Please select a valid .flashdeck file');
+                return;
+            }
+            
+            // Read the file
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const deckData = JSON.parse(e.target.result);
+                    
+                    // Validate file format
+                    if (!deckData.type || deckData.type !== 'flashcards-deck') {
+                        throw new Error('Invalid file format');
+                    }
+                    
+                    if (!deckData.deck || !deckData.deck.name || !deckData.deck.cards) {
+                        throw new Error('Incomplete deck data');
+                    }
+                    
+                    const importedDeck = deckData.deck;
+                    
+                    // Generate new ID and timestamps
+                    importedDeck.id = Date.now().toString();
+                    importedDeck.createdAt = new Date().toISOString();
+                    importedDeck.importedAt = new Date().toISOString();
+                    
+                    // Check for duplicate names and modify if necessary
+                    let deckName = importedDeck.name;
+                    let counter = 1;
+                    while (this.decks.some(d => d.name === deckName)) {
+                        deckName = `${importedDeck.name} (${counter})`;
+                        counter++;
+                    }
+                    importedDeck.name = deckName;
+                    
+                    // Add to decks array
+                    this.decks.push(importedDeck);
+                    this.saveDecks();
+                    this.renderDecks();
+                    
+                    this.showNotification(`Deck "${deckName}" imported successfully!`, 'success');
+                    
+                } catch (error) {
+                    console.error('Import error:', error);
+                    alert('Error importing deck: Invalid file format or corrupted data');
+                }
+                
+                // Reset the file input
+                fileInput.value = '';
+            };
+            
+            reader.onerror = () => {
+                alert('Error reading file');
+                fileInput.value = '';
+            };
+            
+            reader.readAsText(file);
+        };
+        
+        // Trigger file selection
+        fileInput.click();
+    }
+
     editDeck(deckId) {
         const deck = this.decks.find(d => d.id === deckId);
         if (!deck) {
@@ -403,6 +516,9 @@ class FlashCardsApp {
                     </button>
                     <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); app.editDeck('${deck.id}')" title="Edit deck">
                         ✏️ Edit
+                    </button>
+                    <button class="btn btn-accent btn-small" onclick="event.stopPropagation(); app.saveDeckToFile('${deck.id}')" title="Save deck to file">
+                        💾 Save
                     </button>
                 </div>
             </div>

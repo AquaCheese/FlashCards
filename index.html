@@ -34,9 +34,14 @@
                     <div class="decks-section">
                         <div class="section-header">
                             <h3>Your Decks</h3>
-                            <button class="btn btn-primary" onclick="showView('create')">
-                                <span>+</span> New Deck
-                            </button>
+                            <div class="header-buttons">
+                                <button class="btn btn-secondary" onclick="app.importDeck()">
+                                    📁 Import Deck
+                                </button>
+                                <button class="btn btn-primary" onclick="showView('create')">
+                                    <span>+</span> New Deck
+                                </button>
+                            </div>
                         </div>
                         <div class="decks-grid" id="decks-grid">
                             <!-- Decks will be populated here -->
@@ -229,6 +234,9 @@
             </div>
         </main>
     </div>
+
+    <!-- Hidden file input for importing decks -->
+    <input type="file" id="import-file-input" accept=".flashdeck" style="display: none;">
 
     <script src="script.js"></script>
 </body>

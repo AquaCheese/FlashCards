@@ -137,6 +137,11 @@ body {
     color: #333;
 }
 
+.header-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
 .decks-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -316,6 +321,16 @@ body {
 .btn-secondary:hover {
     background: #cbd5e0;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-accent {
+    background: #48bb78;
+    color: white;
+}
+
+.btn-accent:hover {
+    background: #38a169;
+    box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
 }
 
 .btn-small {
