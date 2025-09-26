@@ -27,6 +27,7 @@ class FlashCardsApp {
         this.setupEventListeners();
         this.setupCustomizationListeners();
         this.renderDecks();
+        this.updateAILockStatus();
         this.showView('home');
     }
 
@@ -67,6 +68,43 @@ class FlashCardsApp {
                 this.closeGenerationInsights();
             }
         });
+    }
+
+    updateAILockStatus() {
+        const sessions = this.loadSessionData();
+        const sessionCount = sessions.length;
+        const requiredSessions = 3;
+        const lockOverlay = document.getElementById('ai-lock-overlay');
+        const regenerateBtn = document.getElementById('regenerate-btn');
+        const progressFill = document.getElementById('unlock-progress');
+        const progressText = document.getElementById('progress-text');
+        const sessionsNeeded = document.getElementById('sessions-needed');
+
+        if (sessionCount >= requiredSessions) {
+            // AI is unlocked
+            lockOverlay.style.display = 'none';
+            regenerateBtn.disabled = false;
+        } else {
+            // AI is locked
+            lockOverlay.style.display = 'block';
+            regenerateBtn.disabled = true;
+            
+            // Update progress
+            const progress = (sessionCount / requiredSessions) * 100;
+            progressFill.style.width = `${progress}%`;
+            progressText.textContent = `${sessionCount} / ${requiredSessions} sessions completed`;
+            sessionsNeeded.textContent = requiredSessions - sessionCount;
+
+            // Add encouraging message based on progress
+            const lockInfo = lockOverlay.querySelector('p');
+            if (sessionCount === 0) {
+                lockInfo.innerHTML = `Complete <strong>${requiredSessions}</strong> study sessions to unlock personalized AI-generated decks!`;
+            } else if (sessionCount === 1) {
+                lockInfo.innerHTML = `Great start! Complete <strong>${requiredSessions - sessionCount}</strong> more study sessions to unlock AI decks!`;
+            } else if (sessionCount === 2) {
+                lockInfo.innerHTML = `Almost there! Just <strong>1</strong> more study session to unlock your AI deck generator!`;
+            }
+        }
     }
 
     setupCustomizationListeners() {
@@ -111,6 +149,7 @@ class FlashCardsApp {
         // Special handling for views
         if (viewName === 'home') {
             this.renderDecks();
+            this.updateAILockStatus();
         } else if (viewName === 'create' && !this.isEditMode) {
             // Reset to create mode if not already in edit mode
             this.updateUIForEditMode(false);
@@ -2518,6 +2557,8 @@ class FlashCardsApp {
                 this.score,
                 sessionDuration
             );
+            // Update AI lock status in case user just unlocked it
+            this.updateAILockStatus();
         }
     }
 
