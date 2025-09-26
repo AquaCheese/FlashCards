@@ -102,9 +102,22 @@
                             </div>
                         </div>
                         
+                        <div class="title-cards-section">
+                            <div class="section-header">
+                                <h3>Title Cards</h3>
+                                <button type="button" class="btn btn-primary" onclick="addTitleCard()">
+                                    <span>+</span> Add Title Card
+                                </button>
+                            </div>
+                            <p class="section-description">Title cards are shown before studying begins. Use them to display deck information, instructions, or introductory content.</p>
+                            <div class="title-cards-list" id="title-cards-list">
+                                <!-- Title cards will be added here -->
+                            </div>
+                        </div>
+                        
                         <div class="cards-section">
                             <div class="section-header">
-                                <h3>Cards</h3>
+                                <h3>Study Cards</h3>
                                 <button type="button" class="btn btn-primary" onclick="addCard()">
                                     <span>+</span> Add Card
                                 </button>
@@ -151,6 +164,33 @@
                         </div>
                     </div>
                     
+                    <!-- Title Card Display -->
+                    <div class="title-card-display" id="title-card-display">
+                        <div class="title-card-navigation">
+                            <button class="nav-arrow prev" id="title-prev-btn" onclick="app.previousTitleCard()">
+                                ← Previous
+                            </button>
+                            <span class="title-card-counter" id="title-card-counter">1 / 1</span>
+                            <button class="nav-arrow next" id="title-next-btn" onclick="app.nextTitleCard()">
+                                Next →
+                            </button>
+                        </div>
+                        
+                        <div class="title-card-content-display">
+                            <h2 class="title-card-title" id="display-title-card-title">Deck Title</h2>
+                            <div class="title-card-text" id="display-title-card-content">Title card content goes here...</div>
+                        </div>
+                        
+                        <div class="title-card-actions">
+                            <button class="btn btn-primary" onclick="app.startActualStudy()">
+                                Start Studying →
+                            </button>
+                            <button class="btn btn-secondary" onclick="app.skipToStudy()">
+                                Skip to Cards
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Study Card -->
                     <div class="study-card-container" id="study-card-container">
                         <!-- Next card preview (hidden behind) -->

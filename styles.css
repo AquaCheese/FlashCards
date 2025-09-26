@@ -497,12 +497,23 @@ body {
     display: flex;
     align-items: center;
     gap: 0.3rem;
+    flex-wrap: wrap;
 }
 
 .color-picker-group label {
     font-size: 0.8rem;
     color: #6b7280;
     margin: 0;
+    min-width: fit-content;
+}
+
+.apply-text-color,
+.apply-highlight-color {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.4rem;
+    min-width: auto;
+    height: 28px;
+    white-space: nowrap;
 }
 
 .text-color-picker,
@@ -553,6 +564,178 @@ body {
 /* Formatted answer display in study view */
 .formatted-answer {
     display: inline;
+}
+
+/* Title Cards Section */
+.title-cards-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.title-cards-section .section-description {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    font-style: italic;
+}
+
+.title-cards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.title-card-item {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.title-card-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.title-card-inputs .title-input {
+    flex: 1;
+}
+
+.title-card-inputs .content-input {
+    flex: 2;
+}
+
+.title-card-title-editor,
+.title-card-content-editor {
+    min-height: 60px;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    outline: none;
+    background: white;
+    position: relative;
+}
+
+.title-card-title-editor {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.title-card-content-editor {
+    min-height: 100px;
+}
+
+.title-card-title-editor:focus,
+.title-card-content-editor:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.title-card-title-editor.empty,
+.title-card-content-editor.empty {
+    color: #9ca3af;
+}
+
+.title-card-title-editor .placeholder,
+.title-card-content-editor .placeholder {
+    color: #9ca3af;
+    pointer-events: none;
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    user-select: none;
+}
+
+/* Title Card Display in Study Mode */
+.title-card-display {
+    display: none;
+    text-align: center;
+    padding: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.title-card-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.nav-arrow {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    min-width: 100px;
+}
+
+.nav-arrow:hover {
+    background: #5a6fd8;
+    transform: translateY(-1px);
+}
+
+.nav-arrow:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.title-card-counter {
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+.title-card-content-display {
+    background: white;
+    border-radius: 12px;
+    padding: 3rem 2rem;
+    margin: 2rem 0;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border: 1px solid #e5e7eb;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.title-card-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+}
+
+.title-card-text {
+    font-size: 1.1rem;
+    color: #4b5563;
+    line-height: 1.6;
+    text-align: left;
+    max-width: none;
+}
+
+.title-card-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.title-card-actions .btn {
+    min-width: 150px;
 }
 
 .form-actions {
@@ -1280,6 +1463,35 @@ body {
 
     .card-inputs {
         grid-template-columns: 1fr;
+    }
+
+    .title-card-display {
+        padding: 1rem;
+    }
+
+    .title-card-content-display {
+        padding: 2rem 1rem;
+        min-height: 250px;
+    }
+
+    .title-card-title {
+        font-size: 1.5rem;
+    }
+
+    .title-card-navigation {
+        flex-direction: column;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .title-card-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .title-card-actions .btn {
+        width: 100%;
+        max-width: 250px;
     }
 
     .answer-input-group {

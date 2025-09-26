@@ -11,6 +11,7 @@ class FlashCardsApp {
         this.selectedColor = 'blue';
         this.isEditMode = false;
         this.editingDeckId = null;
+        this.currentTitleCardIndex = 0;
         
         this.init();
     }
@@ -116,8 +117,10 @@ class FlashCardsApp {
         }
 
         const cards = this.collectCards();
+        const titleCards = this.collectTitleCards();
+        
         if (cards.length === 0) {
-            alert('Please add at least one card');
+            alert('Please add at least one study card');
             return;
         }
 
@@ -130,6 +133,7 @@ class FlashCardsApp {
                     name,
                     subject,
                     cards,
+                    titleCards,
                     style: this.selectedStyle,
                     color: this.selectedColor,
                     updatedAt: new Date().toISOString()
@@ -143,6 +147,7 @@ class FlashCardsApp {
                 name,
                 subject,
                 cards,
+                titleCards,
                 style: this.selectedStyle,
                 color: this.selectedColor,
                 createdAt: new Date().toISOString()
@@ -188,9 +193,42 @@ class FlashCardsApp {
         return cards;
     }
 
+    collectTitleCards() {
+        const titleCards = [];
+        const titleCardItems = document.querySelectorAll('.title-card-item');
+        
+        titleCardItems.forEach(item => {
+            const titleEditor = item.querySelector('.title-card-title-editor');
+            const contentEditor = item.querySelector('.title-card-content-editor');
+            
+            // Get HTML content, but remove placeholder elements
+            let titleHTML = titleEditor.innerHTML;
+            let contentHTML = contentEditor.innerHTML;
+            
+            // Remove placeholder spans
+            titleHTML = titleHTML.replace(/<span class="placeholder">.*?<\/span>/g, '');
+            contentHTML = contentHTML.replace(/<span class="placeholder">.*?<\/span>/g, '');
+            
+            const titleText = titleEditor.textContent.trim();
+            const contentText = contentEditor.textContent.trim();
+            
+            if (titleText) {  // Title is required, content is optional
+                titleCards.push({ 
+                    title: titleHTML.trim(), 
+                    content: contentHTML.trim(),
+                    titleText: titleText,
+                    contentText: contentText
+                });
+            }
+        });
+        
+        return titleCards;
+    }
+
     clearForm() {
         document.getElementById('deck-form').reset();
         document.getElementById('cards-list').innerHTML = '';
+        document.getElementById('title-cards-list').innerHTML = '';
         
         // Reset customization selections
         document.querySelectorAll('.style-option').forEach(opt => opt.classList.remove('selected'));
@@ -231,8 +269,9 @@ class FlashCardsApp {
     }
 
     loadDeckForEditing(deck) {
-        // Clear any existing cards first
+        // Clear any existing cards and title cards first
         document.getElementById('cards-list').innerHTML = '';
+        document.getElementById('title-cards-list').innerHTML = '';
 
         // Load basic deck info
         document.getElementById('deck-name').value = deck.name;
@@ -247,6 +286,35 @@ class FlashCardsApp {
         this.selectedColor = deck.color || 'blue';
         document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
         document.querySelector(`.color-option[data-color="${this.selectedColor}"]`)?.classList.add('selected');
+
+        // Load title cards
+        if (deck.titleCards && deck.titleCards.length > 0) {
+            deck.titleCards.forEach((titleCard, index) => {
+                this.addTitleCard();
+                const titleCardItems = document.querySelectorAll('.title-card-item');
+                const titleCardItem = titleCardItems[titleCardItems.length - 1];
+                
+                const titleEditor = titleCardItem.querySelector('.title-card-title-editor');
+                const contentEditor = titleCardItem.querySelector('.title-card-content-editor');
+                
+                // Use HTML content if available, otherwise use plain text
+                const titleContent = titleCard.title || '';
+                const contentContent = titleCard.content || '';
+                
+                // Check for HTML content for backward compatibility
+                if (titleContent.indexOf('<') === -1) {
+                    titleEditor.textContent = titleContent;
+                } else {
+                    titleEditor.innerHTML = titleContent;
+                }
+                
+                if (contentContent.indexOf('<') === -1) {
+                    contentEditor.textContent = contentContent;
+                } else {
+                    contentEditor.innerHTML = contentContent;
+                }
+            });
+        }
 
         // Load cards
         deck.cards.forEach((card, index) => {
@@ -374,10 +442,12 @@ class FlashCardsApp {
                         <div class="color-picker-group">
                             <label>Text:</label>
                             <input type="color" class="text-color-picker" value="#000000" title="Text Color">
+                            <button type="button" class="format-btn apply-text-color" title="Apply Text Color">Apply</button>
                         </div>
                         <div class="color-picker-group">
                             <label>Highlight:</label>
                             <input type="color" class="highlight-color-picker" value="#ffff00" title="Highlight Color">
+                            <button type="button" class="format-btn apply-highlight-color" title="Apply Highlight Color">Apply</button>
                         </div>
                     </div>
                     <div class="toolbar-group">
@@ -406,6 +476,77 @@ class FlashCardsApp {
         this.setupFormattingToolbar(cardsList.lastElementChild);
     }
 
+    addTitleCard() {
+        const titleCardsList = document.getElementById('title-cards-list');
+        const titleCardNumber = titleCardsList.children.length + 1;
+        
+        const titleCardHtml = `
+            <div class="title-card-item">
+                <div class="card-header">
+                    <span class="card-number">Title Card ${titleCardNumber}</span>
+                    <button type="button" class="card-remove" onclick="this.parentElement.parentElement.remove(); app.updateTitleCardNumbers();">Remove</button>
+                </div>
+                
+                <!-- Formatting Toolbar for Title Cards -->
+                <div class="formatting-toolbar">
+                    <div class="toolbar-group">
+                        <button type="button" class="format-btn" data-command="bold" title="Bold">
+                            <strong>B</strong>
+                        </button>
+                        <button type="button" class="format-btn" data-command="italic" title="Italic">
+                            <em>I</em>
+                        </button>
+                        <button type="button" class="format-btn" data-command="underline" title="Underline">
+                            <u>U</u>
+                        </button>
+                        <button type="button" class="format-btn" data-command="strikeThrough" title="Strikethrough">
+                            <s>S</s>
+                        </button>
+                    </div>
+                    <div class="toolbar-group">
+                        <div class="color-picker-group">
+                            <label>Text:</label>
+                            <input type="color" class="text-color-picker" value="#000000" title="Text Color">
+                            <button type="button" class="format-btn apply-text-color" title="Apply Text Color">Apply</button>
+                        </div>
+                        <div class="color-picker-group">
+                            <label>Highlight:</label>
+                            <input type="color" class="highlight-color-picker" value="#ffff00" title="Highlight Color">
+                            <button type="button" class="format-btn apply-highlight-color" title="Apply Highlight Color">Apply</button>
+                        </div>
+                    </div>
+                    <div class="toolbar-group">
+                        <button type="button" class="format-btn clear-format" title="Clear Formatting">
+                            🗑️ Clear
+                        </button>
+                    </div>
+                </div>
+
+                <div class="title-card-inputs">
+                    <div class="card-input-group title-input">
+                        <label>Title</label>
+                        <div class="title-card-title-editor" contenteditable="true" data-placeholder="Enter title card title..." required></div>
+                    </div>
+                    <div class="card-input-group content-input">
+                        <label>Content</label>
+                        <div class="title-card-content-editor" contenteditable="true" data-placeholder="Enter title card content, instructions, or description..."></div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        titleCardsList.insertAdjacentHTML('beforeend', titleCardHtml);
+        
+        // Set up formatting toolbar events for the new title card
+        this.setupFormattingToolbar(titleCardsList.lastElementChild);
+    }
+
+    updateTitleCardNumbers() {
+        document.querySelectorAll('.title-card-item').forEach((item, index) => {
+            item.querySelector('.card-number').textContent = `Title Card ${index + 1}`;
+        });
+    }
+
     updateCardNumbers() {
         document.querySelectorAll('.card-item').forEach((item, index) => {
             item.querySelector('.card-number').textContent = `Card ${index + 1}`;
@@ -417,11 +558,15 @@ class FlashCardsApp {
         const formatButtons = toolbar.querySelectorAll('.format-btn');
         const textColorPicker = toolbar.querySelector('.text-color-picker');
         const highlightColorPicker = toolbar.querySelector('.highlight-color-picker');
+        const applyTextColorBtn = toolbar.querySelector('.apply-text-color');
+        const applyHighlightColorBtn = toolbar.querySelector('.apply-highlight-color');
         const clearButton = toolbar.querySelector('.clear-format');
 
         // Format buttons (bold, italic, underline, strikethrough)
         formatButtons.forEach(button => {
-            if (!button.classList.contains('clear-format')) {
+            if (!button.classList.contains('clear-format') && 
+                !button.classList.contains('apply-text-color') && 
+                !button.classList.contains('apply-highlight-color')) {
                 button.addEventListener('click', (e) => {
                     e.preventDefault();
                     const command = button.getAttribute('data-command');
@@ -430,14 +575,18 @@ class FlashCardsApp {
             }
         });
 
-        // Text color picker
-        textColorPicker.addEventListener('change', (e) => {
-            this.applyFormat('foreColor', e.target.value);
+        // Apply text color button
+        applyTextColorBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const selectedColor = textColorPicker.value;
+            this.applyFormat('foreColor', selectedColor);
         });
 
-        // Highlight color picker
-        highlightColorPicker.addEventListener('change', (e) => {
-            this.applyFormat('backColor', e.target.value);
+        // Apply highlight color button
+        applyHighlightColorBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const selectedColor = highlightColorPicker.value;
+            this.applyFormat('backColor', selectedColor);
         });
 
         // Clear formatting button
@@ -535,16 +684,89 @@ class FlashCardsApp {
         this.currentCardIndex = 0;
         this.score = 0;
         this.cardCount = 0;
+        this.currentTitleCardIndex = 0;
         
         this.showView('study');
         this.updateStudyHeader();
-        this.showCurrentCard();
         this.hideStudyComplete();
+        
+        // Check if deck has title cards
+        if (deck.titleCards && deck.titleCards.length > 0) {
+            this.showTitleCards();
+        } else {
+            this.startActualStudy();
+        }
+    }
+
+    showTitleCards() {
+        document.getElementById('title-card-display').style.display = 'block';
+        document.getElementById('study-card-container').style.display = 'none';
+        
+        this.showCurrentTitleCard();
+    }
+
+    showCurrentTitleCard() {
+        const titleCards = this.currentDeck.titleCards;
+        const currentTitleCard = titleCards[this.currentTitleCardIndex];
+        
+        // Update counter
+        document.getElementById('title-card-counter').textContent = 
+            `${this.currentTitleCardIndex + 1} / ${titleCards.length}`;
+        
+        // Update content
+        const titleElement = document.getElementById('display-title-card-title');
+        const contentElement = document.getElementById('display-title-card-content');
+        
+        // Handle formatted content
+        if (currentTitleCard.title && currentTitleCard.title.indexOf('<') === -1) {
+            titleElement.textContent = currentTitleCard.title;
+        } else {
+            titleElement.innerHTML = currentTitleCard.title || '';
+        }
+        
+        if (currentTitleCard.content && currentTitleCard.content.indexOf('<') === -1) {
+            contentElement.textContent = currentTitleCard.content;
+        } else {
+            contentElement.innerHTML = currentTitleCard.content || '';
+        }
+        
+        // Update navigation buttons
+        const prevBtn = document.getElementById('title-prev-btn');
+        const nextBtn = document.getElementById('title-next-btn');
+        
+        prevBtn.style.visibility = this.currentTitleCardIndex === 0 ? 'hidden' : 'visible';
+        nextBtn.style.visibility = this.currentTitleCardIndex === titleCards.length - 1 ? 'hidden' : 'visible';
+    }
+
+    previousTitleCard() {
+        if (this.currentTitleCardIndex > 0) {
+            this.currentTitleCardIndex--;
+            this.showCurrentTitleCard();
+        }
+    }
+
+    nextTitleCard() {
+        const titleCards = this.currentDeck.titleCards;
+        if (this.currentTitleCardIndex < titleCards.length - 1) {
+            this.currentTitleCardIndex++;
+            this.showCurrentTitleCard();
+        }
+    }
+
+    startActualStudy() {
+        document.getElementById('title-card-display').style.display = 'none';
+        document.getElementById('study-card-container').style.display = 'block';
+        
+        this.showCurrentCard();
         
         // Focus on answer input
         setTimeout(() => {
             document.getElementById('answer-input').focus();
         }, 100);
+    }
+
+    skipToStudy() {
+        this.startActualStudy();
     }
 
     updateStudyHeader() {
@@ -835,6 +1057,10 @@ function exitStudy() {
 
 function editDeck(deckId) {
     app.editDeck(deckId);
+}
+
+function addTitleCard() {
+    app.addTitleCard();
 }
 
 // CSS for notifications
