@@ -1,15 +1,17 @@
 // Global app instance
 let app = null;
 
+// Debug: Test if script is loading
+console.log('FlashCards script loading...');
+alert('FlashCards script loaded!');
+
 // Immediately available global functions for onclick handlers
 window.addCard = function() {
-    alert('addCard function called!'); // Debug alert
     console.log('addCard called, app:', !!app);
     if (app && app.addCard) {
         app.addCard();
     } else {
         console.log('App not ready or addCard method missing');
-        alert('App not ready! app=' + !!app);
     }
 };
 
@@ -23,13 +25,11 @@ window.addTitleCard = function() {
 };
 
 window.showView = function(view) {
-    alert('showView called with: ' + view); // Debug alert  
     console.log('showView called with:', view, 'app:', !!app);
     if (app && app.showView) {
         app.showView(view);
     } else {
         console.log('App not ready or showView method missing');
-        alert('showView - App not ready! app=' + !!app);
     }
 };
 
@@ -53,10 +53,12 @@ window.checkAnswer = function() {
 
 window.startStudy = function(deckId) {
     console.log('startStudy called with:', deckId, 'app:', !!app);
+    alert('startStudy called with: ' + deckId); // Temporary debug
     if (app && app.startStudy) {
         app.startStudy(deckId);
     } else {
         console.log('App not ready or startStudy method missing');
+        alert('startStudy - App not ready! app=' + !!app);
     }
 };
 
@@ -89,10 +91,12 @@ window.saveDeckToFile = function(deckId) {
 
 window.deleteDeck = function(deckId) {
     console.log('deleteDeck called with:', deckId, 'app:', !!app);
+    alert('deleteDeck called with: ' + deckId); // Temporary debug
     if (app && app.deleteDeck) {
         app.deleteDeck(deckId);
     } else {
         console.log('App not ready or deleteDeck method missing');
+        alert('deleteDeck - App not ready! app=' + !!app);
     }
 };
 
@@ -136,10 +140,12 @@ window.showGenerationInsights = function() {
 
 window.closeGenerationInsights = function() {
     console.log('closeGenerationInsights called, app:', !!app);
+    alert('closeGenerationInsights called!'); // Temporary debug
     if (app && app.closeGenerationInsights) {
         app.closeGenerationInsights();
     } else {
         console.log('App not ready or closeGenerationInsights method missing');
+        alert('closeGenerationInsights - App not ready! app=' + !!app);
     }
 };
 
