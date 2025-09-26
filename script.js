@@ -224,7 +224,9 @@ window.regenerateDecks = function() {
 // FlashCards Application
 class FlashCardsApp {
     constructor() {
+        console.log('FlashCardsApp constructor started');
         this.decks = this.loadDecks();
+        console.log('loadDecks() completed');
         this.currentDeck = null;
         this.currentCards = [];
         this.currentCardIndex = 0;
@@ -237,21 +239,31 @@ class FlashCardsApp {
         this.currentTitleCardIndex = 0;
         
         // Adaptive Learning System
+        console.log('Loading learning data...');
         this.learningData = this.loadLearningData();
+        console.log('Learning data loaded');
         this.sessionStartTime = Date.now();
         
         // Chart instances for cleanup
         this.chartInstances = {};
         
+        console.log('Calling init()...');
         this.init();
+        console.log('Constructor completed successfully');
     }
 
     init() {
+        console.log('init() started');
         this.setupEventListeners();
+        console.log('setupEventListeners() completed');
         this.setupCustomizationListeners();
+        console.log('setupCustomizationListeners() completed');
         this.renderDecks();
+        console.log('renderDecks() completed');
         this.updateAILockStatus();
+        console.log('updateAILockStatus() completed');
         this.showView('home');
+        console.log('init() completed');
     }
 
     setupEventListeners() {
@@ -2978,8 +2990,10 @@ document.addEventListener('DOMContentLoaded', () => {
     alert('DOM loaded, starting app initialization...');
     try {
         console.log('Creating FlashCardsApp instance...');
+        alert('About to create FlashCardsApp...');
         app = new FlashCardsApp();
         console.log('FlashCards app initialized successfully!', app);
+        alert('FlashCardsApp created successfully!');
         
         // Make app globally available for debugging
         window.flashCardsApp = app;
@@ -2995,5 +3009,6 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('App initialization completed! app=' + !!app);
     } catch (error) {
         console.error('Error initializing FlashCards app:', error);
+        alert('ERROR creating app: ' + error.message);
     }
 });
