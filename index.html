@@ -40,7 +40,7 @@
                         <div class="section-header">
                             <h3>Your Decks</h3>
                             <div class="header-buttons">
-                                <button class="btn btn-secondary" onclick="app.importDeck()">
+                                <button class="btn btn-secondary" onclick="importDeck()">
                                     📁 Import Deck
                                 </button>
                                 <button class="btn btn-primary" onclick="showView('create')">
@@ -67,10 +67,10 @@
                                 <p class="section-subtitle">Personalized decks created just for you based on your study patterns</p>
                             </div>
                             <div class="header-buttons">
-                                <button class="btn btn-secondary" onclick="app.regenerateDecks()" id="regenerate-btn" disabled>
+                                <button class="btn btn-secondary" onclick="regenerateDecks()" id="regenerate-btn" disabled>
                                     🔄 Regenerate
                                 </button>
-                                <button class="btn btn-info" onclick="app.showGenerationInsights()" title="How we generate your decks">
+                                <button class="btn btn-info" onclick="showGenerationInsights()" title="How we generate your decks">
                                     ❓ How it works
                                 </button>
                             </div>
@@ -229,11 +229,11 @@
                     <!-- Title Card Display -->
                     <div class="title-card-display" id="title-card-display">
                         <div class="title-card-navigation">
-                            <button class="nav-arrow prev" id="title-prev-btn" onclick="app.previousTitleCard()">
+                            <button class="nav-arrow prev" id="title-prev-btn" onclick="previousTitleCard()">
                                 ← Previous
                             </button>
                             <span class="title-card-counter" id="title-card-counter">1 / 1</span>
-                            <button class="nav-arrow next" id="title-next-btn" onclick="app.nextTitleCard()">
+                            <button class="nav-arrow next" id="title-next-btn" onclick="nextTitleCard()">
                                 Next →
                             </button>
                         </div>
@@ -244,10 +244,10 @@
                         </div>
                         
                         <div class="title-card-actions">
-                            <button class="btn btn-primary" onclick="app.startActualStudy()">
+                            <button class="btn btn-primary" onclick="startActualStudy()">
                                 Start Studying →
                             </button>
-                            <button class="btn btn-secondary" onclick="app.skipToStudy()">
+                            <button class="btn btn-secondary" onclick="skipToStudy()">
                                 Skip to Cards
                             </button>
                         </div>
@@ -399,7 +399,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>🤖 How AI Deck Generation Works</h3>
-                <button class="modal-close" onclick="app.closeGenerationInsights()">✕</button>
+                <button class="modal-close" onclick="closeGenerationInsights()">✕</button>
             </div>
             <div class="modal-body">
                 <div class="ai-explanation">
@@ -444,7 +444,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>⚠️ Delete Deck</h3>
-                <button class="modal-close" onclick="app.cancelDelete()">✕</button>
+                <button class="modal-close" onclick="cancelDelete()">✕</button>
             </div>
             <div class="modal-body">
                 <div class="delete-warning">
@@ -462,10 +462,10 @@
                 </div>
                 
                 <div class="modal-actions">
-                    <button class="btn btn-danger" id="confirm-delete-btn" onclick="app.confirmDelete()" disabled>
+                    <button class="btn btn-danger" id="confirm-delete-btn" onclick="confirmDelete()" disabled>
                         🗑️ Delete Deck
                     </button>
-                    <button class="btn btn-secondary" onclick="app.cancelDelete()">
+                    <button class="btn btn-secondary" onclick="cancelDelete()">
                         Cancel
                     </button>
                 </div>
@@ -478,7 +478,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="stats-deck-name">Deck Statistics</h3>
-                <button class="modal-close" onclick="app.closeStatsModal()">✕</button>
+                <button class="modal-close" onclick="closeStatsModal()">✕</button>
             </div>
             <div class="modal-body">
                 <div class="stats-summary">

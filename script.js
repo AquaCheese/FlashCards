@@ -2724,6 +2724,53 @@ function addTitleCard() {
     app.addTitleCard();
 }
 
+// Additional global functions for app methods
+function importDeck() {
+    if (app) app.importDeck();
+}
+
+function showGenerationInsights() {
+    if (app) app.showGenerationInsights();
+}
+
+function regenerateDecks() {
+    if (app) app.regenerateDecks();
+}
+
+// Study navigation functions
+function previousTitleCard() {
+    if (app) app.previousTitleCard();
+}
+
+function nextTitleCard() {
+    if (app) app.nextTitleCard();
+}
+
+function startActualStudy() {
+    if (app) app.startActualStudy();
+}
+
+function skipToStudy() {
+    if (app) app.skipToStudy();
+}
+
+// Modal functions
+function closeGenerationInsights() {
+    if (app) app.closeGenerationInsights();
+}
+
+function confirmDelete() {
+    if (app) app.confirmDelete();
+}
+
+function cancelDelete() {
+    if (app) app.cancelDelete();
+}
+
+function closeStatsModal() {
+    if (app) app.closeStatsModal();
+}
+
 // CSS for notifications
 const notificationStyles = `
 @keyframes slideInRight {
