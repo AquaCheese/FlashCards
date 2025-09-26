@@ -3,11 +3,13 @@ let app = null;
 
 // Immediately available global functions for onclick handlers
 window.addCard = function() {
+    alert('addCard function called!'); // Debug alert
     console.log('addCard called, app:', !!app);
     if (app && app.addCard) {
         app.addCard();
     } else {
         console.log('App not ready or addCard method missing');
+        alert('App not ready! app=' + !!app);
     }
 };
 
@@ -21,11 +23,13 @@ window.addTitleCard = function() {
 };
 
 window.showView = function(view) {
+    alert('showView called with: ' + view); // Debug alert  
     console.log('showView called with:', view, 'app:', !!app);
     if (app && app.showView) {
         app.showView(view);
     } else {
         console.log('App not ready or showView method missing');
+        alert('showView - App not ready! app=' + !!app);
     }
 };
 
@@ -1942,16 +1946,24 @@ class FlashCardsApp {
         const generatedSection = document.getElementById('generated-decks-section');
         const statusElement = document.getElementById('generation-status');
         const gridElement = document.getElementById('generated-decks-grid');
+        const lockOverlay = document.getElementById('ai-lock-overlay');
+        
+        // Always show the section
+        generatedSection.style.display = 'block';
         
         // Check if we have enough data for generation
         const sessions = this.loadSessionData();
         
         if (sessions.length < 3) {
-            generatedSection.style.display = 'none';
+            // Show lock overlay, hide generation content
+            lockOverlay.style.display = 'block';
+            if (statusElement) statusElement.style.display = 'none';
+            if (gridElement) gridElement.style.display = 'none';
             return;
         }
         
-        generatedSection.style.display = 'block';
+        // Hide lock overlay, show generation content
+        lockOverlay.style.display = 'none';
         statusElement.style.display = 'block';
         
         // Show generation process
@@ -2972,22 +2984,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('window.addCard:', typeof window.addCard);
         console.log('app instance:', !!app);
         
-        // Also make functions directly available on window
-        window.showView = showView;
-        window.importDeck = importDeck;
-        window.showGenerationInsights = showGenerationInsights;
-        window.addCard = addCard;
-        window.addTitleCard = addTitleCard;
-        window.clearForm = clearForm;
-        window.startStudy = startStudy;
-        window.editDeck = editDeck;
-        window.showDeckStats = showDeckStats;
-        window.saveDeckToFile = saveDeckToFile;
-        window.deleteDeck = deleteDeck;
-        window.restartStudy = restartStudy;
-        window.checkAnswer = checkAnswer;
-        
-        console.log('Global functions attached to window object');
+        console.log('FlashCards app initialized and functions are available on window object');
     } catch (error) {
         console.error('Error initializing FlashCards app:', error);
     }
