@@ -352,6 +352,12 @@ class FlashCardsApp {
         const progressText = document.getElementById('progress-text');
         const sessionsNeeded = document.getElementById('sessions-needed');
 
+        // Check if elements exist before accessing them
+        if (!lockOverlay || !regenerateBtn || !progressFill || !progressText || !sessionsNeeded) {
+            console.log('Some AI lock elements not found, skipping update');
+            return;
+        }
+
         if (sessionCount >= requiredSessions) {
             // AI is unlocked
             lockOverlay.style.display = 'none';
@@ -369,12 +375,14 @@ class FlashCardsApp {
 
             // Add encouraging message based on progress
             const lockInfo = lockOverlay.querySelector('p');
-            if (sessionCount === 0) {
-                lockInfo.innerHTML = `Complete <strong>${requiredSessions}</strong> study sessions to unlock personalized AI-generated decks!`;
-            } else if (sessionCount === 1) {
-                lockInfo.innerHTML = `Great start! Complete <strong>${requiredSessions - sessionCount}</strong> more study sessions to unlock AI decks!`;
-            } else if (sessionCount === 2) {
-                lockInfo.innerHTML = `Almost there! Just <strong>1</strong> more study session to unlock your AI deck generator!`;
+            if (lockInfo) {
+                if (sessionCount === 0) {
+                    lockInfo.innerHTML = `Complete <strong>${requiredSessions}</strong> study sessions to unlock personalized AI-generated decks!`;
+                } else if (sessionCount === 1) {
+                    lockInfo.innerHTML = `Great start! Complete <strong>${requiredSessions - sessionCount}</strong> more study sessions to unlock AI decks!`;
+                } else if (sessionCount === 2) {
+                    lockInfo.innerHTML = `Almost there! Just <strong>1</strong> more study session to unlock your AI deck generator!`;
+                }
             }
         }
     }
