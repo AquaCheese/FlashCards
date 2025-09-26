@@ -9,6 +9,8 @@ class FlashCardsApp {
         this.cardCount = 0;
         this.selectedStyle = 'classic';
         this.selectedColor = 'blue';
+        this.isEditMode = false;
+        this.editingDeckId = null;
         
         this.init();
     }
@@ -88,6 +90,9 @@ class FlashCardsApp {
         // Special handling for views
         if (viewName === 'home') {
             this.renderDecks();
+        } else if (viewName === 'create' && !this.isEditMode) {
+            // Reset to create mode if not already in edit mode
+            this.updateUIForEditMode(false);
         }
     }
 
@@ -116,23 +121,39 @@ class FlashCardsApp {
             return;
         }
 
-        const deck = {
-            id: Date.now().toString(),
-            name,
-            subject,
-            cards,
-            style: this.selectedStyle,
-            color: this.selectedColor,
-            createdAt: new Date().toISOString()
-        };
+        if (this.isEditMode && this.editingDeckId) {
+            // Update existing deck
+            const deckIndex = this.decks.findIndex(d => d.id === this.editingDeckId);
+            if (deckIndex !== -1) {
+                this.decks[deckIndex] = {
+                    ...this.decks[deckIndex], // Keep original id and createdAt
+                    name,
+                    subject,
+                    cards,
+                    style: this.selectedStyle,
+                    color: this.selectedColor,
+                    updatedAt: new Date().toISOString()
+                };
+                this.showNotification('Deck updated successfully!', 'success');
+            }
+        } else {
+            // Create new deck
+            const deck = {
+                id: Date.now().toString(),
+                name,
+                subject,
+                cards,
+                style: this.selectedStyle,
+                color: this.selectedColor,
+                createdAt: new Date().toISOString()
+            };
+            this.decks.push(deck);
+            this.showNotification('Deck saved successfully!', 'success');
+        }
 
-        this.decks.push(deck);
         this.saveDecks();
         this.clearForm();
         this.showView('home');
-        
-        // Show success message
-        this.showNotification('Deck saved successfully!', 'success');
     }
 
     collectCards() {
@@ -163,6 +184,11 @@ class FlashCardsApp {
         this.selectedStyle = 'classic';
         this.selectedColor = 'blue';
         
+        // Reset edit mode state
+        this.isEditMode = false;
+        this.editingDeckId = null;
+        this.updateUIForEditMode(false);
+        
         this.addCard();
     }
 
@@ -172,6 +198,63 @@ class FlashCardsApp {
             this.saveDecks();
             this.renderDecks();
             this.showNotification('Deck deleted', 'info');
+        }
+    }
+
+    editDeck(deckId) {
+        const deck = this.decks.find(d => d.id === deckId);
+        if (!deck) {
+            alert('Deck not found');
+            return;
+        }
+
+        this.isEditMode = true;
+        this.editingDeckId = deckId;
+        this.loadDeckForEditing(deck);
+        this.showView('create');
+    }
+
+    loadDeckForEditing(deck) {
+        // Clear any existing cards first
+        document.getElementById('cards-list').innerHTML = '';
+
+        // Load basic deck info
+        document.getElementById('deck-name').value = deck.name;
+        document.getElementById('deck-subject').value = deck.subject;
+
+        // Load style selection
+        this.selectedStyle = deck.style || 'classic';
+        document.querySelectorAll('.style-option').forEach(opt => opt.classList.remove('selected'));
+        document.querySelector(`.style-option[data-style="${this.selectedStyle}"]`)?.classList.add('selected');
+
+        // Load color selection
+        this.selectedColor = deck.color || 'blue';
+        document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+        document.querySelector(`.color-option[data-color="${this.selectedColor}"]`)?.classList.add('selected');
+
+        // Load cards
+        deck.cards.forEach((card, index) => {
+            this.addCard();
+            const cardItems = document.querySelectorAll('.card-item');
+            const cardItem = cardItems[cardItems.length - 1];
+            cardItem.querySelector('.card-question').value = card.question;
+            cardItem.querySelector('.card-answer').value = card.answer;
+        });
+
+        // Update UI labels for edit mode
+        this.updateUIForEditMode(true);
+    }
+
+    updateUIForEditMode(isEdit) {
+        const createHeader = document.querySelector('.create-header h2');
+        const submitButton = document.querySelector('#deck-form button[type="submit"]');
+        
+        if (isEdit) {
+            createHeader.textContent = 'Edit Deck';
+            submitButton.textContent = 'Update Deck';
+        } else {
+            createHeader.textContent = 'Create New Deck';
+            submitButton.textContent = 'Save Deck';
         }
     }
 
@@ -214,6 +297,9 @@ class FlashCardsApp {
                 <div class="deck-buttons">
                     <button class="btn btn-primary btn-small">
                         ▶️ Study
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); app.editDeck('${deck.id}')" title="Edit deck">
+                        ✏️ Edit
                     </button>
                 </div>
             </div>
@@ -555,6 +641,10 @@ function restartStudy() {
 
 function exitStudy() {
     app.exitStudy();
+}
+
+function editDeck(deckId) {
+    app.editDeck(deckId);
 }
 
 // CSS for notifications
