@@ -441,6 +441,120 @@ body {
     font-size: 0.9rem;
 }
 
+/* Formatting Toolbar Styles */
+.formatting-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0.5rem;
+    border-right: 1px solid #cbd5e1;
+}
+
+.toolbar-group:last-child {
+    border-right: none;
+}
+
+.format-btn {
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.format-btn:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.format-btn:active,
+.format-btn.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.color-picker-group {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.color-picker-group label {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+.text-color-picker,
+.highlight-color-picker {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 0;
+}
+
+/* Contenteditable Editor Styles */
+.card-question-editor,
+.card-answer-editor {
+    min-height: 60px;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    outline: none;
+    background: white;
+    position: relative;
+}
+
+.card-question-editor:focus,
+.card-answer-editor:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.card-question-editor.empty,
+.card-answer-editor.empty {
+    color: #9ca3af;
+}
+
+.card-question-editor .placeholder,
+.card-answer-editor .placeholder {
+    color: #9ca3af;
+    pointer-events: none;
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    user-select: none;
+}
+
+/* Formatted answer display in study view */
+.formatted-answer {
+    display: inline;
+}
+
 .form-actions {
     display: flex;
     gap: 1rem;

@@ -161,11 +161,27 @@ class FlashCardsApp {
         const cardItems = document.querySelectorAll('.card-item');
         
         cardItems.forEach(item => {
-            const question = item.querySelector('.card-question').value.trim();
-            const answer = item.querySelector('.card-answer').value.trim();
+            const questionEditor = item.querySelector('.card-question-editor');
+            const answerEditor = item.querySelector('.card-answer-editor');
             
-            if (question && answer) {
-                cards.push({ question, answer });
+            // Get HTML content, but remove placeholder elements
+            let questionHTML = questionEditor.innerHTML;
+            let answerHTML = answerEditor.innerHTML;
+            
+            // Remove placeholder spans
+            questionHTML = questionHTML.replace(/<span class="placeholder">.*?<\/span>/g, '');
+            answerHTML = answerHTML.replace(/<span class="placeholder">.*?<\/span>/g, '');
+            
+            const questionText = questionEditor.textContent.trim();
+            const answerText = answerEditor.textContent.trim();
+            
+            if (questionText && answerText) {
+                cards.push({ 
+                    question: questionHTML.trim(), 
+                    answer: answerHTML.trim(),
+                    questionText: questionText,
+                    answerText: answerText
+                });
             }
         });
         
@@ -237,8 +253,27 @@ class FlashCardsApp {
             this.addCard();
             const cardItems = document.querySelectorAll('.card-item');
             const cardItem = cardItems[cardItems.length - 1];
-            cardItem.querySelector('.card-question').value = card.question;
-            cardItem.querySelector('.card-answer').value = card.answer;
+            
+            const questionEditor = cardItem.querySelector('.card-question-editor');
+            const answerEditor = cardItem.querySelector('.card-answer-editor');
+            
+            // Use HTML content if available (for formatted cards), otherwise use plain text
+            // For backward compatibility, check if content contains HTML tags
+            const questionContent = card.question || '';
+            const answerContent = card.answer || '';
+            
+            // If content doesn't contain HTML tags, treat as plain text
+            if (questionContent.indexOf('<') === -1) {
+                questionEditor.textContent = questionContent;
+            } else {
+                questionEditor.innerHTML = questionContent;
+            }
+            
+            if (answerContent.indexOf('<') === -1) {
+                answerEditor.textContent = answerContent;
+            } else {
+                answerEditor.innerHTML = answerContent;
+            }
         });
 
         // Update UI labels for edit mode
@@ -318,25 +353,172 @@ class FlashCardsApp {
                     <span class="card-number">Card ${cardNumber}</span>
                     <button type="button" class="card-remove" onclick="this.parentElement.parentElement.remove(); app.updateCardNumbers();">Remove</button>
                 </div>
+                
+                <!-- Formatting Toolbar -->
+                <div class="formatting-toolbar">
+                    <div class="toolbar-group">
+                        <button type="button" class="format-btn" data-command="bold" title="Bold">
+                            <strong>B</strong>
+                        </button>
+                        <button type="button" class="format-btn" data-command="italic" title="Italic">
+                            <em>I</em>
+                        </button>
+                        <button type="button" class="format-btn" data-command="underline" title="Underline">
+                            <u>U</u>
+                        </button>
+                        <button type="button" class="format-btn" data-command="strikeThrough" title="Strikethrough">
+                            <s>S</s>
+                        </button>
+                    </div>
+                    <div class="toolbar-group">
+                        <div class="color-picker-group">
+                            <label>Text:</label>
+                            <input type="color" class="text-color-picker" value="#000000" title="Text Color">
+                        </div>
+                        <div class="color-picker-group">
+                            <label>Highlight:</label>
+                            <input type="color" class="highlight-color-picker" value="#ffff00" title="Highlight Color">
+                        </div>
+                    </div>
+                    <div class="toolbar-group">
+                        <button type="button" class="format-btn clear-format" title="Clear Formatting">
+                            🗑️ Clear
+                        </button>
+                    </div>
+                </div>
+
                 <div class="card-inputs">
                     <div class="card-input-group">
                         <label>Question (Front)</label>
-                        <input type="text" class="card-question" placeholder="Enter question..." required>
+                        <div class="card-question-editor" contenteditable="true" data-placeholder="Enter question..." required></div>
                     </div>
                     <div class="card-input-group">
                         <label>Answer (Back)</label>
-                        <input type="text" class="card-answer" placeholder="Enter answer..." required>
+                        <div class="card-answer-editor" contenteditable="true" data-placeholder="Enter answer..." required></div>
                     </div>
                 </div>
             </div>
         `;
         
         cardsList.insertAdjacentHTML('beforeend', cardHtml);
+        
+        // Set up formatting toolbar events for the new card
+        this.setupFormattingToolbar(cardsList.lastElementChild);
     }
 
     updateCardNumbers() {
         document.querySelectorAll('.card-item').forEach((item, index) => {
             item.querySelector('.card-number').textContent = `Card ${index + 1}`;
+        });
+    }
+
+    setupFormattingToolbar(cardElement) {
+        const toolbar = cardElement.querySelector('.formatting-toolbar');
+        const formatButtons = toolbar.querySelectorAll('.format-btn');
+        const textColorPicker = toolbar.querySelector('.text-color-picker');
+        const highlightColorPicker = toolbar.querySelector('.highlight-color-picker');
+        const clearButton = toolbar.querySelector('.clear-format');
+
+        // Format buttons (bold, italic, underline, strikethrough)
+        formatButtons.forEach(button => {
+            if (!button.classList.contains('clear-format')) {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const command = button.getAttribute('data-command');
+                    this.applyFormat(command);
+                });
+            }
+        });
+
+        // Text color picker
+        textColorPicker.addEventListener('change', (e) => {
+            this.applyFormat('foreColor', e.target.value);
+        });
+
+        // Highlight color picker
+        highlightColorPicker.addEventListener('change', (e) => {
+            this.applyFormat('backColor', e.target.value);
+        });
+
+        // Clear formatting button
+        clearButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.clearFormatting();
+        });
+
+        // Add placeholder support for contenteditable divs
+        const editors = cardElement.querySelectorAll('[contenteditable]');
+        editors.forEach(editor => {
+            this.setupPlaceholder(editor);
+        });
+    }
+
+    applyFormat(command, value = null) {
+        // Ensure the selection is preserved
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+            document.execCommand(command, false, value);
+        }
+    }
+
+    clearFormatting() {
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+            document.execCommand('removeFormat', false, null);
+            // Also remove any inline styles
+            const range = selection.getRangeAt(0);
+            const contents = range.extractContents();
+            const div = document.createElement('div');
+            div.appendChild(contents);
+            // Remove all style attributes
+            const elementsWithStyle = div.querySelectorAll('[style]');
+            elementsWithStyle.forEach(el => el.removeAttribute('style'));
+            range.insertNode(div.firstChild || document.createTextNode(div.textContent));
+        }
+    }
+
+    setupPlaceholder(editor) {
+        const placeholder = editor.getAttribute('data-placeholder');
+        
+        // Show placeholder if empty
+        const updatePlaceholder = () => {
+            if (editor.textContent.trim() === '') {
+                editor.classList.add('empty');
+                if (!editor.querySelector('.placeholder')) {
+                    const placeholderEl = document.createElement('span');
+                    placeholderEl.className = 'placeholder';
+                    placeholderEl.textContent = placeholder;
+                    editor.appendChild(placeholderEl);
+                }
+            } else {
+                editor.classList.remove('empty');
+                const placeholderEl = editor.querySelector('.placeholder');
+                if (placeholderEl) {
+                    placeholderEl.remove();
+                }
+            }
+        };
+
+        // Initial placeholder setup
+        updatePlaceholder();
+
+        // Handle focus events
+        editor.addEventListener('focus', () => {
+            const placeholderEl = editor.querySelector('.placeholder');
+            if (placeholderEl) {
+                placeholderEl.remove();
+            }
+        });
+
+        editor.addEventListener('blur', updatePlaceholder);
+        editor.addEventListener('input', updatePlaceholder);
+
+        // Prevent placeholder from being part of the content
+        editor.addEventListener('keydown', (e) => {
+            const placeholderEl = editor.querySelector('.placeholder');
+            if (placeholderEl && e.key !== 'Tab') {
+                placeholderEl.remove();
+            }
         });
     }
 
@@ -379,7 +561,14 @@ class FlashCardsApp {
         }
 
         const card = this.currentCards[this.currentCardIndex];
-        document.getElementById('card-question').textContent = card.question;
+        const questionElement = document.getElementById('card-question');
+        
+        // Check if content contains HTML tags for backward compatibility
+        if (card.question && card.question.indexOf('<') === -1) {
+            questionElement.textContent = card.question;
+        } else {
+            questionElement.innerHTML = card.question || '';
+        }
         document.getElementById('answer-input').value = '';
         document.getElementById('card-number').textContent = `${this.cardCount + 1} / ${this.currentDeck.cards.length}`;
         this.hideFeedback();
@@ -415,8 +604,9 @@ class FlashCardsApp {
         }
 
         const currentCard = this.currentCards[this.currentCardIndex];
-        const correctAnswer = currentCard.answer.toLowerCase();
-        const isCorrect = userAnswer.toLowerCase() === correctAnswer;
+        // Use answerText for comparison (plain text) but answer for display (formatted HTML)
+        const correctAnswerText = (currentCard.answerText || currentCard.answer).toLowerCase();
+        const isCorrect = userAnswer.toLowerCase() === correctAnswerText;
 
         this.cardCount++;
         
@@ -435,7 +625,7 @@ class FlashCardsApp {
                 this.currentCardIndex = 0;
             }
         } else {
-            this.showFeedback(`Incorrect. The correct answer is: "${currentCard.answer}"`, 'incorrect', currentCard.answer);
+            this.showFeedback(`Incorrect. The correct answer is: "${currentCard.answerText || currentCard.answer}"`, 'incorrect', currentCard.answer);
             
             // Trigger slide animation for incorrect answer
             this.animateIncorrectAnswer();
@@ -550,7 +740,7 @@ class FlashCardsApp {
         
         let content = message;
         if (correctAnswer && type === 'incorrect') {
-            content += `<div class="correct-answer">Correct answer: ${correctAnswer}</div>`;
+            content += `<div class="correct-answer">Correct answer: <span class="formatted-answer">${correctAnswer}</span></div>`;
         }
         
         feedback.innerHTML = content;
