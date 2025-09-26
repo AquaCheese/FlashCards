@@ -1,180 +1,215 @@
 // Global app instance
 let app = null;
 
-// Global functions - will be set up after app initialization
-function addCard() {
-    if (app) app.addCard();
-    console.log('addCard called');
-}
+// Immediately available global functions for onclick handlers
+window.addCard = function() {
+    console.log('addCard called, app:', !!app);
+    if (app && app.addCard) {
+        app.addCard();
+    } else {
+        console.log('App not ready or addCard method missing');
+    }
+};
 
-function addTitleCard() {
-    if (app) app.addTitleCard();
-    console.log('addTitleCard called');
-}
+window.addTitleCard = function() {
+    console.log('addTitleCard called, app:', !!app);
+    if (app && app.addTitleCard) {
+        app.addTitleCard();
+    } else {
+        console.log('App not ready or addTitleCard method missing');
+    }
+};
 
-function showView(view) {
-    if (app) app.showView(view);
-    console.log('showView called with:', view);
-}
+window.showView = function(view) {
+    console.log('showView called with:', view, 'app:', !!app);
+    if (app && app.showView) {
+        app.showView(view);
+    } else {
+        console.log('App not ready or showView method missing');
+    }
+};
 
-function clearForm() {
-    if (app) app.clearForm();
-}
+window.clearForm = function() {
+    console.log('clearForm called, app:', !!app);
+    if (app && app.clearForm) {
+        app.clearForm();
+    } else {
+        console.log('App not ready or clearForm method missing');
+    }
+};
 
-function checkAnswer() {
-    if (app) app.checkAnswer();
-}
+window.checkAnswer = function() {
+    console.log('checkAnswer called, app:', !!app);
+    if (app && app.checkAnswer) {
+        app.checkAnswer();
+    } else {
+        console.log('App not ready or checkAnswer method missing');
+    }
+};
 
-function startStudy(deckId) {
-    if (app) app.startStudy(deckId);
-    console.log('startStudy called with:', deckId);
-}
+window.startStudy = function(deckId) {
+    console.log('startStudy called with:', deckId, 'app:', !!app);
+    if (app && app.startStudy) {
+        app.startStudy(deckId);
+    } else {
+        console.log('App not ready or startStudy method missing');
+    }
+};
 
-function editDeck(deckId) {
-    if (app) app.editDeck(deckId);
-    console.log('editDeck called with:', deckId);
-}
+window.editDeck = function(deckId) {
+    console.log('editDeck called with:', deckId, 'app:', !!app);
+    if (app && app.editDeck) {
+        app.editDeck(deckId);
+    } else {
+        console.log('App not ready or editDeck method missing');
+    }
+};
 
-function showDeckStats(deckId) {
-    if (app) app.showDeckStats(deckId);
-    console.log('showDeckStats called with:', deckId);
-}
+window.showDeckStats = function(deckId) {
+    console.log('showDeckStats called with:', deckId, 'app:', !!app);
+    if (app && app.showDeckStats) {
+        app.showDeckStats(deckId);
+    } else {
+        console.log('App not ready or showDeckStats method missing');
+    }
+};
 
-function saveDeckToFile(deckId) {
-    if (app) app.saveDeckToFile(deckId);
-    console.log('saveDeckToFile called with:', deckId);
-}
+window.saveDeckToFile = function(deckId) {
+    console.log('saveDeckToFile called with:', deckId, 'app:', !!app);
+    if (app && app.saveDeckToFile) {
+        app.saveDeckToFile(deckId);
+    } else {
+        console.log('App not ready or saveDeckToFile method missing');
+    }
+};
 
-function deleteDeck(deckId) {
-    if (app) app.deleteDeck(deckId);
-    console.log('deleteDeck called with:', deckId);
-}
+window.deleteDeck = function(deckId) {
+    console.log('deleteDeck called with:', deckId, 'app:', !!app);
+    if (app && app.deleteDeck) {
+        app.deleteDeck(deckId);
+    } else {
+        console.log('App not ready or deleteDeck method missing');
+    }
+};
 
-function restartStudy() {
-    if (app) app.restartStudy();
-}
+window.restartStudy = function() {
+    console.log('restartStudy called, app:', !!app);
+    if (app && app.restartStudy) {
+        app.restartStudy();
+    } else {
+        console.log('App not ready or restartStudy method missing');
+    }
+};
 
-// Make all functions available on window object for onclick handlers
-window.addCard = addCard;
-window.addTitleCard = addTitleCard;
-window.showView = showView;
-window.clearForm = clearForm;
-window.checkAnswer = checkAnswer;
-window.startStudy = startStudy;
-window.editDeck = editDeck;
-window.showDeckStats = showDeckStats;
-window.saveDeckToFile = saveDeckToFile;
-window.deleteDeck = deleteDeck;
-window.restartStudy = restartStudy;
+// Functions are now defined directly on window object above
 
-function exitStudy() {
+window.exitStudy = function() {
+    console.log('exitStudy called, app:', !!app);
     if (app && app.exitStudy) {
         app.exitStudy();
     } else {
-        setTimeout(() => exitStudy(), 100);
+        console.log('App not ready or exitStudy method missing');
     }
-}
+};
 
-function importDeck() {
+window.importDeck = function() {
+    console.log('importDeck called, app:', !!app);
     if (app && app.importDeck) {
         app.importDeck();
     } else {
-        setTimeout(() => importDeck(), 100);
+        console.log('App not ready or importDeck method missing');
     }
-}
+};
 
-function showGenerationInsights() {
+window.showGenerationInsights = function() {
+    console.log('showGenerationInsights called, app:', !!app);
     if (app && app.showGenerationInsights) {
         app.showGenerationInsights();
     } else {
-        setTimeout(() => showGenerationInsights(), 100);
+        console.log('App not ready or showGenerationInsights method missing');
     }
-}
+};
 
-function closeGenerationInsights() {
+window.closeGenerationInsights = function() {
+    console.log('closeGenerationInsights called, app:', !!app);
     if (app && app.closeGenerationInsights) {
         app.closeGenerationInsights();
     } else {
-        setTimeout(() => closeGenerationInsights(), 100);
+        console.log('App not ready or closeGenerationInsights method missing');
     }
-}
+};
 
-function confirmDelete() {
+window.confirmDelete = function() {
+    console.log('confirmDelete called, app:', !!app);
     if (app && app.confirmDelete) {
         app.confirmDelete();
     } else {
-        setTimeout(() => confirmDelete(), 100);
+        console.log('App not ready or confirmDelete method missing');
     }
-}
+};
 
-function cancelDelete() {
+window.cancelDelete = function() {
+    console.log('cancelDelete called, app:', !!app);
     if (app && app.cancelDelete) {
         app.cancelDelete();
     } else {
-        setTimeout(() => cancelDelete(), 100);
+        console.log('App not ready or cancelDelete method missing');
     }
-}
+};
 
-function closeStatsModal() {
+window.closeStatsModal = function() {
+    console.log('closeStatsModal called, app:', !!app);
     if (app && app.closeStatsModal) {
         app.closeStatsModal();
     } else {
-        setTimeout(() => closeStatsModal(), 100);
+        console.log('App not ready or closeStatsModal method missing');
     }
-}
+};
 
-function previousTitleCard() {
+window.previousTitleCard = function() {
+    console.log('previousTitleCard called, app:', !!app);
     if (app && app.previousTitleCard) {
         app.previousTitleCard();
     } else {
-        setTimeout(() => previousTitleCard(), 100);
+        console.log('App not ready or previousTitleCard method missing');
     }
-}
+};
 
-function nextTitleCard() {
+window.nextTitleCard = function() {
+    console.log('nextTitleCard called, app:', !!app);
     if (app && app.nextTitleCard) {
         app.nextTitleCard();
     } else {
-        setTimeout(() => nextTitleCard(), 100);
+        console.log('App not ready or nextTitleCard method missing');
     }
-}
+};
 
-function startActualStudy() {
+window.startActualStudy = function() {
+    console.log('startActualStudy called, app:', !!app);
     if (app && app.startActualStudy) {
         app.startActualStudy();
     } else {
-        setTimeout(() => startActualStudy(), 100);
+        console.log('App not ready or startActualStudy method missing');
     }
-}
+};
 
-function skipToStudy() {
+window.skipToStudy = function() {
+    console.log('skipToStudy called, app:', !!app);
     if (app && app.skipToStudy) {
         app.skipToStudy();
     } else {
-        setTimeout(() => skipToStudy(), 100);
+        console.log('App not ready or skipToStudy method missing');
     }
-}
+};
 
-// Make additional onclick functions available on window object  
-window.exitStudy = exitStudy;
-window.previousTitleCard = previousTitleCard;
-window.nextTitleCard = nextTitleCard;
-window.startActualStudy = startActualStudy;
-window.skipToStudy = skipToStudy;
-window.closeGenerationInsights = closeGenerationInsights;
-window.cancelDelete = cancelDelete;
-window.confirmDelete = confirmDelete;
-window.closeStatsModal = closeStatsModal;
-window.importDeck = importDeck;
-window.regenerateDecks = regenerateDecks;
-
-function regenerateDecks() {
+window.regenerateDecks = function() {
+    console.log('regenerateDecks called, app:', !!app);
     if (app && app.regenerateDecks) {
         app.regenerateDecks();
     } else {
-        setTimeout(() => regenerateDecks(), 100);
+        console.log('App not ready or regenerateDecks method missing');
     }
-}
+};
 
 // FlashCards Application
 class FlashCardsApp {

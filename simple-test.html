@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Button Test</title>
+</head>
+<body>
+    <h1>Simple Button Test</h1>
+    <button onclick="simpleTest()" style="padding: 10px; margin: 5px; background: red; color: white;">Click Me!</button>
+    
+    <div id="output"></div>
+    
+    <script>
+        function simpleTest() {
+            document.getElementById('output').innerHTML = 'Button clicked at ' + new Date();
+            alert('Button works!');
+        }
+        
+        // Test direct assignment
+        window.simpleTest = simpleTest;
+        
+        console.log('Script loaded, function defined');
+    </script>
+</body>
+</html>
