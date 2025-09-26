@@ -1,93 +1,57 @@
 // Global app instance
 let app = null;
 
-// Define global functions at the top level so they're immediately available
+// Global functions - will be set up after app initialization
 function addCard() {
-    if (app && app.addCard) {
-        app.addCard();
-    } else {
-        setTimeout(() => addCard(), 100);
-    }
+    if (app) app.addCard();
+    console.log('addCard called');
 }
 
 function addTitleCard() {
-    if (app && app.addTitleCard) {
-        app.addTitleCard();
-    } else {
-        setTimeout(() => addTitleCard(), 100);
-    }
+    if (app) app.addTitleCard();
+    console.log('addTitleCard called');
 }
 
 function showView(view) {
-    if (app && app.showView) {
-        app.showView(view);
-    } else {
-        setTimeout(() => showView(view), 100);
-    }
+    if (app) app.showView(view);
+    console.log('showView called with:', view);
 }
 
 function clearForm() {
-    if (app && app.clearForm) {
-        app.clearForm();
-    } else {
-        setTimeout(() => clearForm(), 100);
-    }
+    if (app) app.clearForm();
 }
 
 function checkAnswer() {
-    if (app && app.checkAnswer) {
-        app.checkAnswer();
-    } else {
-        setTimeout(() => checkAnswer(), 100);
-    }
+    if (app) app.checkAnswer();
 }
 
 function startStudy(deckId) {
-    if (app && app.startStudy) {
-        app.startStudy(deckId);
-    } else {
-        setTimeout(() => startStudy(deckId), 100);
-    }
+    if (app) app.startStudy(deckId);
+    console.log('startStudy called with:', deckId);
 }
 
 function editDeck(deckId) {
-    if (app && app.editDeck) {
-        app.editDeck(deckId);
-    } else {
-        setTimeout(() => editDeck(deckId), 100);
-    }
+    if (app) app.editDeck(deckId);
+    console.log('editDeck called with:', deckId);
 }
 
 function showDeckStats(deckId) {
-    if (app && app.showDeckStats) {
-        app.showDeckStats(deckId);
-    } else {
-        setTimeout(() => showDeckStats(deckId), 100);
-    }
+    if (app) app.showDeckStats(deckId);
+    console.log('showDeckStats called with:', deckId);
 }
 
 function saveDeckToFile(deckId) {
-    if (app && app.saveDeckToFile) {
-        app.saveDeckToFile(deckId);
-    } else {
-        setTimeout(() => saveDeckToFile(deckId), 100);
-    }
+    if (app) app.saveDeckToFile(deckId);
+    console.log('saveDeckToFile called with:', deckId);
 }
 
 function deleteDeck(deckId) {
-    if (app && app.deleteDeck) {
-        app.deleteDeck(deckId);
-    } else {
-        setTimeout(() => deleteDeck(deckId), 100);
-    }
+    if (app) app.deleteDeck(deckId);
+    console.log('deleteDeck called with:', deckId);
 }
 
 function restartStudy() {
-    if (app && app.restartStudy) {
-        app.restartStudy();
-    } else {
-        setTimeout(() => restartStudy(), 100);
-    }
+    if (app) app.restartStudy();
 }
 
 function exitStudy() {
@@ -2946,6 +2910,13 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addCard = addCard;
         window.addTitleCard = addTitleCard;
         window.clearForm = clearForm;
+        window.startStudy = startStudy;
+        window.editDeck = editDeck;
+        window.showDeckStats = showDeckStats;
+        window.saveDeckToFile = saveDeckToFile;
+        window.deleteDeck = deleteDeck;
+        window.restartStudy = restartStudy;
+        window.checkAnswer = checkAnswer;
         
         console.log('Global functions attached to window object');
     } catch (error) {
