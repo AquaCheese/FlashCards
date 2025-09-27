@@ -283,6 +283,12 @@ window.continueToNext = function() {
     }
 };
 
+window.updateAnswerNumbers = function(element) {
+    if (app && app.updateAnswerNumbers) {
+        app.updateAnswerNumbers(element);
+    }
+};
+
 // FlashCards Application
 class FlashCardsApp {
     constructor() {
@@ -4417,6 +4423,27 @@ Hint:`
             const questionText = questionEditor.textContent.trim();
             const answerText = answerEditor.textContent.trim();
             
+            // Get explanation if provided
+            const explanationEditor = item.querySelector('.card-explanation-editor');
+            let explanationHTML = '';
+            let explanationText = '';
+            
+            if (explanationEditor) {
+                explanationHTML = explanationEditor.innerHTML;
+                explanationHTML = explanationHTML.replace(/<span class="placeholder">.*?<\/span>/g, '');
+                explanationText = explanationEditor.textContent.trim();
+            }
+            
+            // Get alternative answers
+            const alternativeAnswers = [];
+            const altAnswerInputs = item.querySelectorAll('.alternative-answer-input');
+            altAnswerInputs.forEach(input => {
+                const altAnswer = input.value.trim();
+                if (altAnswer) {
+                    alternativeAnswers.push(altAnswer);
+                }
+            });
+            
             // Get custom hint if provided
             const hintInput = item.querySelector('.card-hint-input');
             const customHint = hintInput ? hintInput.value.trim() : '';
@@ -4428,6 +4455,17 @@ Hint:`
                     questionText: questionText,
                     answerText: answerText
                 };
+                
+                // Add explanation if provided
+                if (explanationText) {
+                    card.explanation = explanationHTML.trim();
+                    card.explanationText = explanationText;
+                }
+                
+                // Add alternative answers if provided
+                if (alternativeAnswers.length > 0) {
+                    card.alternativeAnswers = alternativeAnswers;
+                }
                 
                 // Add custom hint if provided
                 if (customHint) {
@@ -6202,6 +6240,36 @@ Hint:`
             } else {
                 answerEditor.innerHTML = answerContent;
             }
+            
+            // Load explanation if available
+            const explanationEditor = cardItem.querySelector('.card-explanation-editor');
+            if (explanationEditor && card.explanation) {
+                const explanationContent = card.explanation || '';
+                
+                if (explanationContent.indexOf('<') === -1) {
+                    explanationEditor.textContent = explanationContent;
+                } else {
+                    explanationEditor.innerHTML = explanationContent;
+                }
+            }
+            
+            // Load alternative answers if available
+            if (card.alternativeAnswers && card.alternativeAnswers.length > 0) {
+                const alternativeAnswersContainer = cardItem.querySelector('.alternative-answers');
+                
+                card.alternativeAnswers.forEach(altAnswer => {
+                    this.addAlternativeAnswer(alternativeAnswersContainer);
+                    const altAnswerInputs = alternativeAnswersContainer.querySelectorAll('.alternative-answer-input');
+                    const lastInput = altAnswerInputs[altAnswerInputs.length - 1];
+                    lastInput.value = altAnswer;
+                });
+            }
+            
+            // Load custom hint if available
+            const hintInput = cardItem.querySelector('.card-hint-input');
+            if (hintInput && card.customHint) {
+                hintInput.value = card.customHint;
+            }
         });
 
         // Update UI labels for edit mode
@@ -6346,6 +6414,20 @@ Hint:`
                     <div class="card-input-group">
                         <label>Answer (Back)</label>
                         <div class="card-answer-editor" contenteditable="true" data-placeholder="Enter answer..." required></div>
+                        <div class="multiple-answers-container">
+                            <div class="answers-header">
+                                <span class="answers-label">💡 Multiple Answer Variations (Optional)</span>
+                                <button type="button" class="btn btn-small add-answer-btn">+ Add Alternative</button>
+                            </div>
+                            <div class="alternative-answers">
+                                <!-- Alternative answers will be added here -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-input-group">
+                        <label>📝 Explanation (Optional)</label>
+                        <div class="card-explanation-editor" contenteditable="true" data-placeholder="Add detailed explanation, context, or additional information..."></div>
+                        <small class="explanation-help">This explanation will appear below the answer to provide additional context and learning information.</small>
                     </div>
                     <div class="card-input-group hint-input-group">
                         <label>💡 Custom Hint (Optional)</label>
@@ -6360,6 +6442,9 @@ Hint:`
         
         // Set up formatting toolbar events for the new card
         this.setupFormattingToolbar(cardsList.lastElementChild);
+        
+        // Set up multiple answers functionality for the new card
+        this.setupMultipleAnswers(cardsList.lastElementChild);
     }
 
     addTitleCard() {
@@ -6720,6 +6805,42 @@ Hint:`
             
         document.getElementById('score').textContent = `Cards Remaining: ${this.currentCards.length}`;
     }
+    
+    setupMultipleAnswers(cardElement) {
+        const addAnswerBtn = cardElement.querySelector('.add-answer-btn');
+        const alternativeAnswersContainer = cardElement.querySelector('.alternative-answers');
+        
+        if (!addAnswerBtn || !alternativeAnswersContainer) return;
+        
+        addAnswerBtn.addEventListener('click', () => {
+            this.addAlternativeAnswer(alternativeAnswersContainer);
+        });
+    }
+    
+    addAlternativeAnswer(container) {
+        const answerNumber = container.children.length + 1;
+        const answerHtml = `
+            <div class="alternative-answer-item">
+                <span class="answer-number">${answerNumber}.</span>
+                <input type="text" class="alternative-answer-input" placeholder="Enter alternative answer...">
+                <button type="button" class="remove-answer-btn" onclick="this.parentElement.remove(); app.updateAnswerNumbers(this);">Remove</button>
+            </div>
+        `;
+        
+        container.insertAdjacentHTML('beforeend', answerHtml);
+    }
+    
+    updateAnswerNumbers(removedElement) {
+        const container = removedElement.closest('.alternative-answers');
+        const items = container.querySelectorAll('.alternative-answer-item');
+        
+        items.forEach((item, index) => {
+            const numberSpan = item.querySelector('.answer-number');
+            if (numberSpan) {
+                numberSpan.textContent = `${index + 1}.`;
+            }
+        });
+    }
 
     showCurrentCard() {
         if (this.currentCards.length === 0) {
@@ -6777,9 +6898,8 @@ Hint:`
         }
 
         const currentCard = this.currentCards[this.currentCardIndex];
-        // Use answerText for comparison (plain text) but answer for display (formatted HTML)
-        const correctAnswerText = (currentCard.answerText || currentCard.answer);
-        const answerResult = this.smartAnswerComparison(userAnswer, correctAnswerText);
+        // Check against main answer and all alternative answers
+        const answerResult = this.checkAllAnswers(userAnswer, currentCard);
         const isCorrect = answerResult.isCorrect;
 
         // Process the answer and flip the card
@@ -7107,6 +7227,38 @@ Hint:`
             notification.style.animation = 'slideOutRight 0.3s ease';
             setTimeout(() => notification.remove(), 300);
         }, 3000);
+    }
+
+    checkAllAnswers(userAnswer, currentCard) {
+        // Get main answer
+        const mainAnswer = currentCard.answerText || currentCard.answer;
+        
+        // Try main answer first
+        let result = this.smartAnswerComparison(userAnswer, mainAnswer);
+        if (result.isCorrect) {
+            result.matchedAnswer = 'main';
+            return result;
+        }
+        
+        // Try alternative answers if they exist
+        if (currentCard.alternativeAnswers && currentCard.alternativeAnswers.length > 0) {
+            for (let i = 0; i < currentCard.alternativeAnswers.length; i++) {
+                const altAnswer = currentCard.alternativeAnswers[i];
+                const altResult = this.smartAnswerComparison(userAnswer, altAnswer);
+                
+                if (altResult.isCorrect) {
+                    altResult.matchedAnswer = `alternative_${i + 1}`;
+                    return altResult;
+                }
+                
+                // Keep track of the best similarity score
+                if (altResult.similarity && (!result.similarity || altResult.similarity > result.similarity)) {
+                    result = altResult;
+                }
+            }
+        }
+        
+        return result;
     }
 
     smartAnswerComparison(userAnswer, correctAnswer) {
@@ -7821,6 +7973,18 @@ A: This concept is significant because it helps bridge basic understanding with 
         // Set the answer on the back of the card
         const currentCard = this.currentAnswerResult.currentCard;
         cardAnswer.innerHTML = currentCard.answer || currentCard.answerText;
+        
+        // Set the explanation if available
+        const cardExplanation = document.getElementById('card-explanation');
+        if (cardExplanation) {
+            if (currentCard.explanation && currentCard.explanationText) {
+                cardExplanation.innerHTML = currentCard.explanation;
+                cardExplanation.style.display = 'block';
+            } else {
+                cardExplanation.innerHTML = '';
+                cardExplanation.style.display = 'none';
+            }
+        }
         
         // Show result (correct/incorrect)
         const isCorrect = this.currentAnswerResult.isCorrect;
