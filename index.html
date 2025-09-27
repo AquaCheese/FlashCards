@@ -368,29 +368,65 @@
                         <!-- Next card preview (hidden behind) -->
                         <div class="next-card-preview" id="next-card-preview"></div>
                         
-                        <!-- Current card -->
-                        <div class="study-card realistic-card" id="study-card">
-                            <div class="card-shadow"></div>
-                            <div class="card-border"></div>
-                            <div class="card-corner top-left"></div>
-                            <div class="card-corner top-right"></div>
-                            <div class="card-corner bottom-left"></div>
-                            <div class="card-corner bottom-right"></div>
-                            <div class="card-content">
-                                <div class="card-header-badge">QUESTION</div>
-                                <div class="question-side">
-                                    <p id="card-question">Loading...</p>
+                        <!-- Flip Card Container -->
+                        <div class="flip-card" id="flip-card">
+                            <div class="flip-card-inner" id="flip-card-inner">
+                                <!-- Front Side (Question) -->
+                                <div class="flip-card-front">
+                                    <div class="study-card realistic-card">
+                                        <div class="card-shadow"></div>
+                                        <div class="card-border"></div>
+                                        <div class="card-corner top-left"></div>
+                                        <div class="card-corner top-right"></div>
+                                        <div class="card-corner bottom-left"></div>
+                                        <div class="card-corner bottom-right"></div>
+                                        <div class="card-content">
+                                            <div class="card-header-badge">QUESTION</div>
+                                            <div class="question-side">
+                                                <p id="card-question">Loading...</p>
+                                            </div>
+                                            <div class="card-footer">
+                                                <div class="card-number" id="card-number">1 / 10</div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="card-footer">
-                                    <div class="card-number" id="card-number">1 / 10</div>
+                                
+                                <!-- Back Side (Answer) -->
+                                <div class="flip-card-back">
+                                    <div class="study-card realistic-card answer-card">
+                                        <div class="card-shadow"></div>
+                                        <div class="card-border"></div>
+                                        <div class="card-corner top-left"></div>
+                                        <div class="card-corner top-right"></div>
+                                        <div class="card-corner bottom-left"></div>
+                                        <div class="card-corner bottom-right"></div>
+                                        <div class="card-content">
+                                            <div class="card-header-badge answer-badge">ANSWER</div>
+                                            <div class="answer-side">
+                                                <p id="card-answer">The answer will appear here</p>
+                                                <div class="answer-result" id="answer-result">
+                                                    <!-- Correct/Incorrect indicator -->
+                                                </div>
+                                            </div>
+                                            <div class="card-footer">
+                                                <button class="btn btn-primary continue-btn" onclick="app.continueToNext()">
+                                                    Continue &rarr;
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="answer-section">
+                        <div class="answer-section" id="answer-section">
                             <div class="answer-input-group">
                                 <input type="text" id="answer-input" placeholder="Enter your answer..." autocomplete="off">
                                 <button class="btn btn-primary" onclick="checkAnswer()">Check</button>
+                                <button class="btn btn-secondary dont-know-btn" onclick="app.showAnswer()">
+                                    I Don't Know
+                                </button>
                             </div>
                             
                             <!-- Power-ups Bar -->

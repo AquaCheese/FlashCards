@@ -264,6 +264,25 @@ window.deleteGeneratedDeck = function(deckId) {
     }
 };
 
+// New flip card functions
+window.showAnswer = function() {
+    console.log('showAnswer called (I Don\'t Know button)');
+    if (app && app.showAnswer) {
+        app.showAnswer();
+    } else {
+        console.log('App not ready or showAnswer method missing');
+    }
+};
+
+window.continueToNext = function() {
+    console.log('continueToNext called (Continue button)');
+    if (app && app.continueToNext) {
+        app.continueToNext();
+    } else {
+        console.log('App not ready or continueToNext method missing');
+    }
+};
+
 // FlashCards Application
 class FlashCardsApp {
     constructor() {
@@ -6711,6 +6730,12 @@ Hint:`
         const card = this.currentCards[this.currentCardIndex];
         const questionElement = document.getElementById('card-question');
         
+        // Ensure card is not flipped when showing new card
+        const flipCard = document.getElementById('flip-card');
+        if (flipCard) {
+            flipCard.classList.remove('flipped');
+        }
+        
         // Check if content contains HTML tags for backward compatibility
         if (card.question && card.question.indexOf('<') === -1) {
             questionElement.textContent = card.question;
@@ -6757,6 +6782,20 @@ Hint:`
         const answerResult = this.smartAnswerComparison(userAnswer, correctAnswerText);
         const isCorrect = answerResult.isCorrect;
 
+        // Process the answer and flip the card
+        this.processAnswer(isCorrect, answerResult, currentCard);
+    }
+    
+    showAnswer() {
+        // "I Don't Know" button pressed
+        const currentCard = this.currentCards[this.currentCardIndex];
+        
+        // Process as incorrect answer
+        const answerResult = { reason: 'dont_know' };
+        this.processAnswer(false, answerResult, currentCard);
+    }
+    
+    processAnswer(isCorrect, answerResult, currentCard) {
         // Calculate response time for learning algorithm
         const responseTime = Date.now() - this.sessionStartTime;
         
@@ -6770,6 +6809,17 @@ Hint:`
         }
 
         this.cardCount++;
+        
+        // Store result for when card flips
+        this.currentAnswerResult = {
+            isCorrect,
+            answerResult,
+            currentCard,
+            cardIndex
+        };
+        
+        // Flip the card to show answer
+        this.flipCard();
         
         if (isCorrect) {
             // Track unique card completion
@@ -7759,6 +7809,135 @@ A: This concept is significant because it helps bridge basic understanding with 
         }
         
         return cards.join('\n\n');
+    }
+    
+    flipCard() {
+        const flipCard = document.getElementById('flip-card');
+        const cardAnswer = document.getElementById('card-answer');
+        const answerResult = document.getElementById('answer-result');
+        
+        if (!flipCard || !cardAnswer || !answerResult) return;
+        
+        // Set the answer on the back of the card
+        const currentCard = this.currentAnswerResult.currentCard;
+        cardAnswer.innerHTML = currentCard.answer || currentCard.answerText;
+        
+        // Show result (correct/incorrect)
+        const isCorrect = this.currentAnswerResult.isCorrect;
+        const answerResultData = this.currentAnswerResult.answerResult;
+        
+        if (isCorrect) {
+            let resultText = '✅ Correct! Well done!';
+            if (answerResultData.reason === 'key_terms') {
+                resultText = '✅ Correct! You got the key points!';
+            } else if (answerResultData.reason === 'high_similarity') {
+                resultText = '✅ Correct! Close enough - great understanding!';
+            }
+            
+            // Add coin reward
+            const difficulty = this.currentDeck.difficulty || 'Intermediate';
+            const streakCount = this.getCorrectStreakCount();
+            const responseTime = Date.now() - this.sessionStartTime;
+            const coinReward = this.calculateCoinReward(difficulty, streakCount, responseTime);
+            
+            resultText += ` (+${coinReward} 🪙)`;
+            answerResult.innerHTML = resultText;
+            answerResult.className = 'answer-result correct';
+            
+            // Award coins
+            this.earnCoins(coinReward, 'Correct answer!');
+            this.incrementStreak();
+            
+        } else {
+            let resultText = '❌ Incorrect - Better luck next time!';
+            if (answerResultData.reason === 'close') {
+                resultText = '❌ Close! You were on the right track.';
+            } else if (answerResultData.reason === 'dont_know') {
+                resultText = '💭 No worries! Learning is a process.';
+            }
+            
+            // Add coin penalty
+            const difficulty = this.currentDeck.difficulty || 'Intermediate';
+            const coinPenalty = this.calculateCoinPenalty(difficulty);
+            
+            if (coinPenalty > 0) {
+                resultText += ` (-${coinPenalty} 🪙)`;
+                this.loseCoins(coinPenalty, 'Incorrect answer');
+            }
+            
+            answerResult.innerHTML = resultText;
+            answerResult.className = 'answer-result incorrect';
+            this.resetStreak();
+        }
+        
+        // Add flipped class to trigger animation
+        flipCard.classList.add('flipped');
+        
+        // Clear input
+        document.getElementById('answer-input').value = '';
+    }
+    
+    continueToNext() {
+        const flipCard = document.getElementById('flip-card');
+        if (!flipCard) return;
+        
+        const isCorrect = this.currentAnswerResult.isCorrect;
+        const currentCard = this.currentAnswerResult.currentCard;
+        const cardIndex = this.currentAnswerResult.cardIndex;
+        
+        if (isCorrect) {
+            // Track unique card completion
+            const cardOriginalIndex = currentCard.originalIndex;
+            if (cardOriginalIndex !== undefined && !this.completedCards.has(cardOriginalIndex)) {
+                this.completedCards.add(cardOriginalIndex);
+                this.score = this.completedCards.size;
+            }
+            
+            // Remove correct card from deck
+            this.currentCards.splice(this.currentCardIndex, 1);
+            
+            // Adjust index if needed
+            if (this.currentCardIndex >= this.currentCards.length) {
+                this.currentCardIndex = 0;
+            }
+        } else {
+            // For adaptive learning: keep difficult cards in rotation longer
+            const incorrectCard = this.currentCards.splice(this.currentCardIndex, 1)[0];
+            
+            // Add the card back multiple times based on difficulty
+            const cardData = this.getCardLearningData(this.currentDeck.id, cardIndex);
+            const repetitions = Math.min(3, Math.ceil(cardData.difficultyScore));
+            
+            for (let i = 0; i < repetitions; i++) {
+                // Insert at random positions in the latter half of the deck
+                const insertPos = Math.floor(this.currentCards.length * 0.5) + 
+                                Math.floor(Math.random() * Math.ceil(this.currentCards.length * 0.5));
+                this.currentCards.splice(insertPos, 0, { ...incorrectCard });
+            }
+            
+            // Adjust index if needed
+            if (this.currentCardIndex >= this.currentCards.length) {
+                this.currentCardIndex = 0;
+            }
+        }
+
+        // Remove flipped class and update display
+        flipCard.classList.remove('flipped');
+        
+        // Update display with next card or finish study
+        if (this.currentCards.length === 0) {
+            this.finishStudy();
+        } else {
+            setTimeout(() => {
+                this.displayCard();
+                this.sessionStartTime = Date.now(); // Reset timer for next card
+            }, 300); // Small delay for smooth transition
+        }
+    }
+    
+    // Alias for compatibility
+    displayCard() {
+        this.showCurrentCard();
     }
 }
 

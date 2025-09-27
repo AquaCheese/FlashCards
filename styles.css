@@ -2345,6 +2345,143 @@ button:disabled:hover {
     margin: 0 auto;
 }
 
+/* === FLIP CARD ANIMATION STYLES === */
+.flip-card {
+    background-color: transparent;
+    width: 100%;
+    height: 400px;
+    perspective: 1000px;
+    margin-bottom: 2rem;
+}
+
+.flip-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform-style: preserve-3d;
+}
+
+.flip-card.flipped .flip-card-inner {
+    transform: rotateY(180deg);
+}
+
+.flip-card-front, .flip-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.flip-card-back {
+    transform: rotateY(180deg);
+}
+
+.flip-card-front .study-card,
+.flip-card-back .study-card {
+    margin-bottom: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.flip-card-back .study-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.flip-card-back .answer-badge {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+.flip-card-back .card-content {
+    color: white;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.answer-side {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+}
+
+.answer-side p {
+    font-size: 1.4rem;
+    line-height: 1.4;
+    margin-bottom: 1rem;
+    color: white;
+}
+
+.answer-result {
+    padding: 1rem;
+    border-radius: 12px;
+    margin-top: 1rem;
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+
+.answer-result.correct {
+    background: rgba(72, 187, 120, 0.2);
+    border: 2px solid rgba(72, 187, 120, 0.4);
+    color: #68d391;
+}
+
+.answer-result.incorrect {
+    background: rgba(245, 101, 101, 0.2);
+    border: 2px solid rgba(245, 101, 101, 0.4);
+    color: #fc8181;
+}
+
+.continue-btn {
+    background: white !important;
+    color: #667eea !important;
+    border: none !important;
+    padding: 1rem 2rem !important;
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+}
+
+.continue-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+    background: #f7fafc !important;
+}
+
+.dont-know-btn {
+    background: #e53e3e !important;
+    color: white !important;
+    border: none !important;
+    transition: all 0.3s ease !important;
+}
+
+.dont-know-btn:hover {
+    background: #c53030 !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Hide answer section when card is flipped */
+.flip-card.flipped ~ .answer-section {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+}
+
 .study-card {
     background: white;
     border-radius: 16px;
