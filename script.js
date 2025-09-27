@@ -95,6 +95,29 @@ window.deleteDeck = function(deckId) {
     }
 };
 
+window.generateSubjectSpecificDeck = function() {
+    console.log('generateSubjectSpecificDeck called, app:', !!app);
+    if (app && app.generateAIDeck) {
+        const subjectSelect = document.getElementById('deck-subject');
+        const subject = subjectSelect.value;
+        
+        if (!subject) {
+            app.showNotification('Subject Required', 'Please select a GCSE subject first', 'warning');
+            return;
+        }
+        
+        app.generateAIDeck({ subject: subject, cardCount: 8 });
+    } else {
+        console.log('App not ready or generateAIDeck method missing');
+    }
+};
+
+window.devBonus = function() {
+    if (app && app.earnCoins) {
+        app.earnCoins(200, 'Dev bonus');
+    }
+};
+
 window.restartStudy = function() {
     console.log('restartStudy called, app:', !!app);
     if (app && app.restartStudy) {
@@ -265,6 +288,14 @@ class FlashCardsApp {
         console.log('GCSE AI Engine loaded');
         this.sessionStartTime = Date.now();
         
+        // Gamification System - Coin Management
+        this.coins = this.loadCoins();
+        this.initializeCoinSystem();
+        
+        // Power-ups and Shop System
+        this.powerUps = this.loadPowerUps();
+        this.initializePowerUpSystem();
+        
         // Chart instances for cleanup
         this.chartInstances = {};
         
@@ -393,6 +424,48 @@ class FlashCardsApp {
 
         // AI will generate content based on actual user study patterns
         console.log('🤖 AI system ready - will generate content based on your study patterns');
+    }
+
+    updateAIGenerationStatus() {
+        const aiRequirements = document.getElementById('ai-requirements');
+        const aiButtons = document.querySelectorAll('.btn-ai, .btn-ai-subject');
+        
+        if (!aiRequirements) return;
+        
+        // Check if user has enough data for AI generation
+        const profile = JSON.parse(localStorage.getItem('ai-learning-profile') || '{}');
+        const sessionCount = profile.preferences?.accuracyTrends?.length || 0;
+        
+        if (sessionCount >= 2) {
+            // User has enough data
+            aiRequirements.innerHTML = `
+                <p>✅ <strong>AI Ready!</strong> Generated from ${sessionCount} study sessions</p>
+            `;
+            aiRequirements.style.background = 'rgba(34, 197, 94, 0.1)';
+            aiRequirements.style.borderColor = 'rgba(34, 197, 94, 0.2)';
+            aiRequirements.style.color = '#166534';
+            
+            // Enable AI buttons
+            aiButtons.forEach(btn => {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            });
+        } else {
+            // User needs more data
+            const needed = 2 - sessionCount;
+            aiRequirements.innerHTML = `
+                <p>📊 <strong>Requirements:</strong> Complete ${needed} more study session${needed === 1 ? '' : 's'} to unlock AI generation</p>
+            `;
+            aiRequirements.style.background = 'rgba(59, 130, 246, 0.1)';
+            aiRequirements.style.borderColor = 'rgba(59, 130, 246, 0.2)';
+            aiRequirements.style.color = '#1e40af';
+            
+            // Disable AI buttons
+            aiButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            });
+        }
     }
 
     // Removed generateStarterDecks - AI now creates decks without preset content
@@ -772,9 +845,12 @@ class FlashCardsApp {
         if (viewName === 'home') {
             this.renderDecks();
             this.updateAILockStatus();
-        } else if (viewName === 'create' && !this.isEditMode) {
-            // Reset to create mode if not already in edit mode
-            this.updateUIForEditMode(false);
+        } else if (viewName === 'create') {
+            this.updateAIGenerationStatus();
+            if (!this.isEditMode) {
+                // Reset to create mode if not already in edit mode
+                this.updateUIForEditMode(false);
+            }
         } else if (viewName === 'stats') {
             // Initialize stats page with a small delay to ensure DOM is ready
             setTimeout(() => {
@@ -812,6 +888,854 @@ class FlashCardsApp {
     saveSessionData(sessions) {
         localStorage.setItem('flashcards-sessions', JSON.stringify(sessions));
     }
+
+    // 🪙 Gamification System - Coin Management
+    loadCoins() {
+        const saved = localStorage.getItem('flashcards-coins');
+        return saved ? parseInt(saved) : 100; // Start with 100 coins
+    }
+
+    saveCoins() {
+        localStorage.setItem('flashcards-coins', this.coins.toString());
+    }
+
+    initializeCoinSystem() {
+        console.log('💰 Coin system initialized with', this.coins, 'coins');
+        this.updateCoinDisplay();
+        
+        // Initialize coin transaction history
+        this.coinHistory = this.loadCoinHistory();
+    }
+
+    loadCoinHistory() {
+        const saved = localStorage.getItem('flashcards-coin-history');
+        return saved ? JSON.parse(saved) : [];
+    }
+
+    saveCoinHistory() {
+        // Keep only last 50 transactions to prevent storage bloat
+        if (this.coinHistory.length > 50) {
+            this.coinHistory = this.coinHistory.slice(-50);
+        }
+        localStorage.setItem('flashcards-coin-history', JSON.stringify(this.coinHistory));
+    }
+
+    addCoinTransaction(amount, type, reason) {
+        const transaction = {
+            amount: amount,
+            type: type, // 'earn' or 'lose'
+            reason: reason,
+            timestamp: Date.now(),
+            balance: this.coins
+        };
+        
+        this.coinHistory.unshift(transaction); // Add to beginning
+        this.saveCoinHistory();
+    }
+
+    // 🚀 Power-ups and Shop System
+    loadPowerUps() {
+        const saved = localStorage.getItem('flashcards-powerups');
+        return saved ? JSON.parse(saved) : {
+            hints: 0,
+            skipCards: 0,
+            doubleCoins: 0,
+            streakShields: 0,
+            activePowerUps: {
+                doubleCoinsActive: false,
+                streakShieldActive: false
+            }
+        };
+    }
+
+    savePowerUps() {
+        localStorage.setItem('flashcards-powerups', JSON.stringify(this.powerUps));
+    }
+
+    initializePowerUpSystem() {
+        console.log('🚀 Power-up system initialized:', this.powerUps);
+        this.updatePowerUpDisplay();
+    }
+
+    updatePowerUpDisplay() {
+        // Update power-up counts in UI
+        const hintCount = document.querySelector('.hint-count');
+        const skipCount = document.querySelector('.skip-count');
+        const doubleCount = document.querySelector('.double-count');
+        const shieldCount = document.querySelector('.shield-count');
+        
+        if (hintCount) hintCount.textContent = this.powerUps.hints;
+        if (skipCount) skipCount.textContent = this.powerUps.skipCards;
+        if (doubleCount) doubleCount.textContent = this.powerUps.doubleCoins;
+        if (shieldCount) shieldCount.textContent = this.powerUps.streakShields;
+    }
+
+    purchasePowerUp(type, cost) {
+        if (this.coins < cost) {
+            this.showNotification('Not enough coins! 💸', 'error');
+            return false;
+        }
+
+        this.coins -= cost;
+        this.saveCoins();
+        this.updateCoinDisplay();
+        this.addCoinTransaction(cost, 'lose', `Purchased ${type}`);
+
+        // Award power-up
+        this.powerUps[type]++;
+        this.savePowerUps();
+        this.updatePowerUpDisplay();
+
+        this.showNotification(`Purchased ${type}! 🚀`, 'success');
+        return true;
+    }
+
+    usePowerUp(type) {
+        if (this.powerUps[type] <= 0) {
+            this.showNotification(`No ${type} available! Buy more in the shop.`, 'error');
+            return false;
+        }
+
+        this.powerUps[type]--;
+        this.savePowerUps();
+        this.updatePowerUpDisplay();
+        console.log(`🚀 Used ${type} power-up`);
+        return true;
+    }
+
+    activateDoubleCoins() {
+        if (!this.usePowerUp('doubleCoins')) return false;
+        
+        this.powerUps.activePowerUps.doubleCoinsActive = true;
+        this.savePowerUps();
+        this.showNotification('Double Coins activated for this session! 💰✨', 'success');
+        
+        // Visual indicator
+        const coinDisplay = document.querySelector('.coin-display');
+        if (coinDisplay) {
+            coinDisplay.classList.add('double-coins-active');
+        }
+        
+        return true;
+    }
+
+    activateStreakShield() {
+        if (!this.usePowerUp('streakShields')) return false;
+        
+        this.powerUps.activePowerUps.streakShieldActive = true;
+        this.savePowerUps();
+        this.showNotification('Streak Shield activated! Next wrong answer won\'t break your streak! 🛡️', 'success');
+        
+        return true;
+    }
+
+    updateCoinDisplay() {
+        // Update coin display in header
+        const coinElement = document.querySelector('.coin-balance');
+        if (coinElement) {
+            coinElement.textContent = this.coins.toLocaleString();
+        }
+    }
+
+    earnCoins(amount, reason = 'Correct answer!') {
+        const previousCoins = this.coins;
+        let finalAmount = amount;
+        
+        // Apply double coins power-up
+        if (this.powerUps.activePowerUps.doubleCoinsActive) {
+            finalAmount = amount * 2;
+            reason += ' (2x boost!)';
+        }
+        
+        this.coins += finalAmount;
+        this.saveCoins();
+        this.updateCoinDisplay();
+        this.showCoinAnimation(finalAmount, 'earn', reason);
+        this.addCoinTransaction(finalAmount, 'earn', reason);
+        console.log(`💰 Earned ${finalAmount} coins! Total: ${this.coins} (${reason})`);
+        
+        // Check for coin milestones
+        this.checkCoinMilestones(previousCoins, this.coins);
+    }
+
+    loseCoins(amount, reason = 'Incorrect answer') {
+        const actualLoss = Math.min(amount, this.coins); // Don't go below 0
+        this.coins -= actualLoss;
+        this.saveCoins();
+        this.updateCoinDisplay();
+        this.showCoinAnimation(actualLoss, 'lose', reason);
+        this.addCoinTransaction(actualLoss, 'lose', reason);
+        console.log(`💸 Lost ${actualLoss} coins! Total: ${this.coins} (${reason})`);
+        return actualLoss;
+    }
+
+    showCoinAnimation(amount, type, reason) {
+        // Create floating coin animation
+        const animation = document.createElement('div');
+        animation.className = `coin-animation ${type}`;
+        animation.innerHTML = `
+            <div class="coin-popup">
+                <div class="coin-icon">${type === 'earn' ? '🪙' : '💸'}</div>
+                <div class="coin-amount">${type === 'earn' ? '+' : '-'}${amount}</div>
+                <div class="coin-reason">${reason}</div>
+            </div>
+        `;
+        
+        document.body.appendChild(animation);
+        
+        // Remove animation after it completes
+        setTimeout(() => {
+            if (animation.parentNode) {
+                animation.parentNode.removeChild(animation);
+            }
+        }, 3000);
+    }
+
+    calculateCoinReward(difficulty, streakCount = 0, responseTime = 0) {
+        let baseReward = 10;
+        
+        // Difficulty multiplier
+        const difficultyMultipliers = {
+            'Beginner': 1.0,
+            'Intermediate': 1.5,
+            'Advanced': 2.0,
+            'Expert': 2.5
+        };
+        
+        const multiplier = difficultyMultipliers[difficulty] || 1.0;
+        let reward = Math.floor(baseReward * multiplier);
+        
+        // Streak bonus (up to 50% extra)
+        if (streakCount > 0) {
+            const streakBonus = Math.min(streakCount * 2, 15);
+            reward += streakBonus;
+        }
+        
+        // Speed bonus (if answered quickly)
+        if (responseTime > 0 && responseTime < 5000) { // Less than 5 seconds
+            reward += 5;
+        }
+        
+        return reward;
+    }
+
+    calculateCoinPenalty(difficulty) {
+        const basePenalty = 5;
+        const difficultyMultipliers = {
+            'Beginner': 0.5,
+            'Intermediate': 1.0,
+            'Advanced': 1.5,
+            'Expert': 2.0
+        };
+        
+        const multiplier = difficultyMultipliers[difficulty] || 1.0;
+        return Math.floor(basePenalty * multiplier);
+    }
+
+    getCorrectStreakCount() {
+        // Track correct answers in current session for streak bonus
+        if (!this.currentSessionStreak) {
+            this.currentSessionStreak = 0;
+        }
+        return this.currentSessionStreak;
+    }
+
+    incrementStreak() {
+        if (!this.currentSessionStreak) {
+            this.currentSessionStreak = 0;
+        }
+        this.currentSessionStreak++;
+    }
+
+    resetStreak() {
+        // Check if streak shield is active
+        if (this.powerUps.activePowerUps.streakShieldActive) {
+            this.powerUps.activePowerUps.streakShieldActive = false;
+            this.savePowerUps();
+            this.showNotification('Streak Shield protected your streak! 🛡️✨', 'success');
+            return; // Don't reset streak
+        }
+        
+        this.currentSessionStreak = 0;
+    }
+
+    checkCoinMilestones(previousCoins, currentCoins) {
+        const milestones = [
+            { coins: 100, title: 'First Century!', message: 'You earned your first 100 coins! 🎉', emoji: '💯' },
+            { coins: 250, title: 'Coin Collector', message: 'Quarter way to 1000! Keep studying! 📚', emoji: '🏆' },
+            { coins: 500, title: 'Halfway Hero', message: 'You\'re on fire! 500 coins earned! 🔥', emoji: '🌟' },
+            { coins: 1000, title: 'Coin Master', message: '1000 coins! You\'re becoming a study legend! ⚡', emoji: '👑' },
+            { coins: 2500, title: 'Study Tycoon', message: 'Amazing! 2500 coins! You\'re unstoppable! 🚀', emoji: '💎' },
+            { coins: 5000, title: 'Coin Emperor', message: 'INCREDIBLE! 5000 coins! Ultimate dedication! 🏰', emoji: '🎖️' }
+        ];
+
+        for (const milestone of milestones) {
+            if (previousCoins < milestone.coins && currentCoins >= milestone.coins) {
+                this.showMilestoneAchievement(milestone);
+                break; // Only show one milestone at a time
+            }
+        }
+    }
+
+    showMilestoneAchievement(milestone) {
+        // Create achievement popup
+        const achievement = document.createElement('div');
+        achievement.className = 'achievement-popup';
+        achievement.innerHTML = `
+            <div class="achievement-content">
+                <div class="achievement-emoji">${milestone.emoji}</div>
+                <div class="achievement-title">${milestone.title}</div>
+                <div class="achievement-message">${milestone.message}</div>
+                <div class="achievement-coins">🪙 ${milestone.coins.toLocaleString()} Coins Reached!</div>
+            </div>
+        `;
+        
+        document.body.appendChild(achievement);
+        
+        // Trigger animation
+        setTimeout(() => achievement.classList.add('show'), 100);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            achievement.classList.remove('show');
+            setTimeout(() => {
+                if (achievement.parentNode) {
+                    achievement.parentNode.removeChild(achievement);
+                }
+            }, 500);
+        }, 5000);
+        
+        console.log(`🏆 Achievement unlocked: ${milestone.title} - ${milestone.message}`);
+    }
+
+    // 💡 AI Hint System
+    async useHint() {
+        if (!this.usePowerUp('hints')) {
+            // Offer to buy hints
+            if (confirm('No hints available! Would you like to buy a hint for 100 coins?')) {
+                if (this.purchaseHint()) {
+                    return await this.useHint(); // Try again after purchase
+                }
+            }
+            return false;
+        }
+
+        const currentCard = this.currentCards[this.currentCardIndex];
+        if (!currentCard) return false;
+
+        // Show loading state
+        this.showHintLoading();
+
+        try {
+            const hint = await this.generateHint(currentCard);
+            this.showHint(hint);
+            return true;
+        } catch (error) {
+            console.error('Hint generation failed:', error);
+            this.showNotification('Failed to generate hint. Coins refunded.', 'error');
+            // Refund the hint
+            this.powerUps.hints++;
+            this.savePowerUps();
+            this.updatePowerUpDisplay();
+            return false;
+        }
+    }
+
+    purchaseHint() {
+        return this.purchasePowerUp('hints', 100);
+    }
+
+    async generateHint(card) {
+        // First check if card has custom hint
+        if (card.customHint && card.customHint.trim()) {
+            return {
+                type: 'custom',
+                text: card.customHint,
+                source: 'Custom hint from deck creator'
+            };
+        }
+
+        // Try AI hint generation
+        try {
+            const aiHint = await this.generateAIHint(card.question, card.answer);
+            return {
+                type: 'ai',
+                text: aiHint,
+                source: 'AI-generated hint'
+            };
+        } catch (error) {
+            // Fallback to smart hint
+            return this.generateSmartHint(card.question, card.answer);
+        }
+    }
+
+    async generateAIHint(question, answer) {
+        console.log('🤖 Generating AI hint for:', question);
+        
+        try {
+            // Show loading state to user
+            this.showHintLoadingState();
+            
+            // Try AI hint generation
+            const hint = await this.getHuggingFaceHint(question, answer);
+            
+            // Hide loading state
+            this.hideHintLoadingState();
+            
+            return hint;
+        } catch (error) {
+            console.log('AI hint generation failed, using smart fallback...', error);
+            
+            // Hide loading state and provide fallback
+            this.hideHintLoadingState();
+            return this.generateMinimalSmartHint(question, answer);
+        }
+    }
+    
+    showHintLoadingState() {
+        const hintText = document.querySelector('.hint-text');
+        if (hintText) {
+            hintText.innerHTML = '🤖 <em>AI is thinking...</em>';
+            hintText.style.opacity = '0.7';
+        }
+    }
+    
+    hideHintLoadingState() {
+        const hintText = document.querySelector('.hint-text');
+        if (hintText) {
+            hintText.style.opacity = '1';
+        }
+    }
+
+
+
+    async getHuggingFaceHint(question, answer) {
+        // Try multiple AI models for the best educational hints
+        const models = [
+            {
+                name: 'microsoft/DialoGPT-medium',
+                prompt: `You are a helpful tutor. Create a study hint for this flashcard that guides the student to think about the answer without revealing it directly.
+
+Question: ${question}
+Answer: ${answer}
+
+Create a hint that:
+- Gives clues about the topic or context
+- Helps the student think in the right direction
+- Does NOT reveal the actual answer
+- Is educational and encouraging
+
+Hint:`
+            },
+            {
+                name: 'facebook/blenderbot-400M-distill',
+                prompt: `Create a helpful study hint for this question: "${question}". The answer is "${answer}". Give a clue that helps the student think about it without revealing the answer directly.`
+            },
+            {
+                name: 'google/flan-t5-base',
+                prompt: `Question: ${question}\nAnswer: ${answer}\nCreate an educational hint that guides the student to the answer without revealing it:`
+            }
+        ];
+
+        // Try each model in sequence
+        for (const model of models) {
+            try {
+                console.log(`🤖 Trying AI model: ${model.name}`);
+                
+                const response = await fetch(`https://api-inference.huggingface.co/models/${model.name}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        inputs: model.prompt,
+                        parameters: {
+                            max_new_tokens: 80,
+                            temperature: 0.6,
+                            do_sample: true,
+                            return_full_text: false,
+                            repetition_penalty: 1.2,
+                            top_p: 0.9
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    let hintText = '';
+                    
+                    // Handle different response formats
+                    if (Array.isArray(data) && data[0]?.generated_text) {
+                        hintText = data[0].generated_text.trim();
+                    } else if (data.generated_text) {
+                        hintText = data.generated_text.trim();
+                    } else if (typeof data === 'string') {
+                        hintText = data.trim();
+                    }
+                    
+                    // Clean up the hint more thoroughly
+                    hintText = hintText
+                        .replace(/^(hint:|answer:|response:|clue:|think about:|consider:|the hint is:?)/i, '')
+                        .replace(/^(a hint:?|here's a hint:?)/i, '')
+                        .replace(/\n.*/s, '') // Remove everything after first line break
+                        .trim();
+                    
+                    // Additional cleaning - remove common AI artifacts
+                    if (hintText.startsWith('"') && hintText.endsWith('"')) {
+                        hintText = hintText.slice(1, -1);
+                    }
+                    
+                    // Validate hint quality
+                    if (this.isGoodHint(hintText, question, answer)) {
+                        console.log(`✅ Good hint from ${model.name}:`, hintText);
+                        return `💡 ${hintText}`;
+                    } else {
+                        console.log(`❌ Poor quality hint from ${model.name}:`, hintText);
+                    }
+                }
+            } catch (error) {
+                console.log(`❌ Model ${model.name} failed:`, error);
+                continue;
+            }
+        }
+        
+        // If all AI models fail, try a simpler approach
+        return await this.getSimpleAIHint(question, answer);
+    }
+
+    isGoodHint(hintText, question, answer) {
+        if (!hintText || hintText.length < 15 || hintText.length > 250) {
+            return false;
+        }
+        
+        const hintLower = hintText.toLowerCase();
+        const answerLower = answer.toLowerCase();
+        const questionLower = question.toLowerCase();
+        
+        // Reject if hint contains the full answer (unless it's a very short common word)
+        if (answerLower.length > 4 && hintLower.includes(answerLower)) {
+            return false;
+        }
+        
+        // Reject hints that are too generic or unhelpful
+        const badPatterns = [
+            'i cannot', 'i can\'t', 'i don\'t know', 'i\'m sorry', 'i am not able',
+            'mathematical relationship', 'operation or formula', 'what operation',
+            'as an ai', 'i\'m not sure', 'i apologize', 'sorry,',
+            'think about much', 'related to much', 'focus on much',
+            'the answer is', 'it is', 'this is', 'the correct answer'
+        ];
+        
+        if (badPatterns.some(pattern => hintLower.includes(pattern))) {
+            return false;
+        }
+        
+        // Reject hints that are just repetitions of the question
+        const questionWords = questionLower.split(' ').filter(w => w.length > 3);
+        const hintWords = hintLower.split(' ').filter(w => w.length > 3);
+        const overlap = questionWords.filter(word => hintWords.includes(word)).length;
+        
+        if (overlap > questionWords.length * 0.7 && questionWords.length > 3) {
+            return false; // Too much overlap with question
+        }
+        
+        // Reject very short or incomplete hints
+        if (hintText.split(' ').length < 4) {
+            return false;
+        }
+        
+        // Check if hint provides some context or guidance
+        const helpfulPatterns = [
+            'think about', 'consider', 'look for', 'focus on', 'remember',
+            'this relates to', 'associated with', 'connected to', 'involves',
+            'type of', 'kind of', 'form of', 'example of', 'used for'
+        ];
+        
+        const hasHelpfulPattern = helpfulPatterns.some(pattern => hintLower.includes(pattern));
+        
+        // Accept if it has helpful language or seems contextually relevant
+        return hasHelpfulPattern || hintText.length > 30;
+    }
+
+    async getSimpleAIHint(question, answer) {
+        // Try one more simplified approach
+        try {
+            const response = await fetch('https://api-inference.huggingface.co/models/gpt2', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    inputs: `Study hint for "${question}": Think about`,
+                    parameters: {
+                        max_new_tokens: 30,
+                        temperature: 0.8,
+                        do_sample: true,
+                        return_full_text: false
+                    }
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                let hintText = '';
+                
+                if (Array.isArray(data) && data[0]?.generated_text) {
+                    hintText = data[0].generated_text.trim();
+                } else if (data.generated_text) {
+                    hintText = data.generated_text.trim();
+                }
+                
+                if (hintText && hintText.length > 5) {
+                    return `💡 Think about ${hintText}`;
+                }
+            }
+        } catch (error) {
+            console.log('Simple AI hint failed:', error);
+        }
+        
+        // Final fallback - smart but minimal hint
+        return this.generateMinimalSmartHint(question, answer);
+    }
+
+    generateMinimalSmartHint(question, answer) {
+        const questionLower = question.toLowerCase();
+        const answerWords = answer.split(' ').filter(word => word.length > 2);
+        
+        // Extract meaningful words from question, excluding common words
+        const stopWords = ['what', 'when', 'where', 'which', 'who', 'how', 'why', 'this', 'that', 'they', 'have', 'been', 'will', 'from', 'with', 'much', 'many', 'some', 'more', 'most', 'does', 'would', 'could', 'should', 'about', 'into', 'over', 'under', 'between', 'through'];
+        
+        const questionWords = questionLower
+            .split(' ')
+            .filter(word => word.length > 3 && !stopWords.includes(word))
+            .filter(word => /^[a-zA-Z]+$/.test(word)); // Only alphabetic words
+        
+        // Find the most meaningful context words
+        const contextWords = questionWords.slice(0, 3);
+        const context = contextWords.length > 0 ? contextWords.join(', ') : 'this topic';
+        
+        // Different hint strategies based on answer format
+        if (answer.includes('%') || answer.match(/^\d+(\.\d+)?%?$/)) {
+            if (questionLower.includes('school') || questionLower.includes('education')) {
+                return `💡 Think about education statistics. Look for a percentage that represents school enrollment or attendance.`;
+            }
+            if (questionLower.includes('rural') || questionLower.includes('urban')) {
+                return `💡 Consider demographic statistics. What percentage represents the data about population distribution?`;
+            }
+            return `💡 Look for a statistical percentage related to ${context}.`;
+        }
+        
+        if (answer.match(/^\d{4}$/)) {
+            return `💡 Think about a significant year. When did something important happen related to ${context}?`;
+        }
+        
+        if (answer.match(/^\d+$/)) {
+            return `💡 Look for a specific number. What numerical value is associated with ${context}?`;
+        }
+        
+        if (answerWords.length === 1) {
+            const firstLetter = answer.charAt(0).toUpperCase();
+            const lastLetter = answer.charAt(answer.length - 1).toLowerCase();
+            return `💡 Think about ${context}. The answer is a single word starting with "${firstLetter}" and ending with "${lastLetter}".`;
+        }
+        
+        if (answerWords.length > 1) {
+            const wordCount = answerWords.length;
+            const firstWord = answerWords[0];
+            const hint = firstWord.length > 4 ? firstWord.substring(0, 3) + '...' : firstWord.charAt(0).toUpperCase();
+            return `💡 The answer has ${wordCount} words. The first word starts with "${hint}". Think about ${context}.`;
+        }
+        
+        // Generic but more specific fallback
+        if (contextWords.length > 0) {
+            return `💡 Focus on the key concepts: ${context}. What specific information relates to these topics?`;
+        }
+        
+        return `💡 Think carefully about the question. The answer has ${answer.length} characters and relates to the topic mentioned.`;
+    }
+    
+    getWordCategory(word) {
+        const categories = {
+            technology: ['tech', 'digital', 'software', 'computer', 'internet', 'data', 'cyber'],
+            business: ['finance', 'bank', 'trade', 'market', 'company', 'industry', 'economy'],
+            science: ['biology', 'chemistry', 'physics', 'element', 'molecule', 'cell', 'energy'],
+            geography: ['country', 'city', 'river', 'mountain', 'continent', 'ocean', 'climate'],
+            history: ['war', 'empire', 'revolution', 'ancient', 'medieval', 'dynasty', 'battle'],
+            literature: ['novel', 'poem', 'story', 'author', 'writer', 'book', 'character']
+        };
+        
+        for (const [category, keywords] of Object.entries(categories)) {
+            if (keywords.some(keyword => word.includes(keyword))) {
+                return category;
+            }
+        }
+        return 'this topic';
+    }
+    
+    getOrdinalSuffix(number) {
+        const suffixes = ['th', 'st', 'nd', 'rd'];
+        const remainder = number % 100;
+        return suffixes[(remainder - 20) % 10] || suffixes[remainder] || suffixes[0];
+    }
+
+    generateContextualHint(question, answer) {
+        // Enhanced contextual hint generation
+        const questionLower = question.toLowerCase();
+        const answerLower = answer.toLowerCase();
+        const answerWords = answer.split(' ').filter(word => word.length > 2);
+        
+        // Math/calculation hints
+        if (questionLower.includes('solve') || questionLower.includes('calculate') || questionLower.includes('find') || /[\d\+\-\*\/\=]/.test(question)) {
+            return 'Look for the mathematical relationship between the given numbers. What operation or formula applies here?';
+        }
+        
+        // Definition/concept hints
+        if (questionLower.includes('what is') || questionLower.includes('define') || questionLower.includes('meaning')) {
+            if (answerWords.length > 0) {
+                const firstWord = answerWords[0];
+                return `Think about concepts related to "${firstWord}". What category or field does this belong to?`;
+            }
+            return 'Consider the key characteristics and properties. What field of study does this relate to?';
+        }
+        
+        // Science hints
+        if (questionLower.includes('cell') || questionLower.includes('atom') || questionLower.includes('molecule') || questionLower.includes('reaction')) {
+            return 'Think about the basic scientific principles involved. What processes or structures are at work?';
+        }
+        
+        // History/dates hints
+        if (/\d{4}/.test(question) || questionLower.includes('when') || questionLower.includes('year')) {
+            return 'Consider the historical context and timeline. What major events were happening around this time?';
+        }
+        
+        // Language/literature hints
+        if (questionLower.includes('author') || questionLower.includes('wrote') || questionLower.includes('poem') || questionLower.includes('novel')) {
+            return 'Think about the time period and literary movement. What themes or styles was this writer known for?';
+        }
+        
+        // Give a hint based on answer structure
+        if (answer.length < 15) {
+            return `The answer is concise - think of a ${answerWords.length === 1 ? 'single key term' : 'short phrase'} that directly addresses the question.`;
+        }
+        
+        // Generic but helpful hint
+        return 'Break down the question into its key components. What is it really asking for?';
+    }
+
+
+
+    generateSmartHint(question, answer) {
+        // Fallback smart hint generation based on analysis
+        const questionLower = question.toLowerCase();
+        const answerLower = answer.toLowerCase();
+        
+        // Math hints
+        if (questionLower.includes('solve') || questionLower.includes('calculate') || questionLower.includes('find')) {
+            return {
+                type: 'smart',
+                text: 'Think about what mathematical operation or formula might be needed here. Look for key numbers or variables in the question.',
+                source: 'Smart hint system'
+            };
+        }
+        
+        // Science hints
+        if (questionLower.includes('what is') || questionLower.includes('define')) {
+            return {
+                type: 'smart',
+                text: 'Think about the key characteristics or properties. What category does this belong to?',
+                source: 'Smart hint system'
+            };
+        }
+        
+        // Give a hint based on answer length
+        if (answer.length < 10) {
+            return {
+                type: 'smart',
+                text: `The answer is a short ${answer.split(' ').length === 1 ? 'single word' : 'phrase'}. Think about the most direct response to the question.`,
+                source: 'Smart hint system'
+            };
+        }
+        
+        // Generic hint
+        return {
+            type: 'smart',
+            text: 'Think about what you already know about this topic. What concepts or keywords come to mind?',
+            source: 'Smart hint system'
+        };
+    }
+
+    showHintLoading() {
+        const hintButton = document.querySelector('.hint-button');
+        if (hintButton) {
+            hintButton.innerHTML = '💭 Generating...';
+            hintButton.disabled = true;
+        }
+    }
+
+    showHint(hint) {
+        // Create hint modal
+        const modal = document.createElement('div');
+        modal.className = 'hint-modal';
+        modal.innerHTML = `
+            <div class="hint-content">
+                <div class="hint-header">
+                    <h3>💡 Hint</h3>
+                    <button class="hint-close" onclick="this.parentElement.parentElement.parentElement.remove()">×</button>
+                </div>
+                <div class="hint-text">${hint.text}</div>
+                <div class="hint-source">${hint.source}</div>
+                <div class="hint-actions">
+                    <button class="btn btn-primary" onclick="this.parentElement.parentElement.parentElement.remove()">Got it!</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Reset hint button
+        const hintButton = document.querySelector('.hint-button');
+        if (hintButton) {
+            hintButton.innerHTML = '💡 Hint';
+            hintButton.disabled = false;
+        }
+        
+        // Auto-remove after 30 seconds
+        setTimeout(() => {
+            if (modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
+        }, 30000);
+    }
+
+    useSkipCard() {
+        if (!this.usePowerUp('skipCards')) {
+            this.showNotification('No skip cards available! Buy more in the shop.', 'error');
+            return false;
+        }
+
+        if (this.currentCards.length === 0) return false;
+
+        // Remove current card without penalty
+        this.currentCards.splice(this.currentCardIndex, 1);
+        
+        // Adjust index if needed
+        if (this.currentCardIndex >= this.currentCards.length) {
+            this.currentCardIndex = 0;
+        }
+
+        this.showNotification('Card skipped! No penalty applied. 🚀', 'success');
+        
+        // Show next card or complete study
+        if (this.currentCards.length === 0) {
+            this.showStudyComplete();
+        } else {
+            this.showCurrentCard();
+        }
+        
+        return true;
+    }
+
+
 
     recordStudySession(deckId, cardsStudied, correctAnswers, totalTime) {
         const sessions = this.loadSessionData();
@@ -3303,13 +4227,24 @@ class FlashCardsApp {
             const questionText = questionEditor.textContent.trim();
             const answerText = answerEditor.textContent.trim();
             
+            // Get custom hint if provided
+            const hintInput = item.querySelector('.card-hint-input');
+            const customHint = hintInput ? hintInput.value.trim() : '';
+            
             if (questionText && answerText) {
-                cards.push({ 
+                const card = { 
                     question: questionHTML.trim(), 
                     answer: answerHTML.trim(),
                     questionText: questionText,
                     answerText: answerText
-                });
+                };
+                
+                // Add custom hint if provided
+                if (customHint) {
+                    card.customHint = customHint;
+                }
+                
+                cards.push(card);
             }
         });
         
@@ -5086,6 +6021,11 @@ class FlashCardsApp {
                         <label>Answer (Back)</label>
                         <div class="card-answer-editor" contenteditable="true" data-placeholder="Enter answer..." required></div>
                     </div>
+                    <div class="card-input-group hint-input-group">
+                        <label>💡 Custom Hint (Optional)</label>
+                        <textarea class="card-hint-input" placeholder="Enter a helpful hint that guides without giving away the answer..."></textarea>
+                        <small class="hint-help">This hint will be shown when users use the hint power-up. If empty, AI will generate a hint.</small>
+                    </div>
                 </div>
             </div>
         `;
@@ -5299,6 +6239,15 @@ class FlashCardsApp {
             // Load generated decks from localStorage
             const generatedDecks = this.loadGeneratedDecks();
             deck = generatedDecks.find(d => d.id === deckId);
+            
+            // Normalize AI-generated card properties to match expected format
+            if (deck && deck.cards) {
+                deck.cards = deck.cards.map(card => ({
+                    ...card,
+                    question: card.question || card.front || card.question,
+                    answer: card.answer || card.back || card.answer
+                }));
+            }
         } else {
             deck = this.decks.find(d => d.id === deckId);
         }
@@ -5327,6 +6276,20 @@ class FlashCardsApp {
         this.cardCount = 0;
         this.currentTitleCardIndex = 0;
         this.sessionStartTime = Date.now();
+        
+        // Reset streak for new study session
+        this.resetStreak();
+        
+        // Reset session power-ups
+        this.powerUps.activePowerUps.doubleCoinsActive = false;
+        this.powerUps.activePowerUps.streakShieldActive = false;
+        this.savePowerUps();
+        
+        // Update visual indicators
+        const coinDisplay = document.querySelector('.coin-display');
+        if (coinDisplay) {
+            coinDisplay.classList.remove('double-coins-active');
+        }
         
         // Track which cards have been completed correctly
         this.completedCards = new Set();
@@ -5504,6 +6467,12 @@ class FlashCardsApp {
                 this.score = this.completedCards.size; // Score = number of unique cards completed
             }
             
+            // 🪙 Gamification: Award coins for correct answer
+            const difficulty = this.currentDeck.difficulty || 'Intermediate';
+            const streakCount = this.getCorrectStreakCount();
+            const responseTime = Date.now() - this.sessionStartTime;
+            const coinReward = this.calculateCoinReward(difficulty, streakCount, responseTime);
+            
             // Provide encouraging feedback based on how they got it right
             let feedbackMessage = 'Correct! Well done! 🎉';
             if (answerResult.reason === 'key_terms') {
@@ -5511,7 +6480,13 @@ class FlashCardsApp {
             } else if (answerResult.reason === 'high_similarity') {
                 feedbackMessage = 'Correct! Close enough - great understanding! ✨';
             }
+            
+            // Add coin information to feedback
+            feedbackMessage += ` <span class="coin-reward">+${coinReward} 🪙</span>`;
+            
             this.showFeedback(feedbackMessage, 'correct');
+            this.earnCoins(coinReward, 'Correct answer!');
+            this.incrementStreak(); // Track streak for bonus calculations
             
             // Trigger fall animation for correct answer
             this.animateCorrectAnswer();
@@ -5524,12 +6499,27 @@ class FlashCardsApp {
                 this.currentCardIndex = 0;
             }
         } else {
+            // 🪙 Gamification: Lose coins for incorrect answer
+            const difficulty = this.currentDeck.difficulty || 'Intermediate';
+            const coinPenalty = this.calculateCoinPenalty(difficulty);
+            
             // Provide helpful feedback based on how close they were
             let feedbackMessage = `Incorrect. The correct answer is: "${currentCard.answerText || currentCard.answer}"`;
             if (answerResult.reason === 'close') {
                 feedbackMessage = `Close! You were on the right track. The correct answer is: "${currentCard.answerText || currentCard.answer}"`;
             }
+            
+            // Add coin penalty information to feedback (but be encouraging)
+            if (coinPenalty > 0) {
+                feedbackMessage += ` <span class="coin-penalty">-${coinPenalty} 🪙</span>`;
+            }
+            
             this.showFeedback(feedbackMessage, 'incorrect', currentCard.answer);
+            
+            if (coinPenalty > 0) {
+                this.loseCoins(coinPenalty, 'Incorrect answer');
+            }
+            this.resetStreak(); // Reset streak on incorrect answer
             
             // Trigger slide animation for incorrect answer
             this.animateIncorrectAnswer();
@@ -5674,6 +6664,32 @@ class FlashCardsApp {
         document.getElementById('study-complete').classList.add('show');
         document.getElementById('final-score').textContent = 
             `${this.score} / ${this.totalUniqueCards}`;
+
+        // 🪙 Gamification: Award completion bonus
+        if (this.currentDeck) {
+            const completionRate = this.score / this.totalUniqueCards;
+            let completionBonus = 0;
+            
+            if (completionRate === 1.0) {
+                // Perfect completion - big bonus!
+                completionBonus = 50;
+                this.earnCoins(completionBonus, 'Perfect completion! 🌟');
+            } else if (completionRate >= 0.8) {
+                // Good completion
+                completionBonus = 25;
+                this.earnCoins(completionBonus, 'Great job completing the deck!');
+            } else if (completionRate >= 0.5) {
+                // Decent effort
+                completionBonus = 10;
+                this.earnCoins(completionBonus, 'Good effort!');
+            }
+            
+            // Add streak bonus if applicable
+            const streakBonus = Math.min(this.getCorrectStreakCount() * 5, 30);
+            if (streakBonus > 0) {
+                this.earnCoins(streakBonus, `${this.getCorrectStreakCount()}-answer streak bonus! 🔥`);
+            }
+        }
 
         // Record study session for analytics
         if (this.currentDeck) {
@@ -5858,6 +6874,401 @@ class FlashCardsApp {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // =================== AI DECK GENERATION BASED ON USER STATISTICS ===================
+    
+    async generateAIDeck(options = {}) {
+        console.log('🤖 Starting AI deck generation based on user statistics...');
+        
+        try {
+            // Load user learning profile
+            const profile = JSON.parse(localStorage.getItem('ai-learning-profile') || '{}');
+            
+            if (!profile.preferences || profile.preferences.accuracyTrends.length < 2) {
+                throw new Error('Insufficient user data for AI deck generation. Please complete more study sessions first.');
+            }
+            
+            // Build personalized prompt based on user statistics
+            const statsPrompt = this.buildUserStatsPrompt(profile, options);
+            console.log('📊 Generated stats-based prompt:', statsPrompt);
+            
+            // Generate cards using Hugging Face AI
+            const aiResponse = await this.getHuggingFaceResponse(statsPrompt);
+            
+            if (!aiResponse) {
+                throw new Error('Failed to get AI response for deck generation');
+            }
+            
+            // Parse AI response into cards
+            const cards = this.parseAICardResponse(aiResponse);
+            
+            if (cards.length === 0) {
+                throw new Error('AI did not generate any valid cards');
+            }
+            
+            // Create deck with AI metadata
+            const deckId = 'ai_stats_' + Date.now();
+            const aiDeck = {
+                id: deckId,
+                title: this.generateAIDeckTitle(profile, options),
+                subject: this.determineSubjectFromProfile(profile),
+                difficulty: this.determineDifficultyFromProfile(profile),
+                cards: cards,
+                dateCreated: Date.now(),
+                generationType: 'user-stats-based',
+                confidence: this.calculateAIConfidence(profile),
+                aiMetadata: {
+                    basedOnSessions: profile.preferences.accuracyTrends.length,
+                    targetWeaknesses: this.identifyTopWeaknesses(profile),
+                    userAccuracyAvg: this.calculateAverageAccuracy(profile),
+                    generationPrompt: statsPrompt,
+                    timestamp: Date.now()
+                }
+            };
+            
+            console.log('✅ Generated AI deck based on user stats:', aiDeck);
+            
+            // Save the generated deck
+            this.saveGeneratedDeck(aiDeck);
+            
+            // Show success notification
+            this.showNotification(
+                'AI Deck Generated!', 
+                `Created "${aiDeck.title}" with ${cards.length} personalized cards based on your study patterns`,
+                'success'
+            );
+            
+            // Update last generation timestamp
+            localStorage.setItem('last-ai-generation', Date.now().toString());
+            
+            return aiDeck;
+            
+        } catch (error) {
+            console.error('❌ AI deck generation failed:', error);
+            this.showNotification(
+                'AI Generation Failed', 
+                error.message || 'Unable to generate AI deck. Please try again later.',
+                'error'
+            );
+            throw error;
+        }
+    }
+    
+    buildUserStatsPrompt(profile, options = {}) {
+        const trends = profile.preferences.accuracyTrends;
+        const recentTrends = trends.slice(-10);
+        
+        // Calculate user statistics
+        const avgAccuracy = this.calculateAverageAccuracy(profile);
+        const weakSubjects = this.identifyTopWeaknesses(profile);
+        const strongSubjects = this.identifyTopStrengths(profile);
+        const difficultyPrefs = profile.preferences.difficultyPreference;
+        
+        // Determine learning focus
+        let focusArea = 'review';
+        if (avgAccuracy < 60) {
+            focusArea = 'remedial';
+        } else if (avgAccuracy > 80) {
+            focusArea = 'advanced';
+        }
+        
+        // Build comprehensive prompt
+        const prompt = `Create educational flashcards based on this user's learning profile:
+
+PERFORMANCE ANALYSIS:
+- Average accuracy: ${avgAccuracy}% 
+- Total study sessions: ${trends.length}
+- Learning focus needed: ${focusArea}
+
+SUBJECT STRENGTHS: ${strongSubjects.map(s => `${s.subject} (${s.score}% avg)`).join(', ') || 'Still identifying'}
+
+AREAS NEEDING IMPROVEMENT: ${weakSubjects.map(w => `${w.subject} (${w.score}% avg)`).join(', ') || 'None identified'}
+
+DIFFICULTY PREFERENCES: ${Object.entries(difficultyPrefs).map(([diff, data]) => `${diff}: ${data.averageAccuracy}% avg`).join(', ') || 'Still analyzing'}
+
+INSTRUCTIONS:
+Generate ${options.cardCount || 8} flashcards that:
+1. Target the user's weak areas for improvement
+2. Match their preferred difficulty level
+3. Include a mix of review and challenge content
+4. Focus on ${options.subject || this.determineSubjectFromProfile(profile)}
+
+Format each card as:
+Q: [Question text]
+A: [Answer text]
+
+Make cards educational, specific, and appropriate for the user's current skill level.`;
+
+        return prompt;
+    }
+    
+    parseAICardResponse(aiResponse) {
+        const cards = [];
+        const lines = aiResponse.split('\n');
+        
+        let currentQuestion = '';
+        let currentAnswer = '';
+        let parsingAnswer = false;
+        
+        for (const line of lines) {
+            const trimmedLine = line.trim();
+            
+            if (trimmedLine.startsWith('Q:')) {
+                // Save previous card if we have both question and answer
+                if (currentQuestion && currentAnswer) {
+                    cards.push({
+                        id: Date.now() + Math.random(),
+                        question: currentQuestion.trim(),
+                        answer: currentAnswer.trim()
+                    });
+                }
+                
+                // Start new question
+                currentQuestion = trimmedLine.substring(2).trim();
+                currentAnswer = '';
+                parsingAnswer = false;
+                
+            } else if (trimmedLine.startsWith('A:')) {
+                currentAnswer = trimmedLine.substring(2).trim();
+                parsingAnswer = true;
+                
+            } else if (trimmedLine && parsingAnswer) {
+                // Continue building answer
+                currentAnswer += ' ' + trimmedLine;
+                
+            } else if (trimmedLine && !parsingAnswer && currentQuestion) {
+                // Continue building question
+                currentQuestion += ' ' + trimmedLine;
+            }
+        }
+        
+        // Don't forget the last card
+        if (currentQuestion && currentAnswer) {
+            cards.push({
+                id: Date.now() + Math.random(),
+                question: currentQuestion.trim(),
+                answer: currentAnswer.trim()
+            });
+        }
+        
+        // Fallback parsing if the above didn't work
+        if (cards.length === 0) {
+            const fallbackCards = this.fallbackCardParsing(aiResponse);
+            cards.push(...fallbackCards);
+        }
+        
+        console.log(`📝 Parsed ${cards.length} cards from AI response`);
+        return cards;
+    }
+    
+    fallbackCardParsing(aiResponse) {
+        // Try to extract question-answer pairs using different patterns
+        const cards = [];
+        const patterns = [
+            /(?:Question|Q):\s*(.+?)(?:Answer|A):\s*(.+?)(?=(?:Question|Q):|$)/gis,
+            /(\d+\.\s*.+?)\n(.+?)(?=\d+\.|$)/gis,
+            /(.+\?)\s*(.+?)(?=.+\?|$)/gis
+        ];
+        
+        for (const pattern of patterns) {
+            const matches = aiResponse.matchAll(pattern);
+            for (const match of matches) {
+                if (match[1] && match[2]) {
+                    cards.push({
+                        id: Date.now() + Math.random(),
+                        question: match[1].trim().replace(/^(Question|Q):\s*/i, ''),
+                        answer: match[2].trim().replace(/^(Answer|A):\s*/i, '')
+                    });
+                }
+            }
+            if (cards.length > 0) break; // Use first successful pattern
+        }
+        
+        return cards;
+    }
+    
+    generateAIDeckTitle(profile, options) {
+        const weaknesses = this.identifyTopWeaknesses(profile);
+        const avgAccuracy = this.calculateAverageAccuracy(profile);
+        
+        if (options.subject) {
+            if (avgAccuracy < 60) {
+                return `${options.subject} - Remedial Practice`;
+            } else if (avgAccuracy > 80) {
+                return `${options.subject} - Advanced Challenge`;
+            } else {
+                return `${options.subject} - Skill Building`;
+            }
+        }
+        
+        if (weaknesses.length > 0) {
+            return `Focus on ${weaknesses[0].subject} - Personalized Practice`;
+        }
+        
+        const subject = this.determineSubjectFromProfile(profile);
+        return `${subject} - AI Personalized Deck`;
+    }
+    
+    determineSubjectFromProfile(profile) {
+        if (!profile.preferences || !profile.preferences.favoriteSubjects) {
+            return 'General Studies';
+        }
+        
+        const subjects = Object.entries(profile.preferences.favoriteSubjects);
+        if (subjects.length === 0) return 'General Studies';
+        
+        subjects.sort((a, b) => b[1] - a[1]); // Sort by frequency
+        return subjects[0][0];
+    }
+    
+    determineDifficultyFromProfile(profile) {
+        const avgAccuracy = this.calculateAverageAccuracy(profile);
+        
+        if (avgAccuracy < 50) return 'Beginner';
+        if (avgAccuracy < 70) return 'Intermediate';
+        if (avgAccuracy < 85) return 'Advanced';
+        return 'Expert';
+    }
+    
+    calculateAverageAccuracy(profile) {
+        if (!profile.preferences || !profile.preferences.accuracyTrends || profile.preferences.accuracyTrends.length === 0) {
+            return 0;
+        }
+        
+        const trends = profile.preferences.accuracyTrends;
+        const sum = trends.reduce((total, trend) => total + trend.accuracy, 0);
+        return Math.round(sum / trends.length);
+    }
+    
+    identifyTopWeaknesses(profile) {
+        if (!profile.weaknesses) return [];
+        
+        return Object.entries(profile.weaknesses)
+            .map(([subject, count]) => ({
+                subject,
+                count,
+                score: this.getSubjectAverageAccuracy(profile, subject)
+            }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 3);
+    }
+    
+    identifyTopStrengths(profile) {
+        if (!profile.strengths) return [];
+        
+        return Object.entries(profile.strengths)
+            .map(([subject, count]) => ({
+                subject,
+                count,
+                score: this.getSubjectAverageAccuracy(profile, subject)
+            }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 3);
+    }
+    
+    getSubjectAverageAccuracy(profile, subject) {
+        if (!profile.preferences || !profile.preferences.accuracyTrends) return 0;
+        
+        const subjectTrends = profile.preferences.accuracyTrends.filter(t => t.subject === subject);
+        if (subjectTrends.length === 0) return 0;
+        
+        const sum = subjectTrends.reduce((total, trend) => total + trend.accuracy, 0);
+        return Math.round(sum / subjectTrends.length);
+    }
+    
+    calculateAIConfidence(profile) {
+        const sessionCount = profile.preferences?.accuracyTrends?.length || 0;
+        
+        if (sessionCount < 3) return 'Low';
+        if (sessionCount < 8) return 'Medium';
+        if (sessionCount < 15) return 'High';
+        return 'Very High';
+    }
+    
+    saveGeneratedDeck(deck) {
+        const generatedDecks = this.loadGeneratedDecks();
+        generatedDecks.push(deck);
+        localStorage.setItem('generated-decks', JSON.stringify(generatedDecks));
+        
+        // Trigger UI refresh
+        if (this.currentView === 'decks') {
+            this.showDecks();
+        }
+    }
+    
+    async getHuggingFaceResponse(prompt) {
+        try {
+            console.log('🤖 Sending request to Hugging Face AI...');
+            
+            const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    inputs: prompt,
+                    parameters: {
+                        max_new_tokens: 500,
+                        temperature: 0.7,
+                        top_p: 0.9,
+                        do_sample: true
+                    }
+                })
+            });
+            
+            if (!response.ok) {
+                console.warn('Hugging Face API response not OK, trying alternative approach...');
+                return this.getFallbackAIResponse(prompt);
+            }
+            
+            const data = await response.json();
+            console.log('✅ Received Hugging Face response:', data);
+            
+            if (data.generated_text || (data[0] && data[0].generated_text)) {
+                return data.generated_text || data[0].generated_text;
+            }
+            
+            // If no generated text, try fallback
+            return this.getFallbackAIResponse(prompt);
+            
+        } catch (error) {
+            console.error('❌ Hugging Face API error:', error);
+            return this.getFallbackAIResponse(prompt);
+        }
+    }
+    
+    getFallbackAIResponse(prompt) {
+        console.log('🔄 Using fallback AI response generation...');
+        
+        // Extract key information from prompt to generate relevant cards
+        const subjectMatch = prompt.match(/focus on ([^.\n]+)/i);
+        const subject = subjectMatch ? subjectMatch[1] : 'General Studies';
+        
+        const accuracyMatch = prompt.match(/Average accuracy: (\d+)%/);
+        const accuracy = accuracyMatch ? parseInt(accuracyMatch[1]) : 60;
+        
+        // Generate cards based on accuracy level and subject
+        const cards = [];
+        const cardCount = 6;
+        
+        for (let i = 1; i <= cardCount; i++) {
+            if (accuracy < 60) {
+                // Remedial level cards
+                cards.push(`Q: What is a fundamental concept in ${subject}?
+A: This is a basic principle that forms the foundation of understanding in ${subject}.`);
+            } else if (accuracy > 80) {
+                // Advanced level cards
+                cards.push(`Q: How would you apply advanced ${subject} concepts to solve complex problems?
+A: Advanced applications require deep understanding and creative problem-solving approaches.`);
+            } else {
+                // Intermediate level cards
+                cards.push(`Q: Explain an important ${subject} concept and its applications.
+A: This concept is significant because it helps bridge basic understanding with practical applications.`);
+            }
+        }
+        
+        return cards.join('\n\n');
     }
 }
 

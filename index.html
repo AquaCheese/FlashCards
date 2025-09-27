@@ -19,12 +19,28 @@
         <header class="header">
             <div class="container">
                 <h1 class="logo">📚 FlashCards</h1>
-                <nav class="nav">
-                    <button class="nav-btn active" data-view="home">Home</button>
-                    <button class="nav-btn" data-view="create">Create Deck</button>
-                    <button class="nav-btn" data-view="study">Study</button>
-                    <button class="nav-btn" data-view="stats">Stats</button>
-                </nav>
+                <div class="header-right">
+                    <div class="coin-display" title="Your earned coins! Gain coins by answering correctly, lose them for wrong answers.">
+                        <span class="coin-icon">🪙</span>
+                        <span class="coin-balance">100</span>
+                        <div class="coin-tooltip">
+                            <div class="tooltip-title">Coin System</div>
+                            <div class="tooltip-content">
+                                ✅ Correct answers: +10-25 coins<br>
+                                ❌ Wrong answers: -2-10 coins<br>
+                                🎯 Streak bonus: +2 per streak<br>
+                                🏆 Perfect completion: +50 coins
+                            </div>
+                        </div>
+                    </div>
+                    <nav class="nav">
+                        <button class="nav-btn active" data-view="home">Home</button>
+                        <button class="nav-btn" data-view="create">Create Deck</button>
+                        <button class="nav-btn" data-view="study">Study</button>
+                        <button class="nav-btn" data-view="shop">🛍️ Shop</button>
+                        <button class="nav-btn" data-view="stats">Stats</button>
+                    </nav>
+                </div>
             </div>
         </header>
 
@@ -34,7 +50,7 @@
                 <!-- Home View -->
                 <div class="view active" id="home-view">
                     <div class="welcome-section">
-                        <div class="gcse-badge">Created with 🧀 by Charlie Gump</div>
+                        <div class="gcse-badge">Created with <span class="cheese-easter-egg" onclick="devBonus()"></span>🧀</span> by Charlie Gump</div>
                         <h2 class="welcome-title">FLASHCARDS!!!!!</h2>
                         <p class="welcome-text">Master your GCSEs with study decks. Cards that grow with you.</p>
                         <div class="gcse-subjects-showcase">
@@ -258,6 +274,31 @@
                             </div>
                         </div>
                         
+                        <!-- AI Generation Section -->
+                        <div class="ai-generation-section">
+                            <div class="section-header">
+                                <h3>🤖 AI Deck Generation</h3>
+                            </div>
+                            <p class="section-description">Generate personalized flashcards based on your study statistics and performance patterns.</p>
+                            <div class="ai-generation-options">
+                                <div class="ai-option">
+                                    <button type="button" class="btn btn-ai" onclick="app.generateAIDeck()">
+                                        <span>✨</span> Generate Smart Deck
+                                    </button>
+                                    <p class="ai-option-desc">Creates cards targeting your weak areas and learning patterns</p>
+                                </div>
+                                <div class="ai-option">
+                                    <button type="button" class="btn btn-ai-subject" onclick="generateSubjectSpecificDeck()">
+                                        <span>🎯</span> Generate for Subject
+                                    </button>
+                                    <p class="ai-option-desc">Creates cards for the selected GCSE subject above</p>
+                                </div>
+                            </div>
+                            <div class="ai-requirements" id="ai-requirements">
+                                <p>📊 <strong>Requirements:</strong> Complete at least 2 study sessions to unlock AI generation</p>
+                            </div>
+                        </div>
+                        
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary">Save Deck</button>
                             <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear</button>
@@ -351,6 +392,23 @@
                                 <input type="text" id="answer-input" placeholder="Enter your answer..." autocomplete="off">
                                 <button class="btn btn-primary" onclick="checkAnswer()">Check</button>
                             </div>
+                            
+                            <!-- Power-ups Bar -->
+                            <div class="powerups-bar">
+                                <button class="powerup-btn hint-button" onclick="app.useHint()" title="Get a helpful hint (100 coins)">
+                                    💡 Hint <span class="hint-count">0</span>
+                                </button>
+                                <button class="powerup-btn skip-button" onclick="app.useSkipCard()" title="Skip this card without penalty">
+                                    ⏭️ Skip <span class="skip-count">0</span>
+                                </button>
+                                <button class="powerup-btn double-button" onclick="app.activateDoubleCoins()" title="Double coin earnings for this session">
+                                    💰 2x Coins <span class="double-count">0</span>
+                                </button>
+                                <button class="powerup-btn shield-button" onclick="app.activateStreakShield()" title="Protect streak from next wrong answer">
+                                    🛡️ Shield <span class="shield-count">0</span>
+                                </button>
+                            </div>
+                            
                             <div class="answer-feedback" id="answer-feedback">
                                 <!-- Feedback will appear here -->
                             </div>
@@ -453,6 +511,133 @@
                             <div id="learning-insights-list">
                                 <!-- Insights will be populated here -->
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shop View -->
+                <div class="view" id="shop-view">
+                    <div class="shop-header">
+                        <h2>🛍️ Power-up Shop</h2>
+                        <p>Enhance your learning experience with powerful boosters!</p>
+                    </div>
+                    
+                    <div class="shop-grid">
+                        <!-- Hints -->
+                        <div class="shop-item">
+                            <div class="shop-item-icon">💡</div>
+                            <div class="shop-item-content">
+                                <h3>AI Hints</h3>
+                                <p>Get intelligent hints that guide you to the answer without giving it away</p>
+                                <div class="shop-item-features">
+                                    <span>� Personalized guidance</span>
+                                    <span>📚 Educational approach</span>
+                                    <span>🧠 Smart analysis</span>
+                                </div>
+                                <div class="shop-item-footer">
+                                    <div class="shop-price">100 🪙</div>
+                                    <button class="btn btn-primary shop-buy-btn" onclick="app.purchasePowerUp('hints', 100)">Buy Hint</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Skip Cards -->
+                        <div class="shop-item">
+                            <div class="shop-item-icon">⏭️</div>
+                            <div class="shop-item-content">
+                                <h3>Skip Cards</h3>
+                                <p>Skip difficult cards without any penalty to your score or streak</p>
+                                <div class="shop-item-features">
+                                    <span>🚀 No penalties</span>
+                                    <span>⚡ Keep momentum</span>
+                                    <span>🎯 Strategic learning</span>
+                                </div>
+                                <div class="shop-item-footer">
+                                    <div class="shop-price">75 🪙</div>
+                                    <button class="btn btn-primary shop-buy-btn" onclick="app.purchasePowerUp('skipCards', 75)">Buy Skip</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Double Coins -->
+                        <div class="shop-item premium">
+                            <div class="shop-item-icon">💰</div>
+                            <div class="shop-item-content">
+                                <h3>Double Coins</h3>
+                                <p>Earn 2x coins for an entire study session - great for grinding!</p>
+                                <div class="shop-item-features">
+                                    <span>💎 2x earnings</span>
+                                    <span>🔥 Full session</span>
+                                    <span>📈 Fast progress</span>
+                                </div>
+                                <div class="shop-item-footer">
+                                    <div class="shop-price">200 🪙</div>
+                                    <button class="btn btn-primary shop-buy-btn" onclick="app.purchasePowerUp('doubleCoins', 200)">Buy Booster</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Streak Shield -->
+                        <div class="shop-item premium">
+                            <div class="shop-item-icon">🛡️</div>
+                            <div class="shop-item-content">
+                                <h3>Streak Shield</h3>
+                                <p>Protect your answer streak from one wrong answer - perfect for long streaks!</p>
+                                <div class="shop-item-features">
+                                    <span>🛡️ Streak protection</span>
+                                    <span>🔥 Keep momentum</span>
+                                    <span>💪 Confidence boost</span>
+                                </div>
+                                <div class="shop-item-footer">
+                                    <div class="shop-price">150 🪙</div>
+                                    <button class="btn btn-primary shop-buy-btn" onclick="app.purchasePowerUp('streakShields', 150)">Buy Shield</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Current Power-ups Inventory -->
+                    <div class="inventory-section">
+                        <h3>📦 Your Power-ups</h3>
+                        <div class="inventory-grid">
+                            <div class="inventory-item">
+                                <div class="inventory-icon">💡</div>
+                                <div class="inventory-name">Hints</div>
+                                <div class="inventory-count hint-count">0</div>
+                            </div>
+                            <div class="inventory-item">
+                                <div class="inventory-icon">⏭️</div>
+                                <div class="inventory-name">Skip Cards</div>
+                                <div class="inventory-count skip-count">0</div>
+                            </div>
+                            <div class="inventory-item">
+                                <div class="inventory-icon">💰</div>
+                                <div class="inventory-name">Double Coins</div>
+                                <div class="inventory-count double-count">0</div>
+                            </div>
+                            <div class="inventory-item">
+                                <div class="inventory-icon">🛡️</div>
+                                <div class="inventory-name">Streak Shields</div>
+                                <div class="inventory-count shield-count">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Status Section -->
+                    <div class="ai-info-section">
+                        <h3>🤖 AI System Status</h3>
+                        <div class="ai-status">
+                            <div class="status-item">
+                                <span class="status-icon">🆓</span>
+                                <span class="status-text">Free AI: <strong>Hugging Face</strong> (Always Available)</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-icon">�</span>
+                                <span class="status-text">Smart Hints: <strong>Contextual Analysis</strong> (Fallback System)</span>
+                            </div>
+                        </div>
+                        <div class="ai-note">
+                            <small>✨ AI hints work completely free with no setup required. The system automatically generates educational hints tailored to your learning needs.</small>
                         </div>
                     </div>
                 </div>
