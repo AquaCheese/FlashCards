@@ -39,6 +39,11 @@
                         <button class="nav-btn" data-view="study">Study</button>
                         <button class="nav-btn" data-view="shop">🛍️ Shop</button>
                         <button class="nav-btn" data-view="stats">Stats</button>
+                        <button class="nav-btn" data-view="leaderboard">🏆 Leaderboard</button>
+                        <button class="nav-btn account-btn" data-view="account" id="account-btn">
+                            <span class="account-icon">👤</span>
+                            <span class="account-text" id="account-text">Sign In</span>
+                        </button>
                     </nav>
                 </div>
             </div>
@@ -587,6 +592,557 @@
                             <h3>🧠 Learning Insights</h3>
                             <div id="learning-insights-list">
                                 <!-- Insights will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Leaderboard View -->
+                <div class="view" id="leaderboard-view">
+                    <div class="container">
+                        <div class="section-header">
+                            <h2>🏆 Leaderboards</h2>
+                            <p class="section-description">Compete with other users and climb the rankings!</p>
+                        </div>
+
+                        <!-- Leaderboard Navigation -->
+                        <div class="leaderboard-nav">
+                            <button class="leaderboard-tab active" data-board="coins">💰 Most Coins</button>
+                            <button class="leaderboard-tab" data-board="accuracy">🎯 Most Accurate</button>
+                            <button class="leaderboard-tab" data-board="studytime">⏱️ Study Time</button>
+                            <button class="leaderboard-tab" data-board="streak">🔥 Longest Streak</button>
+                            <button class="leaderboard-tab" data-board="decks">📚 Most Decks</button>
+                            <button class="leaderboard-tab" data-board="cards">💡 Cards Mastered</button>
+                        </div>
+
+                        <!-- Leaderboard Content -->
+                        <div class="leaderboard-container">
+                            <!-- User's Current Rank Display -->
+                            <div class="current-rank-card">
+                                <div class="rank-header">
+                                    <h3>Your Current Position</h3>
+                                    <span class="refresh-btn" onclick="refreshLeaderboard()">🔄</span>
+                                </div>
+                                <div class="user-rank-display">
+                                    <div class="rank-position">#<span id="user-current-rank">-</span></div>
+                                    <div class="rank-details">
+                                        <div class="rank-username" id="user-rank-name">Sign in to compete!</div>
+                                        <div class="rank-score" id="user-rank-score">-</div>
+                                    </div>
+                                    <div class="rank-progress">
+                                        <div class="progress-text" id="rank-progress-text">Sign in to see your progress</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" id="rank-progress-fill" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Leaderboard Lists -->
+                            <div class="leaderboard-content">
+                                <!-- Most Coins Leaderboard -->
+                                <div class="leaderboard-list active" id="coins-leaderboard">
+                                    <div class="leaderboard-header">
+                                        <h3>💰 Most Coins</h3>
+                                        <p>Users with the most coins earned through correct answers</p>
+                                    </div>
+                                    <div class="podium">
+                                        <div class="podium-place second" data-place="2">
+                                            <div class="podium-avatar">🥈</div>
+                                            <div class="podium-name" id="coins-2nd">-</div>
+                                            <div class="podium-score" id="coins-2nd-score">-</div>
+                                        </div>
+                                        <div class="podium-place first" data-place="1">
+                                            <div class="podium-avatar">👑</div>
+                                            <div class="podium-name" id="coins-1st">-</div>
+                                            <div class="podium-score" id="coins-1st-score">-</div>
+                                        </div>
+                                        <div class="podium-place third" data-place="3">
+                                            <div class="podium-avatar">🥉</div>
+                                            <div class="podium-name" id="coins-3rd">-</div>
+                                            <div class="podium-score" id="coins-3rd-score">-</div>
+                                        </div>
+                                    </div>
+                                    <div class="leaderboard-entries" id="coins-entries">
+                                        <!-- Entries 4+ will be populated here -->
+                                    </div>
+                                </div>
+
+                                <!-- Most Accurate Leaderboard -->
+                                <div class="leaderboard-list" id="accuracy-leaderboard">
+                                    <div class="leaderboard-header">
+                                        <h3>🎯 Most Accurate</h3>
+                                        <p>Users with the highest answer accuracy (minimum 100 answers)</p>
+                                    </div>
+                                    <div class="podium">
+                                        <div class="podium-place second" data-place="2">
+                                            <div class="podium-avatar">🥈</div>
+                                            <div class="podium-name" id="accuracy-2nd">-</div>
+                                            <div class="podium-score" id="accuracy-2nd-score">-</div>
+                                        </div>
+                                        <div class="podium-place first" data-place="1">
+                                            <div class="podium-avatar">👑</div>
+                                            <div class="podium-name" id="accuracy-1st">-</div>
+                                            <div class="podium-score" id="accuracy-1st-score">-</div>
+                                        </div>
+                                        <div class="podium-place third" data-place="3">
+                                            <div class="podium-avatar">🥉</div>
+                                            <div class="podium-name" id="accuracy-3rd">-</div>
+                                            <div class="podium-score" id="accuracy-3rd-score">-</div>
+                                        </div>
+                                    </div>
+                                    <div class="leaderboard-entries" id="accuracy-entries">
+                                        <!-- Entries 4+ will be populated here -->
+                                    </div>
+                                </div>
+
+                                <!-- Study Time Leaderboard -->
+                                <div class="leaderboard-list" id="studytime-leaderboard">
+                                    <div class="leaderboard-header">
+                                        <h3>⏱️ Longest Study Time</h3>
+                                        <p>Users with the most total study time logged</p>
+                                    </div>
+                                    <div class="podium">
+                                        <div class="podium-place second" data-place="2">
+                                            <div class="podium-avatar">🥈</div>
+                                            <div class="podium-name" id="studytime-2nd">-</div>
+                                            <div class="podium-score" id="studytime-2nd-score">-</div>
+                                        </div>
+                                        <div class="podium-place first" data-place="1">
+                                            <div class="podium-avatar">👑</div>
+                                            <div class="podium-name" id="studytime-1st">-</div>
+                                            <div class="podium-score" id="studytime-1st-score">-</div>
+                                        </div>
+                                        <div class="podium-place third" data-place="3">
+                                            <div class="podium-avatar">🥉</div>
+                                            <div class="podium-name" id="studytime-3rd">-</div>
+                                            <div class="podium-score" id="studytime-3rd-score">-</div>
+                                        </div>
+                                    </div>
+                                    <div class="leaderboard-entries" id="studytime-entries">
+                                        <!-- Entries 4+ will be populated here -->
+                                    </div>
+                                </div>
+
+                                <!-- Longest Streak Leaderboard -->
+                                <div class="leaderboard-list" id="streak-leaderboard">
+                                    <div class="leaderboard-header">
+                                        <h3>🔥 Longest Streak</h3>
+                                        <p>Users with the longest consecutive correct answers</p>
+                                    </div>
+                                    <div class="podium">
+                                        <div class="podium-place second" data-place="2">
+                                            <div class="podium-avatar">🥈</div>
+                                            <div class="podium-name" id="streak-2nd">-</div>
+                                            <div class="podium-score" id="streak-2nd-score">-</div>
+                                        </div>
+                                        <div class="podium-place first" data-place="1">
+                                            <div class="podium-avatar">👑</div>
+                                            <div class="podium-name" id="streak-1st">-</div>
+                                            <div class="podium-score" id="streak-1st-score">-</div>
+                                        </div>
+                                        <div class="podium-place third" data-place="3">
+                                            <div class="podium-avatar">🥉</div>
+                                            <div class="podium-name" id="streak-3rd">-</div>
+                                            <div class="podium-score" id="streak-3rd-score">-</div>
+                                        </div>
+                                    </div>
+                                    <div class="leaderboard-entries" id="streak-entries">
+                                        <!-- Entries 4+ will be populated here -->
+                                    </div>
+                                </div>
+
+                                <!-- Most Decks Leaderboard -->
+                                <div class="leaderboard-list" id="decks-leaderboard">
+                                    <div class="leaderboard-header">
+                                        <h3>📚 Most Decks Created</h3>
+                                        <p>Users who have created the most study decks</p>
+                                    </div>
+                                    <div class="podium">
+                                        <div class="podium-place second" data-place="2">
+                                            <div class="podium-avatar">🥈</div>
+                                            <div class="podium-name" id="decks-2nd">-</div>
+                                            <div class="podium-score" id="decks-2nd-score">-</div>
+                                        </div>
+                                        <div class="podium-place first" data-place="1">
+                                            <div class="podium-avatar">👑</div>
+                                            <div class="podium-name" id="decks-1st">-</div>
+                                            <div class="podium-score" id="decks-1st-score">-</div>
+                                        </div>
+                                        <div class="podium-place third" data-place="3">
+                                            <div class="podium-avatar">🥉</div>
+                                            <div class="podium-name" id="decks-3rd">-</div>
+                                            <div class="podium-score" id="decks-3rd-score">-</div>
+                                        </div>
+                                    </div>
+                                    <div class="leaderboard-entries" id="decks-entries">
+                                        <!-- Entries 4+ will be populated here -->
+                                    </div>
+                                </div>
+
+                                <!-- Cards Mastered Leaderboard -->
+                                <div class="leaderboard-list" id="cards-leaderboard">
+                                    <div class="leaderboard-header">
+                                        <h3>💡 Cards Mastered</h3>
+                                        <p>Users who have mastered the most individual cards</p>
+                                    </div>
+                                    <div class="podium">
+                                        <div class="podium-place second" data-place="2">
+                                            <div class="podium-avatar">🥈</div>
+                                            <div class="podium-name" id="cards-2nd">-</div>
+                                            <div class="podium-score" id="cards-2nd-score">-</div>
+                                        </div>
+                                        <div class="podium-place first" data-place="1">
+                                            <div class="podium-avatar">👑</div>
+                                            <div class="podium-name" id="cards-1st">-</div>
+                                            <div class="podium-score" id="cards-1st-score">-</div>
+                                        </div>
+                                        <div class="podium-place third" data-place="3">
+                                            <div class="podium-avatar">🥉</div>
+                                            <div class="podium-name" id="cards-3rd">-</div>
+                                            <div class="podium-score" id="cards-3rd-score">-</div>
+                                        </div>
+                                    </div>
+                                    <div class="leaderboard-entries" id="cards-entries">
+                                        <!-- Entries 4+ will be populated here -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Leaderboard Actions -->
+                            <div class="leaderboard-actions">
+                                <button class="btn primary" onclick="shareRank()">📤 Share My Rank</button>
+                                <button class="btn secondary" onclick="viewAllTimeStats()">📊 All-Time Stats</button>
+                                <button class="btn secondary" onclick="togglePrivateMode()">👁️ Privacy Settings</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account View -->
+                <div class="view" id="account-view">
+                    <div class="account-container">
+                        <!-- Authentication Forms -->
+                        <div class="auth-section" id="auth-section">
+                            <div class="auth-tabs">
+                                <button class="auth-tab active" id="signin-tab">Sign In</button>
+                                <button class="auth-tab" id="register-tab">Register</button>
+                            </div>
+                            
+                            <!-- Sign In Form -->
+                            <div class="auth-form" id="signin-form">
+                                <h2>Welcome Back! 👋</h2>
+                                <p>Sign in to sync your progress across devices</p>
+                                
+                                <form id="signin-form-element">
+                                    <div class="form-group">
+                                        <label for="signin-username">Username</label>
+                                        <input type="text" id="signin-username" required>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="signin-password">Password</label>
+                                        <input type="password" id="signin-password" required>
+                                    </div>
+                                    
+                                    <div class="form-options">
+                                        <label class="checkbox-container">
+                                            <input type="checkbox" id="remember-me">
+                                            <span class="checkmark"></span>
+                                            Remember me
+                                        </label>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary auth-btn">
+                                        <span class="btn-text">Sign In</span>
+                                        <span class="btn-loading" style="display: none;">Signing in...</span>
+                                    </button>
+                                </form>
+                            </div>
+                            
+                            <!-- Register Form -->
+                            <div class="auth-form" id="register-form" style="display: none;">
+                                <h2>Join FlashCards! 🎉</h2>
+                                <p>Create an account to unlock online features</p>
+                                
+                                <form id="register-form-element">
+                                    <div class="form-group">
+                                        <label for="register-username">Username</label>
+                                        <input type="text" id="register-username" required minlength="3" maxlength="20">
+                                        <small class="form-help">3-20 characters, letters and numbers only</small>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="register-email">Email (Optional)</label>
+                                        <input type="email" id="register-email">
+                                        <small class="form-help">For account recovery</small>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="register-password">Password</label>
+                                        <input type="password" id="register-password" required minlength="6">
+                                        <small class="form-help">At least 6 characters</small>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="register-password-confirm">Confirm Password</label>
+                                        <input type="password" id="register-password-confirm" required>
+                                    </div>
+                                    
+                                    <div class="form-options">
+                                        <label class="checkbox-container">
+                                            <input type="checkbox" id="agree-terms" required>
+                                            <span class="checkmark"></span>
+                                            I agree to the <a href="#" onclick="showTerms()">Terms of Service</a>
+                                        </label>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary auth-btn">
+                                        <span class="btn-text">Create Account</span>
+                                        <span class="btn-loading" style="display: none;">Creating account...</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <!-- Account Settings (shown when logged in) -->
+                        <div class="account-settings" id="account-settings" style="display: none;">
+                            <div class="settings-header">
+                                <div class="user-info">
+                                    <div class="user-avatar">
+                                        <span class="avatar-icon" id="user-avatar">👤</span>
+                                    </div>
+                                    <div class="user-details">
+                                        <h2 id="user-display-name">Username</h2>
+                                        <p class="user-stats">
+                                            <span id="user-join-date">Joined Today</span> • 
+                                            <span id="user-level">Level 1</span> • 
+                                            <span id="user-total-coins">100 coins</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <button class="btn btn-secondary" onclick="app.signOut()">Sign Out</button>
+                            </div>
+                            
+                            <div class="settings-content">
+                                <div class="settings-tabs">
+                                    <button class="settings-tab active" data-tab="profile">👤 Profile</button>
+                                    <button class="settings-tab" data-tab="preferences">⚙️ Preferences</button>
+                                    <button class="settings-tab" data-tab="privacy">🔒 Privacy</button>
+                                    <button class="settings-tab" data-tab="data">📊 Data</button>
+                                </div>
+                                
+                                <!-- Profile Tab -->
+                                <div class="settings-tab-content active" id="profile-tab">
+                                    <h3>Profile Customization</h3>
+                                    
+                                    <!-- Profile Stats Display -->
+                                    <div class="profile-stats-display">
+                                        <div class="profile-avatar-section">
+                                            <div class="profile-avatar-large" id="profile-avatar-large">
+                                                <img id="profile-pic-preview" src="" alt="Profile Picture" style="display: none;">
+                                                <span id="profile-initial-large">A</span>
+                                            </div>
+                                            <div class="avatar-upload">
+                                                <input type="file" id="profile-pic-upload" accept="image/*" style="display: none;">
+                                                <button class="btn secondary" onclick="document.getElementById('profile-pic-upload').click()">
+                                                    📷 Change Photo
+                                                </button>
+                                                <button class="btn btn-small" onclick="removeProfilePicture()">Remove</button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="profile-info-section">
+                                            <div class="level-display">
+                                                <div class="level-badge">
+                                                    <span class="level-number" id="user-level">1</span>
+                                                    <span class="level-label">Level</span>
+                                                </div>
+                                                <div class="xp-progress">
+                                                    <div class="xp-bar">
+                                                        <div class="xp-fill" id="xp-progress-bar" style="width: 0%"></div>
+                                                    </div>
+                                                    <div class="xp-text">
+                                                        <span id="current-xp">0</span> / <span id="next-level-xp">100</span> XP
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="profile-stats-grid">
+                                                <div class="stat-card">
+                                                    <div class="stat-icon">🪙</div>
+                                                    <div class="stat-value" id="profile-coins">0</div>
+                                                    <div class="stat-label">Total Coins</div>
+                                                </div>
+                                                <div class="stat-card">
+                                                    <div class="stat-icon">📅</div>
+                                                    <div class="stat-value" id="profile-join-date">Today</div>
+                                                    <div class="stat-label">Member Since</div>
+                                                </div>
+                                                <div class="stat-card">
+                                                    <div class="stat-icon">📚</div>
+                                                    <div class="stat-value" id="profile-total-decks">0</div>
+                                                    <div class="stat-label">Decks Created</div>
+                                                </div>
+                                                <div class="stat-card">
+                                                    <div class="stat-icon">🎯</div>
+                                                    <div class="stat-value" id="profile-accuracy">0%</div>
+                                                    <div class="stat-label">Accuracy</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Customization Options -->
+                                    <div class="preference-group">
+                                        <h4>Display Customization</h4>
+                                        <div class="form-group">
+                                            <label for="display-name">Display Name</label>
+                                            <input type="text" id="display-name" placeholder="How others see your name">
+                                            <small class="form-help">This is how your name appears on leaderboards and to other users</small>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="profile-title">Profile Title</label>
+                                            <select id="profile-title">
+                                                <option value="">Select a title (optional)</option>
+                                                <option value="📚 Study Master">📚 Study Master</option>
+                                                <option value="🧠 Brain Trainer">🧠 Brain Trainer</option>
+                                                <option value="🎯 Accuracy Expert">🎯 Accuracy Expert</option>
+                                                <option value="⚡ Speed Learner">⚡ Speed Learner</option>
+                                                <option value="🏆 Quiz Champion">🏆 Quiz Champion</option>
+                                                <option value="🔥 Streak Legend">🔥 Streak Legend</option>
+                                                <option value="💎 Flashcard Pro">💎 Flashcard Pro</option>
+                                                <option value="🌟 Rising Star">🌟 Rising Star</option>
+                                            </select>
+                                            <small class="form-help">Unlock more titles by reaching higher levels!</small>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="profile-bio">Profile Bio</label>
+                                            <textarea id="profile-bio" placeholder="Tell others about your study interests or goals..." rows="3" maxlength="200"></textarea>
+                                            <small class="form-help"><span id="bio-count">0</span>/200 characters</small>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="profile-color">Profile Theme Color</label>
+                                            <div class="color-picker-grid">
+                                                <div class="color-option" data-color="blue" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)"></div>
+                                                <div class="color-option" data-color="green" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%)"></div>
+                                                <div class="color-option" data-color="purple" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)"></div>
+                                                <div class="color-option" data-color="red" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%)"></div>
+                                                <div class="color-option" data-color="orange" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"></div>
+                                                <div class="color-option" data-color="pink" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%)"></div>
+                                                <div class="color-option" data-color="teal" style="background: linear-gradient(135deg, #14b8a6 0%, #0f766e 100%)"></div>
+                                                <div class="color-option" data-color="indigo" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)"></div>
+                                            </div>
+                                            <small class="form-help">Choose a color theme for your profile and avatar</small>
+                                        </div>
+                                    </div>
+
+                                    <!-- Achievements Display -->
+                                    <div class="preference-group">
+                                        <h4>Achievements & Badges</h4>
+                                        <div class="achievements-grid" id="achievements-grid">
+                                            <!-- Achievements will be populated here -->
+                                        </div>
+                                    </div>
+
+                                    <div class="profile-actions">
+                                        <button class="btn primary" onclick="saveProfileSettings()">💾 Save Changes</button>
+                                        <button class="btn secondary" onclick="resetProfileSettings()">🔄 Reset to Default</button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Preferences Tab -->
+                                <div class="settings-tab-content" id="preferences-tab">
+                                    <h3>Study Preferences</h3>
+                                    
+                                    <div class="preference-group">
+                                        <h4>Default Study Settings</h4>
+                                        <div class="form-group">
+                                            <label for="default-style">Default Card Style</label>
+                                            <select id="default-style">
+                                                <option value="classic">Classic</option>
+                                                <option value="modern">Modern</option>
+                                                <option value="vintage">Vintage</option>
+                                                <option value="neon">Neon</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="default-color">Default Card Color</label>
+                                            <select id="default-color">
+                                                <option value="blue">Blue</option>
+                                                <option value="green">Green</option>
+                                                <option value="purple">Purple</option>
+                                                <option value="red">Red</option>
+                                                <option value="orange">Orange</option>
+                                                <option value="teal">Teal</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="preference-group">
+                                        <h4>Notifications</h4>
+                                        <label class="checkbox-container">
+                                            <input type="checkbox" id="notify-study-reminder">
+                                            <span class="checkmark"></span>
+                                            Daily study reminders
+                                        </label>
+                                        
+                                        <label class="checkbox-container">
+                                            <input type="checkbox" id="notify-achievements">
+                                            <span class="checkmark"></span>
+                                            Achievement notifications
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Privacy Tab -->
+                                <div class="settings-tab-content" id="privacy-tab">
+                                    <h3>Privacy Settings</h3>
+                                    
+                                    <div class="form-group">
+                                        <label>Change Password</label>
+                                        <input type="password" id="current-password" placeholder="Current password">
+                                        <input type="password" id="new-password" placeholder="New password">
+                                        <input type="password" id="confirm-new-password" placeholder="Confirm new password">
+                                        <button class="btn btn-secondary" onclick="app.changePassword()">Update Password</button>
+                                    </div>
+                                    
+                                    <div class="danger-zone">
+                                        <h4>Danger Zone</h4>
+                                        <p>These actions cannot be undone.</p>
+                                        <button class="btn btn-danger" onclick="app.deleteAccount()">Delete Account</button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Data Tab -->
+                                <div class="settings-tab-content" id="data-tab">
+                                    <h3>Data Management</h3>
+                                    
+                                    <div class="data-stats">
+                                        <div class="stat-item">
+                                            <span class="stat-label">Total Decks:</span>
+                                            <span class="stat-value" id="total-decks-count">0</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <span class="stat-label">Total Cards:</span>
+                                            <span class="stat-value" id="total-cards-count">0</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <span class="stat-label">Study Sessions:</span>
+                                            <span class="stat-value" id="total-sessions-count">0</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="data-actions">
+                                        <button class="btn btn-secondary" onclick="app.exportData()">📥 Export Data</button>
+                                        <button class="btn btn-secondary" onclick="app.importData()">📤 Import Data</button>
+                                        <button class="btn btn-secondary" onclick="app.syncData()">🔄 Sync Data</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

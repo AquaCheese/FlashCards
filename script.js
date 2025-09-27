@@ -884,6 +884,10 @@ class FlashCardsApp {
             setTimeout(() => {
                 this.initializeStatsPage();
             }, 100);
+        } else if (viewName === 'leaderboard') {
+            // Refresh leaderboard data when view is shown
+            updateUserStats();
+            switchLeaderboard(currentLeaderboard);
         }
     }
 
@@ -1131,6 +1135,16 @@ class FlashCardsApp {
         
         // Check for coin milestones
         this.checkCoinMilestones(previousCoins, this.coins);
+        
+        // Update leaderboard stats if coins changed significantly
+        if (finalAmount >= 10 && typeof updateUserStats === 'function') {
+            updateUserStats();
+        }
+        
+        // Check coin achievements
+        if (typeof checkAchievements === 'function') {
+            checkAchievements('coinsEarned', { totalCoins: this.coins });
+        }
     }
 
     loseCoins(amount, reason = 'Incorrect answer') {
@@ -1977,6 +1991,11 @@ Hint:`
         
         // Update AI learning patterns
         this.updateAILearningPatterns(session);
+        
+        // Update leaderboard stats if logged in
+        if (typeof updateUserStats === 'function') {
+            updateUserStats();
+        }
     }
 
     updateAILearningPatterns(session) {
@@ -4397,6 +4416,16 @@ Hint:`
             };
             this.decks.push(deck);
             this.showNotification('Deck saved successfully!', 'success');
+            
+            // Award XP for creating a new deck
+            if (typeof awardXP === 'function') {
+                awardXP(XP_VALUES.createDeck, 'Deck created!');
+                
+                // Check deck creation achievements
+                if (typeof checkAchievements === 'function') {
+                    checkAchievements('createDeck', { totalDecks: this.decks.length });
+                }
+            }
         }
 
         this.saveDecks();
@@ -6970,6 +6999,20 @@ Hint:`
             this.earnCoins(coinReward, 'Correct answer!');
             this.incrementStreak(); // Track streak for bonus calculations
             
+            // Award XP for correct answer
+            if (typeof awardXP === 'function') {
+                awardXP(XP_VALUES.correctAnswer, 'Correct answer!');
+                
+                // Check for first answer achievement
+                if (typeof checkAchievements === 'function') {
+                    checkAchievements('firstAnswer');
+                    
+                    // Check streak achievements
+                    const currentStreak = this.getCorrectStreakCount();
+                    checkAchievements('streak', { streak: currentStreak });
+                }
+            }
+            
             // Trigger fall animation for correct answer
             this.animateCorrectAnswer();
             
@@ -7002,6 +7045,11 @@ Hint:`
                 this.loseCoins(coinPenalty, 'Incorrect answer');
             }
             this.resetStreak(); // Reset streak on incorrect answer
+            
+            // Award small XP for effort even when wrong
+            if (typeof awardXP === 'function') {
+                awardXP(XP_VALUES.wrongAnswer, 'Keep trying!');
+            }
             
             // Trigger slide animation for incorrect answer
             this.animateIncorrectAnswer();
@@ -7156,14 +7204,34 @@ Hint:`
                 // Perfect completion - big bonus!
                 completionBonus = 50;
                 this.earnCoins(completionBonus, 'Perfect completion! 🌟');
+                
+                // Award XP for perfect completion
+                if (typeof awardXP === 'function') {
+                    awardXP(XP_VALUES.perfectCompletion, 'Perfect completion!');
+                    
+                    // Check perfect deck achievement
+                    if (typeof checkAchievements === 'function') {
+                        checkAchievements('perfectDeck');
+                    }
+                }
             } else if (completionRate >= 0.8) {
                 // Good completion
                 completionBonus = 25;
                 this.earnCoins(completionBonus, 'Great job completing the deck!');
+                
+                // Award XP for deck completion
+                if (typeof awardXP === 'function') {
+                    awardXP(XP_VALUES.deckCompletion, 'Deck completed!');
+                }
             } else if (completionRate >= 0.5) {
                 // Decent effort
                 completionBonus = 10;
                 this.earnCoins(completionBonus, 'Good effort!');
+                
+                // Award XP for study session
+                if (typeof awardXP === 'function') {
+                    awardXP(XP_VALUES.studySession, 'Study session completed!');
+                }
             }
             
             // Add streak bonus if applicable
@@ -8254,6 +8322,1448 @@ A: This concept is significant because it helps bridge basic understanding with 
 
 // All global functions are now defined at the top of the file
 
+// ========================= AUTHENTICATION SYSTEM =========================
+
+// User session management
+let currentUser = null;
+
+// Initialize authentication system
+function initializeAuth() {
+    // Check for existing session
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        updateAccountButton();
+        showAccountSettings();
+    }
+    
+    // Set up event listeners
+    setupAuthEventListeners();
+}
+
+function setupAuthEventListeners() {
+    // Account button click
+    const accountBtn = document.getElementById('account-btn');
+    if (accountBtn) {
+        accountBtn.addEventListener('click', toggleAccountSection);
+    }
+    
+    // Auth tabs
+    const authTabs = document.querySelectorAll('.auth-tab');
+    authTabs.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            switchAuthTab(e.target.dataset.tab);
+        });
+    });
+    
+    // Settings tabs
+    const settingsTabs = document.querySelectorAll('.settings-tab');
+    settingsTabs.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            switchSettingsTab(e.target.dataset.tab);
+        });
+    });
+    
+    // Form submissions
+    const signInForm = document.getElementById('signin-form');
+    const registerForm = document.getElementById('register-form');
+    
+    if (signInForm) {
+        signInForm.addEventListener('submit', handleSignIn);
+    }
+    
+    if (registerForm) {
+        registerForm.addEventListener('submit', handleRegister);
+    }
+    
+    // Account settings forms (we'll add these handlers later)
+    setupSettingsHandlers();
+}
+
+// Toggle account section visibility
+function toggleAccountSection() {
+    const accountSection = document.getElementById('account-section');
+    const isVisible = accountSection.style.display === 'block';
+    
+    if (isVisible) {
+        accountSection.style.display = 'none';
+    } else {
+        accountSection.style.display = 'block';
+        if (currentUser) {
+            showAccountSettings();
+        } else {
+            showAuthForms();
+        }
+    }
+}
+
+// Switch between auth tabs (signin/register)
+function switchAuthTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.auth-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    
+    // Show corresponding form
+    document.querySelectorAll('.auth-form').forEach(form => {
+        form.style.display = 'none';
+    });
+    document.getElementById(`${tabName}-form`).style.display = 'block';
+}
+
+// Switch between settings tabs
+function switchSettingsTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.settings-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    
+    // Show corresponding content
+    document.querySelectorAll('.settings-tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    document.getElementById(`${tabName}-settings`).classList.add('active');
+}
+
+// Handle sign in
+async function handleSignIn(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const username = formData.get('username');
+    const password = formData.get('password');
+    const rememberMe = formData.get('remember') === 'on';
+    
+    // Show loading state
+    const submitBtn = e.target.querySelector('.auth-btn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span class="btn-loading">Signing in...</span>';
+    submitBtn.disabled = true;
+    
+    try {
+        // Simulate API call (replace with actual authentication)
+        await simulateAuthRequest();
+        
+        // For demo purposes, accept any credentials
+        const user = {
+            username: username,
+            email: `${username}@example.com`,
+            joinDate: new Date().toISOString(),
+            totalDecks: app ? app.decks.length : 0,
+            studySessions: 0,
+            preferences: {
+                theme: localStorage.getItem('theme') || 'light',
+                autoPlay: false,
+                studyMode: 'cards',
+                notifications: true
+            }
+        };
+        
+        currentUser = user;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        
+        if (rememberMe) {
+            localStorage.setItem('rememberUser', 'true');
+        }
+        
+        updateAccountButton();
+        showAccountSettings();
+        
+        // Load profile settings into form
+        if (typeof loadProfileSettingsIntoForm === 'function') {
+            loadProfileSettingsIntoForm();
+        }
+        
+        // Update profile display
+        if (typeof updateProfileDisplay === 'function') {
+            updateProfileDisplay();
+        }
+        
+        showNotification('Successfully signed in!', 'success');
+        
+    } catch (error) {
+        console.error('Sign in error:', error);
+        showNotification('Sign in failed. Please try again.', 'error');
+    } finally {
+        // Reset button
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+// Handle registration
+async function handleRegister(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const username = formData.get('username');
+    const email = formData.get('email');
+    const password = formData.get('password');
+    const confirmPassword = formData.get('confirmPassword');
+    const agreeTerms = formData.get('terms') === 'on';
+    
+    // Validation
+    if (password !== confirmPassword) {
+        showNotification('Passwords do not match!', 'error');
+        return;
+    }
+    
+    if (!agreeTerms) {
+        showNotification('Please agree to the terms and conditions.', 'error');
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = e.target.querySelector('.auth-btn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span class="btn-loading">Creating account...</span>';
+    submitBtn.disabled = true;
+    
+    try {
+        // Simulate API call
+        await simulateAuthRequest();
+        
+        // Create user account
+        const user = {
+            username: username,
+            email: email,
+            joinDate: new Date().toISOString(),
+            totalDecks: app ? app.decks.length : 0,
+            studySessions: 0,
+            preferences: {
+                theme: localStorage.getItem('theme') || 'light',
+                autoPlay: false,
+                studyMode: 'cards',
+                notifications: true
+            }
+        };
+        
+        currentUser = user;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        
+        updateAccountButton();
+        showAccountSettings();
+        showNotification('Account created successfully!', 'success');
+        
+    } catch (error) {
+        console.error('Registration error:', error);
+        showNotification('Registration failed. Please try again.', 'error');
+    } finally {
+        // Reset button
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+// Update account button based on login state
+function updateAccountButton() {
+    const accountBtn = document.getElementById('account-btn');
+    if (!accountBtn) return;
+    
+    if (currentUser) {
+        accountBtn.innerHTML = `
+            <span class="account-icon">👤</span>
+            <span class="account-text">${currentUser.username}</span>
+        `;
+        accountBtn.title = `Signed in as ${currentUser.username}`;
+    } else {
+        accountBtn.innerHTML = `
+            <span class="account-icon">👤</span>
+            <span class="account-text">Account</span>
+        `;
+        accountBtn.title = 'Sign in or create account';
+    }
+}
+
+// Show authentication forms
+function showAuthForms() {
+    document.getElementById('auth-section').style.display = 'block';
+    document.getElementById('account-settings').style.display = 'none';
+}
+
+// Show account settings
+function showAccountSettings() {
+    if (!currentUser) {
+        showAuthForms();
+        return;
+    }
+    
+    document.getElementById('auth-section').style.display = 'none';
+    document.getElementById('account-settings').style.display = 'block';
+    
+    // Update user info
+    document.getElementById('user-avatar').textContent = currentUser.username.charAt(0).toUpperCase();
+    document.getElementById('user-name').textContent = currentUser.username;
+    document.getElementById('user-stats').textContent = `Member since ${new Date(currentUser.joinDate).toLocaleDateString()}`;
+    
+    // Update data stats
+    updateDataStats();
+    
+    // Load preferences
+    loadUserPreferences();
+}
+
+// Update data statistics
+function updateDataStats() {
+    if (!app) return;
+    
+    const totalDecks = app.decks.length;
+    const totalCards = app.decks.reduce((sum, deck) => sum + deck.cards.length, 0);
+    const studySessions = currentUser.studySessions || 0;
+    
+    document.getElementById('total-decks').textContent = totalDecks;
+    document.getElementById('total-cards').textContent = totalCards;
+    document.getElementById('study-sessions').textContent = studySessions;
+    document.getElementById('data-size').textContent = `${Math.round((JSON.stringify(app.decks).length + JSON.stringify(currentUser).length) / 1024)} KB`;
+}
+
+// Load user preferences into settings
+function loadUserPreferences() {
+    if (!currentUser.preferences) return;
+    
+    const prefs = currentUser.preferences;
+    
+    // Theme preference
+    const themeSelect = document.getElementById('theme-preference');
+    if (themeSelect) {
+        themeSelect.value = prefs.theme || 'light';
+    }
+    
+    // Other preferences
+    const autoPlayCheck = document.getElementById('auto-play');
+    if (autoPlayCheck) {
+        autoPlayCheck.checked = prefs.autoPlay || false;
+    }
+    
+    const studyModeSelect = document.getElementById('study-mode');
+    if (studyModeSelect) {
+        studyModeSelect.value = prefs.studyMode || 'cards';
+    }
+    
+    const notificationsCheck = document.getElementById('notifications');
+    if (notificationsCheck) {
+        notificationsCheck.checked = prefs.notifications !== false;
+    }
+}
+
+// Setup settings form handlers
+function setupSettingsHandlers() {
+    // Theme change
+    const themeSelect = document.getElementById('theme-preference');
+    if (themeSelect) {
+        themeSelect.addEventListener('change', (e) => {
+            const newTheme = e.target.value;
+            document.body.className = newTheme + '-theme';
+            localStorage.setItem('theme', newTheme);
+            
+            if (currentUser) {
+                currentUser.preferences.theme = newTheme;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
+            
+            showNotification('Theme updated!', 'success');
+        });
+    }
+    
+    // Sign out button
+    const signOutBtn = document.getElementById('sign-out-btn');
+    if (signOutBtn) {
+        signOutBtn.addEventListener('click', handleSignOut);
+    }
+    
+    // Export data
+    const exportBtn = document.getElementById('export-data-btn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportUserData);
+    }
+    
+    // Delete account
+    const deleteBtn = document.getElementById('delete-account-btn');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', handleDeleteAccount);
+    }
+}
+
+// Handle sign out
+function handleSignOut() {
+    if (confirm('Are you sure you want to sign out?')) {
+        currentUser = null;
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('rememberUser');
+        
+        updateAccountButton();
+        document.getElementById('account-section').style.display = 'none';
+        showNotification('Successfully signed out!', 'success');
+    }
+}
+
+// Export user data
+function exportUserData() {
+    const userData = {
+        user: currentUser,
+        decks: app ? app.decks : [],
+        settings: {
+            theme: localStorage.getItem('theme'),
+            powerUps: JSON.parse(localStorage.getItem('powerUps') || '{}')
+        },
+        exportDate: new Date().toISOString()
+    };
+    
+    const dataStr = JSON.stringify(userData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = `flashcards-data-${currentUser.username}-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    
+    showNotification('Data exported successfully!', 'success');
+}
+
+// Handle account deletion
+function handleDeleteAccount() {
+    const confirmText = prompt('This will permanently delete your account and all data. Type "DELETE" to confirm:');
+    
+    if (confirmText === 'DELETE') {
+        // Clear all user data
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('rememberUser');
+        localStorage.removeItem('decks');
+        localStorage.removeItem('powerUps');
+        
+        currentUser = null;
+        
+        // Reset app
+        if (app) {
+            app.decks = [];
+            app.saveDecks();
+        }
+        
+        updateAccountButton();
+        document.getElementById('account-section').style.display = 'none';
+        showNotification('Account deleted successfully.', 'success');
+        
+        // Reload page to reset everything
+        setTimeout(() => {
+            location.reload();
+        }, 2000);
+    }
+}
+
+// Simulate authentication request (replace with actual API calls)
+function simulateAuthRequest() {
+    return new Promise((resolve) => {
+        setTimeout(resolve, 1000 + Math.random() * 1000);
+    });
+}
+
+// ========================= LEVEL & XP SYSTEM =========================
+
+// XP and Level Management
+let userXP = 0;
+let userLevel = 1;
+let userProfile = {};
+
+// XP Values for different actions
+const XP_VALUES = {
+    correctAnswer: 10,
+    wrongAnswer: 2, // Small XP for effort
+    deckCompletion: 50,
+    perfectCompletion: 100,
+    streakBonus: 5, // per streak level
+    createDeck: 25,
+    studySession: 15,
+    dailyLogin: 20,
+    achievementUnlock: 100
+};
+
+// Level thresholds (XP required for each level)
+const LEVEL_THRESHOLDS = [
+    0, 100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700, 3250, // Levels 1-11
+    3850, 4500, 5200, 5950, 6750, 7600, 8500, 9450, 10450, 11500, // Levels 12-21
+    12600, 13750, 14950, 16200, 17500, 18850, 20250, 21700, 23200, 24750, // Levels 22-31
+    26350, 28000, 29700, 31450, 33250, 35100, 37000, 38950, 40950, 43000, // Levels 32-41
+    45100, 47250, 49450, 51700, 54000, 56350, 58750, 61200, 63700, 66250, // Levels 42-51
+    68850, 71500, 74200, 76950, 79750, 82600, 85500, 88450, 91450, 94500, // Levels 52-61
+    97600, 100750, 103950, 107200, 110500, 113850, 117250, 120700, 124200, 127750, // Levels 62-71
+    131350, 135000, 138700, 142450, 146250, 150100, 154000, 157950, 161950, 166000, // Levels 72-81
+    170100, 174250, 178450, 182700, 187000, 191350, 195750, 200200, 204700, 209250, // Levels 82-91
+    213850, 218500, 223200, 227950, 232750, 237600, 242500, 247450, 252450, 257500 // Levels 92-101
+];
+
+// Achievement definitions
+const ACHIEVEMENTS = {
+    firstStep: { icon: '👶', name: 'First Steps', desc: 'Answer your first question', xp: 0, unlocked: false },
+    streak5: { icon: '🔥', name: 'On Fire', desc: 'Get 5 answers in a row', xp: 25, unlocked: false },
+    streak10: { icon: '🌡️', name: 'Hot Streak', desc: 'Get 10 answers in a row', xp: 50, unlocked: false },
+    streak25: { icon: '💥', name: 'Unstoppable', desc: 'Get 25 answers in a row', xp: 100, unlocked: false },
+    perfectDeck: { icon: '💯', name: 'Perfectionist', desc: 'Complete a deck with 100% accuracy', xp: 50, unlocked: false },
+    speed10: { icon: '⚡', name: 'Lightning Fast', desc: 'Answer 10 questions in under 30 seconds', xp: 75, unlocked: false },
+    creator: { icon: '📚', name: 'Deck Creator', desc: 'Create your first deck', xp: 25, unlocked: false },
+    prolific: { icon: '📖', name: 'Prolific Creator', desc: 'Create 10 decks', xp: 100, unlocked: false },
+    scholar: { icon: '🎓', name: 'Scholar', desc: 'Reach level 10', xp: 100, unlocked: false },
+    master: { icon: '👑', name: 'Master Student', desc: 'Reach level 25', xp: 250, unlocked: false },
+    legend: { icon: '🏆', name: 'Legend', desc: 'Reach level 50', xp: 500, unlocked: false },
+    coinCollector: { icon: '💰', name: 'Coin Collector', desc: 'Earn 1000 coins', xp: 50, unlocked: false },
+    wealthy: { icon: '💎', name: 'Wealthy', desc: 'Earn 5000 coins', xp: 150, unlocked: false },
+    millionaire: { icon: '🏦', name: 'Millionaire', desc: 'Earn 10000 coins', xp: 300, unlocked: false }
+};
+
+// Initialize XP and Profile system
+function initializeXPSystem() {
+    loadUserXP();
+    loadUserProfile();
+    setupProfileEventListeners();
+    updateLevelDisplay();
+    updateAchievements();
+}
+
+// Load user XP and level from storage
+function loadUserXP() {
+    const savedXP = localStorage.getItem('userXP');
+    const savedLevel = localStorage.getItem('userLevel');
+    
+    userXP = savedXP ? parseInt(savedXP) : 0;
+    userLevel = savedLevel ? parseInt(savedLevel) : 1;
+    
+    // Recalculate level based on XP (in case thresholds changed)
+    const calculatedLevel = calculateLevelFromXP(userXP);
+    if (calculatedLevel !== userLevel) {
+        userLevel = calculatedLevel;
+        saveUserLevel();
+    }
+}
+
+// Load user profile from storage
+function loadUserProfile() {
+    const savedProfile = localStorage.getItem('userProfile');
+    userProfile = savedProfile ? JSON.parse(savedProfile) : {
+        displayName: '',
+        title: '',
+        bio: '',
+        profileColor: 'blue',
+        profilePicture: null,
+        achievements: { ...ACHIEVEMENTS }
+    };
+    
+    // Merge with default achievements if new ones were added
+    userProfile.achievements = { ...ACHIEVEMENTS, ...userProfile.achievements };
+}
+
+// Save user XP and level
+function saveUserXP() {
+    localStorage.setItem('userXP', userXP.toString());
+}
+
+function saveUserLevel() {
+    localStorage.setItem('userLevel', userLevel.toString());
+}
+
+function saveUserProfile() {
+    localStorage.setItem('userProfile', JSON.stringify(userProfile));
+}
+
+// Calculate level from XP
+function calculateLevelFromXP(xp) {
+    for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
+        if (xp >= LEVEL_THRESHOLDS[i]) {
+            return i + 1;
+        }
+    }
+    return 1;
+}
+
+// Get XP required for next level
+function getXPForNextLevel(level) {
+    return LEVEL_THRESHOLDS[level] || LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1];
+}
+
+// Award XP for actions
+function awardXP(amount, reason = 'Great job!') {
+    const previousLevel = userLevel;
+    userXP += amount;
+    userLevel = calculateLevelFromXP(userXP);
+    
+    saveUserXP();
+    saveUserLevel();
+    
+    // Show XP gain animation
+    showXPGain(amount, reason);
+    
+    // Check for level up
+    if (userLevel > previousLevel) {
+        handleLevelUp(previousLevel, userLevel);
+    }
+    
+    // Update displays
+    updateLevelDisplay();
+    updateAchievements();
+    
+    // Update leaderboard stats
+    if (typeof updateUserStats === 'function') {
+        updateUserStats();
+    }
+    
+    console.log(`🌟 Gained ${amount} XP! Total: ${userXP} (Level ${userLevel}) - ${reason}`);
+}
+
+// Handle level up
+function handleLevelUp(oldLevel, newLevel) {
+    // Play level up animation
+    const levelBadge = document.getElementById('user-level');
+    if (levelBadge) {
+        levelBadge.parentElement.classList.add('level-up-animation');
+        setTimeout(() => {
+            levelBadge.parentElement.classList.remove('level-up-animation');
+        }, 600);
+    }
+    
+    // Show notification
+    showNotification(`🎉 Level Up! You reached Level ${newLevel}!`, 'success');
+    
+    // Award bonus XP for level up
+    const bonusXP = newLevel * 10;
+    setTimeout(() => {
+        awardXP(bonusXP, `Level ${newLevel} bonus!`);
+    }, 1000);
+    
+    // Check for level-based achievements
+    checkLevelAchievements(newLevel);
+}
+
+// Show XP gain animation
+function showXPGain(amount, reason) {
+    const popup = document.createElement('div');
+    popup.className = 'xp-gain-popup';
+    popup.textContent = `+${amount} XP`;
+    popup.title = reason;
+    
+    // Position near level display
+    const levelDisplay = document.querySelector('.level-display');
+    if (levelDisplay) {
+        const rect = levelDisplay.getBoundingClientRect();
+        popup.style.left = `${rect.right - 100}px`;
+        popup.style.top = `${rect.top + 10}px`;
+    } else {
+        popup.style.left = '50%';
+        popup.style.top = '20%';
+        popup.style.transform = 'translateX(-50%)';
+    }
+    
+    document.body.appendChild(popup);
+    
+    // Remove after animation
+    setTimeout(() => {
+        if (popup.parentNode) {
+            popup.parentNode.removeChild(popup);
+        }
+    }, 2000);
+}
+
+// Update level display
+function updateLevelDisplay() {
+    const levelElement = document.getElementById('user-level');
+    const currentXPElement = document.getElementById('current-xp');
+    const nextLevelXPElement = document.getElementById('next-level-xp');
+    const xpProgressBar = document.getElementById('xp-progress-bar');
+    
+    if (levelElement) {
+        levelElement.textContent = userLevel;
+    }
+    
+    if (currentXPElement && nextLevelXPElement && xpProgressBar) {
+        const currentLevelXP = LEVEL_THRESHOLDS[userLevel - 1] || 0;
+        const nextLevelXP = LEVEL_THRESHOLDS[userLevel] || LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1];
+        const xpInCurrentLevel = userXP - currentLevelXP;
+        const xpNeededForNextLevel = nextLevelXP - currentLevelXP;
+        const progressPercent = Math.min((xpInCurrentLevel / xpNeededForNextLevel) * 100, 100);
+        
+        currentXPElement.textContent = xpInCurrentLevel;
+        nextLevelXPElement.textContent = xpNeededForNextLevel;
+        xpProgressBar.style.width = `${progressPercent}%`;
+    }
+}
+
+// Setup profile event listeners
+function setupProfileEventListeners() {
+    // Profile picture upload
+    const profilePicUpload = document.getElementById('profile-pic-upload');
+    if (profilePicUpload) {
+        profilePicUpload.addEventListener('change', handleProfilePictureUpload);
+    }
+    
+    // Bio character counter
+    const profileBio = document.getElementById('profile-bio');
+    const bioCount = document.getElementById('bio-count');
+    if (profileBio && bioCount) {
+        profileBio.addEventListener('input', (e) => {
+            bioCount.textContent = e.target.value.length;
+        });
+    }
+    
+    // Color picker
+    const colorOptions = document.querySelectorAll('.color-option');
+    colorOptions.forEach(option => {
+        option.addEventListener('click', (e) => {
+            // Remove previous selection
+            colorOptions.forEach(opt => opt.classList.remove('selected'));
+            // Add selection to clicked option
+            e.target.classList.add('selected');
+            
+            // Update profile color
+            const color = e.target.dataset.color;
+            userProfile.profileColor = color;
+            updateAvatarColor(color);
+        });
+    });
+}
+
+// Handle profile picture upload
+function handleProfilePictureUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Check file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+        showNotification('Profile picture must be less than 2MB', 'error');
+        return;
+    }
+    
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+        showNotification('Please select an image file', 'error');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const imageData = e.target.result;
+        userProfile.profilePicture = imageData;
+        
+        // Update preview
+        const preview = document.getElementById('profile-pic-preview');
+        const initial = document.getElementById('profile-initial-large');
+        
+        if (preview && initial) {
+            preview.src = imageData;
+            preview.style.display = 'block';
+            initial.style.display = 'none';
+        }
+        
+        showNotification('Profile picture updated!', 'success');
+    };
+    
+    reader.readAsDataURL(file);
+}
+
+// Remove profile picture
+function removeProfilePicture() {
+    userProfile.profilePicture = null;
+    
+    const preview = document.getElementById('profile-pic-preview');
+    const initial = document.getElementById('profile-initial-large');
+    
+    if (preview && initial) {
+        preview.style.display = 'none';
+        initial.style.display = 'flex';
+    }
+    
+    showNotification('Profile picture removed', 'success');
+}
+
+// Update avatar color
+function updateAvatarColor(color) {
+    const colorMap = {
+        blue: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        green: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        purple: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+        red: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+        orange: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+        pink: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
+        teal: 'linear-gradient(135deg, #14b8a6 0%, #0f766e 100%)',
+        indigo: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)'
+    };
+    
+    const avatar = document.getElementById('profile-avatar-large');
+    if (avatar && colorMap[color]) {
+        avatar.style.background = colorMap[color];
+    }
+}
+
+// Save profile settings
+function saveProfileSettings() {
+    // Get form values
+    const displayName = document.getElementById('display-name').value.trim();
+    const title = document.getElementById('profile-title').value;
+    const bio = document.getElementById('profile-bio').value.trim();
+    
+    // Validation
+    if (displayName.length > 30) {
+        showNotification('Display name must be 30 characters or less', 'error');
+        return;
+    }
+    
+    if (bio.length > 200) {
+        showNotification('Bio must be 200 characters or less', 'error');
+        return;
+    }
+    
+    // Update profile
+    userProfile.displayName = displayName;
+    userProfile.title = title;
+    userProfile.bio = bio;
+    
+    saveUserProfile();
+    updateProfileDisplay();
+    showNotification('Profile settings saved!', 'success');
+}
+
+// Reset profile settings
+function resetProfileSettings() {
+    if (confirm('Are you sure you want to reset your profile to default settings?')) {
+        userProfile = {
+            displayName: '',
+            title: '',
+            bio: '',
+            profileColor: 'blue',
+            profilePicture: null,
+            achievements: userProfile.achievements // Keep achievements
+        };
+        
+        saveUserProfile();
+        loadProfileSettingsIntoForm();
+        updateProfileDisplay();
+        showNotification('Profile reset to defaults', 'success');
+    }
+}
+
+// Load profile settings into form
+function loadProfileSettingsIntoForm() {
+    const displayNameInput = document.getElementById('display-name');
+    const titleSelect = document.getElementById('profile-title');
+    const bioTextarea = document.getElementById('profile-bio');
+    const bioCount = document.getElementById('bio-count');
+    
+    if (displayNameInput) displayNameInput.value = userProfile.displayName || '';
+    if (titleSelect) titleSelect.value = userProfile.title || '';
+    if (bioTextarea) {
+        bioTextarea.value = userProfile.bio || '';
+        if (bioCount) bioCount.textContent = userProfile.bio?.length || 0;
+    }
+    
+    // Set color selection
+    const colorOptions = document.querySelectorAll('.color-option');
+    colorOptions.forEach(option => {
+        option.classList.toggle('selected', option.dataset.color === userProfile.profileColor);
+    });
+    
+    // Update avatar
+    updateAvatarColor(userProfile.profileColor);
+    
+    // Load profile picture
+    if (userProfile.profilePicture) {
+        const preview = document.getElementById('profile-pic-preview');
+        const initial = document.getElementById('profile-initial-large');
+        
+        if (preview && initial) {
+            preview.src = userProfile.profilePicture;
+            preview.style.display = 'block';
+            initial.style.display = 'none';
+        }
+    }
+}
+
+// Update profile stats display
+function updateProfileDisplay() {
+    // Update stats
+    const coinsElement = document.getElementById('profile-coins');
+    const joinDateElement = document.getElementById('profile-join-date');
+    const totalDecksElement = document.getElementById('profile-total-decks');
+    const accuracyElement = document.getElementById('profile-accuracy');
+    
+    if (coinsElement && app) {
+        coinsElement.textContent = app.coins.toLocaleString();
+    }
+    
+    if (joinDateElement && currentUser) {
+        const joinDate = new Date(currentUser.joinDate);
+        joinDateElement.textContent = joinDate.toLocaleDateString();
+    }
+    
+    if (totalDecksElement && app) {
+        totalDecksElement.textContent = app.decks.length;
+    }
+    
+    if (accuracyElement) {
+        const accuracy = calculateUserAccuracy();
+        accuracyElement.textContent = `${accuracy}%`;
+    }
+    
+    // Update avatar initial
+    const initialElement = document.getElementById('profile-initial-large');
+    if (initialElement && currentUser) {
+        const displayName = userProfile.displayName || currentUser.username;
+        initialElement.textContent = displayName.charAt(0).toUpperCase();
+    }
+}
+
+// Update achievements display
+function updateAchievements() {
+    const achievementsGrid = document.getElementById('achievements-grid');
+    if (!achievementsGrid) return;
+    
+    achievementsGrid.innerHTML = '';
+    
+    Object.entries(userProfile.achievements).forEach(([key, achievement]) => {
+        const achievementDiv = document.createElement('div');
+        achievementDiv.className = `achievement-item ${achievement.unlocked ? 'unlocked' : 'locked'}`;
+        
+        achievementDiv.innerHTML = `
+            <div class="achievement-icon">${achievement.icon}</div>
+            <div class="achievement-name">${achievement.name}</div>
+            <div class="achievement-desc">${achievement.desc}</div>
+            ${achievement.progress !== undefined ? `
+                <div class="achievement-progress">
+                    <div class="achievement-progress-fill" style="width: ${Math.min(achievement.progress, 100)}%"></div>
+                </div>
+            ` : ''}
+        `;
+        
+        achievementsGrid.appendChild(achievementDiv);
+    });
+}
+
+// Check for new achievements
+function checkAchievements(action, data = {}) {
+    let newAchievements = [];
+    
+    switch (action) {
+        case 'firstAnswer':
+            if (!userProfile.achievements.firstStep.unlocked) {
+                unlockAchievement('firstStep');
+                newAchievements.push('firstStep');
+            }
+            break;
+            
+        case 'streak':
+            const streak = data.streak || 0;
+            if (streak >= 25 && !userProfile.achievements.streak25.unlocked) {
+                unlockAchievement('streak25');
+                newAchievements.push('streak25');
+            } else if (streak >= 10 && !userProfile.achievements.streak10.unlocked) {
+                unlockAchievement('streak10');
+                newAchievements.push('streak10');
+            } else if (streak >= 5 && !userProfile.achievements.streak5.unlocked) {
+                unlockAchievement('streak5');
+                newAchievements.push('streak5');
+            }
+            break;
+            
+        case 'perfectDeck':
+            if (!userProfile.achievements.perfectDeck.unlocked) {
+                unlockAchievement('perfectDeck');
+                newAchievements.push('perfectDeck');
+            }
+            break;
+            
+        case 'createDeck':
+            const totalDecks = data.totalDecks || 0;
+            if (!userProfile.achievements.creator.unlocked) {
+                unlockAchievement('creator');
+                newAchievements.push('creator');
+            }
+            if (totalDecks >= 10 && !userProfile.achievements.prolific.unlocked) {
+                unlockAchievement('prolific');
+                newAchievements.push('prolific');
+            }
+            break;
+            
+        case 'coinsEarned':
+            const totalCoins = data.totalCoins || 0;
+            if (totalCoins >= 10000 && !userProfile.achievements.millionaire.unlocked) {
+                unlockAchievement('millionaire');
+                newAchievements.push('millionaire');
+            } else if (totalCoins >= 5000 && !userProfile.achievements.wealthy.unlocked) {
+                unlockAchievement('wealthy');
+                newAchievements.push('wealthy');
+            } else if (totalCoins >= 1000 && !userProfile.achievements.coinCollector.unlocked) {
+                unlockAchievement('coinCollector');
+                newAchievements.push('coinCollector');
+            }
+            break;
+            
+        case 'speedAnswering':
+            const timePerQuestion = data.timePerQuestion || 0;
+            if (timePerQuestion <= 3 && data.questionCount >= 10 && !userProfile.achievements.speed10.unlocked) {
+                unlockAchievement('speed10');
+                newAchievements.push('speed10');
+            }
+            break;
+    }
+    
+    return newAchievements;
+}
+
+// Check level-based achievements
+function checkLevelAchievements(level) {
+    let newAchievements = [];
+    
+    if (level >= 50 && !userProfile.achievements.legend.unlocked) {
+        unlockAchievement('legend');
+        newAchievements.push('legend');
+    } else if (level >= 25 && !userProfile.achievements.master.unlocked) {
+        unlockAchievement('master');
+        newAchievements.push('master');
+    } else if (level >= 10 && !userProfile.achievements.scholar.unlocked) {
+        unlockAchievement('scholar');
+        newAchievements.push('scholar');
+    }
+    
+    return newAchievements;
+}
+
+// Unlock achievement
+function unlockAchievement(achievementKey) {
+    if (userProfile.achievements[achievementKey]) {
+        userProfile.achievements[achievementKey].unlocked = true;
+        saveUserProfile();
+        
+        const achievement = userProfile.achievements[achievementKey];
+        showNotification(`🏆 Achievement Unlocked: ${achievement.name}!`, 'success');
+        
+        // Award bonus XP
+        if (achievement.xp > 0) {
+            setTimeout(() => {
+                awardXP(achievement.xp, `Achievement: ${achievement.name}`);
+            }, 500);
+        }
+        
+        updateAchievements();
+    }
+}
+
+// ========================= LEADERBOARD SYSTEM =========================
+
+// Leaderboard data and management
+let leaderboardData = {};
+let currentLeaderboard = 'coins';
+let userStats = null;
+
+// Initialize leaderboard system
+function initializeLeaderboard() {
+    setupLeaderboardEventListeners();
+    generateSampleLeaderboardData();
+    updateUserStats();
+    switchLeaderboard('coins');
+}
+
+// Setup leaderboard event listeners
+function setupLeaderboardEventListeners() {
+    // Leaderboard tab switching
+    const leaderboardTabs = document.querySelectorAll('.leaderboard-tab');
+    leaderboardTabs.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            switchLeaderboard(e.target.dataset.board);
+        });
+    });
+}
+
+// Switch between different leaderboards
+function switchLeaderboard(boardType) {
+    currentLeaderboard = boardType;
+    
+    // Update tab buttons
+    document.querySelectorAll('.leaderboard-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelector(`[data-board="${boardType}"]`).classList.add('active');
+    
+    // Show corresponding leaderboard
+    document.querySelectorAll('.leaderboard-list').forEach(list => {
+        list.classList.remove('active');
+    });
+    document.getElementById(`${boardType}-leaderboard`).classList.add('active');
+    
+    // Update current user rank display
+    updateCurrentUserRank(boardType);
+    
+    // Load leaderboard data
+    loadLeaderboardData(boardType);
+}
+
+// Generate sample leaderboard data (replace with actual API calls)
+function generateSampleLeaderboardData() {
+    const sampleUsers = [
+        { username: 'StudyMaster2025', coins: 15420, accuracy: 94.2, studyTime: 145.5, streak: 89, decks: 23, cards: 456 },
+        { username: 'FlashCardPro', coins: 12890, accuracy: 96.8, studyTime: 132.3, streak: 127, decks: 18, cards: 389 },
+        { username: 'BrainBooster', coins: 11750, accuracy: 91.5, studyTime: 168.2, streak: 73, decks: 31, cards: 523 },
+        { username: 'QuizWiz2024', coins: 10340, accuracy: 93.7, studyTime: 98.7, streak: 156, decks: 15, cards: 298 },
+        { username: 'MemoryMaster', coins: 9820, accuracy: 89.3, studyTime: 201.4, streak: 62, decks: 42, cards: 687 },
+        { username: 'StudySensei', coins: 8650, accuracy: 97.1, studyTime: 89.6, streak: 203, decks: 12, cards: 234 },
+        { username: 'CardCrusher', coins: 7890, accuracy: 86.2, studyTime: 156.8, streak: 45, decks: 28, cards: 412 },
+        { username: 'LearnLegend', coins: 6420, accuracy: 92.6, studyTime: 234.5, streak: 91, decks: 35, cards: 578 },
+        { username: 'FlashGenius', coins: 5340, accuracy: 88.9, studyTime: 67.3, streak: 134, decks: 9, cards: 167 },
+        { username: 'StudyStorm', coins: 4230, accuracy: 95.4, studyTime: 123.7, streak: 78, decks: 21, cards: 345 }
+    ];
+    
+    // Add current user if logged in
+    if (currentUser) {
+        const userPosition = Math.floor(Math.random() * 8) + 3; // Random position between 3-10
+        userStats = {
+            username: currentUser.username,
+            coins: app ? (JSON.parse(localStorage.getItem('coins')) || 100) : 100,
+            accuracy: calculateUserAccuracy(),
+            studyTime: calculateUserStudyTime(),
+            streak: calculateUserStreak(),
+            decks: app ? app.decks.length : 0,
+            cards: calculateMasteredCards(),
+            isCurrentUser: true
+        };
+        
+        sampleUsers.splice(userPosition, 0, userStats);
+    }
+    
+    // Sort and organize data by different criteria
+    leaderboardData = {
+        coins: [...sampleUsers].sort((a, b) => b.coins - a.coins),
+        accuracy: [...sampleUsers].sort((a, b) => b.accuracy - a.accuracy),
+        studytime: [...sampleUsers].sort((a, b) => b.studyTime - a.studyTime),
+        streak: [...sampleUsers].sort((a, b) => b.streak - a.streak),
+        decks: [...sampleUsers].sort((a, b) => b.decks - a.decks),
+        cards: [...sampleUsers].sort((a, b) => b.cards - a.cards)
+    };
+}
+
+// Calculate user statistics
+function calculateUserAccuracy() {
+    if (!app || !app.decks.length) return 85.0 + Math.random() * 10;
+    
+    let totalAnswers = 0;
+    let correctAnswers = 0;
+    
+    app.decks.forEach(deck => {
+        deck.cards.forEach(card => {
+            if (card.stats) {
+                totalAnswers += card.stats.attempts || 0;
+                correctAnswers += card.stats.correct || 0;
+            }
+        });
+    });
+    
+    return totalAnswers > 0 ? Math.round((correctAnswers / totalAnswers) * 100 * 10) / 10 : 85.0;
+}
+
+function calculateUserStudyTime() {
+    // Simulate study time based on deck usage
+    const baseTime = app ? app.decks.length * 5.2 : 0;
+    const randomTime = Math.random() * 30;
+    return Math.round((baseTime + randomTime) * 10) / 10;
+}
+
+function calculateUserStreak() {
+    // Get current or best streak from app data
+    if (app && app.currentStreak !== undefined) {
+        return Math.max(app.currentStreak, app.bestStreak || 0);
+    }
+    return Math.floor(Math.random() * 50) + 10;
+}
+
+function calculateMasteredCards() {
+    if (!app || !app.decks.length) return 0;
+    
+    let masteredCount = 0;
+    app.decks.forEach(deck => {
+        deck.cards.forEach(card => {
+            if (card.stats && card.stats.mastery > 0.8) {
+                masteredCount++;
+            }
+        });
+    });
+    
+    return masteredCount;
+}
+
+// Update current user rank display
+function updateCurrentUserRank(boardType) {
+    const rankDisplay = document.getElementById('user-current-rank');
+    const nameDisplay = document.getElementById('user-rank-name');
+    const scoreDisplay = document.getElementById('user-rank-score');
+    const progressText = document.getElementById('rank-progress-text');
+    const progressFill = document.getElementById('rank-progress-fill');
+    
+    if (!currentUser || !userStats) {
+        rankDisplay.textContent = '-';
+        nameDisplay.textContent = 'Sign in to compete!';
+        scoreDisplay.textContent = '';
+        progressText.textContent = 'Sign in to see your progress';
+        progressFill.style.width = '0%';
+        return;
+    }
+    
+    const leaderboard = leaderboardData[boardType];
+    const userRank = leaderboard.findIndex(user => user.isCurrentUser) + 1;
+    const userScore = getUserScore(userStats, boardType);
+    const scoreUnit = getScoreUnit(boardType);
+    
+    rankDisplay.textContent = userRank || '-';
+    nameDisplay.textContent = currentUser.username;
+    scoreDisplay.textContent = `${userScore}${scoreUnit}`;
+    
+    // Calculate progress to next rank
+    if (userRank > 1) {
+        const nextUser = leaderboard[userRank - 2];
+        const nextScore = getUserScore(nextUser, boardType);
+        const progressPercent = Math.min((userScore / nextScore) * 100, 100);
+        
+        progressText.textContent = `${nextScore - userScore}${scoreUnit} to rank #${userRank - 1}`;
+        progressFill.style.width = `${progressPercent}%`;
+    } else {
+        progressText.textContent = 'You\'re #1! 👑';
+        progressFill.style.width = '100%';
+    }
+}
+
+// Get user score for specific leaderboard type
+function getUserScore(user, boardType) {
+    switch (boardType) {
+        case 'coins': return user.coins;
+        case 'accuracy': return user.accuracy;
+        case 'studytime': return user.studyTime;
+        case 'streak': return user.streak;
+        case 'decks': return user.decks;
+        case 'cards': return user.cards;
+        default: return 0;
+    }
+}
+
+// Get score unit for display
+function getScoreUnit(boardType) {
+    switch (boardType) {
+        case 'coins': return ' coins';
+        case 'accuracy': return '%';
+        case 'studytime': return 'h';
+        case 'streak': return ' streak';
+        case 'decks': return ' decks';
+        case 'cards': return ' cards';
+        default: return '';
+    }
+}
+
+// Load and display leaderboard data
+function loadLeaderboardData(boardType) {
+    const leaderboard = leaderboardData[boardType];
+    if (!leaderboard) return;
+    
+    // Update podium (top 3)
+    updatePodium(boardType, leaderboard.slice(0, 3));
+    
+    // Update entries (4th place and below)
+    updateLeaderboardEntries(boardType, leaderboard.slice(3));
+}
+
+// Update podium display
+function updatePodium(boardType, topThree) {
+    const positions = ['1st', '2nd', '3rd'];
+    const scoreUnit = getScoreUnit(boardType);
+    
+    positions.forEach((pos, index) => {
+        const nameElement = document.getElementById(`${boardType}-${pos}`);
+        const scoreElement = document.getElementById(`${boardType}-${pos}-score`);
+        
+        if (topThree[index]) {
+            const user = topThree[index];
+            const score = getUserScore(user, boardType);
+            
+            nameElement.textContent = user.username;
+            scoreElement.textContent = `${score}${scoreUnit}`;
+            
+            // Highlight current user
+            const podiumPlace = nameElement.closest('.podium-place');
+            if (user.isCurrentUser) {
+                podiumPlace.style.border = '3px solid #10b981';
+                podiumPlace.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                nameElement.style.color = 'white';
+                scoreElement.style.color = 'rgba(255, 255, 255, 0.9)';
+            }
+        } else {
+            nameElement.textContent = '-';
+            scoreElement.textContent = '-';
+        }
+    });
+}
+
+// Update leaderboard entries
+function updateLeaderboardEntries(boardType, entries) {
+    const entriesContainer = document.getElementById(`${boardType}-entries`);
+    const scoreUnit = getScoreUnit(boardType);
+    
+    entriesContainer.innerHTML = '';
+    
+    entries.forEach((user, index) => {
+        const rank = index + 4; // Starting from 4th place
+        const score = getUserScore(user, boardType);
+        
+        const entryDiv = document.createElement('div');
+        entryDiv.className = `leaderboard-entry ${user.isCurrentUser ? 'current-user' : ''}`;
+        
+        entryDiv.innerHTML = `
+            <div class="entry-rank">${rank}</div>
+            <div class="entry-avatar">${user.username.charAt(0).toUpperCase()}</div>
+            <div class="entry-details">
+                <div class="entry-name">
+                    ${user.username}
+                    ${user.isCurrentUser ? '<span class="achievement-badge">YOU</span>' : ''}
+                </div>
+                <div class="entry-subtitle">
+                    ${getSubtitleText(user, boardType)}
+                </div>
+            </div>
+            <div class="entry-score">
+                ${score}${scoreUnit}
+                <span class="entry-trend trend-${getTrendDirection()}">
+                    ${getTrendIcon()}
+                </span>
+            </div>
+        `;
+        
+        entriesContainer.appendChild(entryDiv);
+    });
+}
+
+// Get subtitle text for leaderboard entries
+function getSubtitleText(user, boardType) {
+    switch (boardType) {
+        case 'coins':
+            return `${user.accuracy}% accuracy • ${user.streak} streak`;
+        case 'accuracy':
+            return `${user.coins} coins • ${user.studyTime}h studied`;
+        case 'studytime':
+            return `${user.accuracy}% accuracy • ${user.decks} decks`;
+        case 'streak':
+            return `${user.coins} coins • ${user.accuracy}% accuracy`;
+        case 'decks':
+            return `${user.cards} cards mastered • ${user.studyTime}h`;
+        case 'cards':
+            return `${user.decks} decks • ${user.studyTime}h studied`;
+        default:
+            return `${user.coins} coins`;
+    }
+}
+
+// Get trend direction (simulate trending)
+function getTrendDirection() {
+    const trends = ['up', 'down', 'same'];
+    return trends[Math.floor(Math.random() * trends.length)];
+}
+
+// Get trend icon
+function getTrendIcon() {
+    const direction = getTrendDirection();
+    switch (direction) {
+        case 'up': return '📈';
+        case 'down': return '📉';
+        case 'same': return '➡️';
+        default: return '➡️';
+    }
+}
+
+// Refresh leaderboard data
+function refreshLeaderboard() {
+    showNotification('Refreshing leaderboard...', 'info');
+    
+    // Simulate API refresh
+    setTimeout(() => {
+        generateSampleLeaderboardData();
+        updateUserStats();
+        switchLeaderboard(currentLeaderboard);
+        showNotification('Leaderboard updated!', 'success');
+    }, 1000);
+}
+
+// Share user rank
+function shareRank() {
+    if (!currentUser || !userStats) {
+        showNotification('Please sign in to share your rank!', 'error');
+        return;
+    }
+    
+    const leaderboard = leaderboardData[currentLeaderboard];
+    const userRank = leaderboard.findIndex(user => user.isCurrentUser) + 1;
+    const score = getUserScore(userStats, currentLeaderboard);
+    const scoreUnit = getScoreUnit(currentLeaderboard);
+    const boardName = getBoardDisplayName(currentLeaderboard);
+    
+    const shareText = `🏆 I'm ranked #${userRank} on the ${boardName} leaderboard with ${score}${scoreUnit}! 📚 Challenge me on FlashCards! 🎓`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'FlashCards Leaderboard',
+            text: shareText,
+            url: window.location.href
+        });
+    } else {
+        // Fallback to clipboard
+        navigator.clipboard.writeText(shareText).then(() => {
+            showNotification('Rank copied to clipboard!', 'success');
+        }).catch(() => {
+            showNotification('Unable to share rank', 'error');
+        });
+    }
+}
+
+// Get display name for board type
+function getBoardDisplayName(boardType) {
+    switch (boardType) {
+        case 'coins': return 'Most Coins';
+        case 'accuracy': return 'Most Accurate';
+        case 'studytime': return 'Study Time';
+        case 'streak': return 'Longest Streak';
+        case 'decks': return 'Most Decks';
+        case 'cards': return 'Cards Mastered';
+        default: return 'Leaderboard';
+    }
+}
+
+// View all-time statistics
+function viewAllTimeStats() {
+    showNotification('All-time stats feature coming soon!', 'info');
+}
+
+// Toggle privacy mode
+function togglePrivateMode() {
+    const isPrivate = localStorage.getItem('leaderboardPrivate') === 'true';
+    const newPrivate = !isPrivate;
+    
+    localStorage.setItem('leaderboardPrivate', newPrivate.toString());
+    
+    if (newPrivate) {
+        showNotification('Your profile is now private on leaderboards', 'success');
+    } else {
+        showNotification('Your profile is now public on leaderboards', 'success');
+    }
+    
+    // Update display
+    refreshLeaderboard();
+}
+
+// Update user stats when achievements change
+function updateUserStats() {
+    if (!currentUser) return;
+    
+    userStats = {
+        username: currentUser.username,
+        coins: app ? (JSON.parse(localStorage.getItem('coins')) || 100) : 100,
+        accuracy: calculateUserAccuracy(),
+        studyTime: calculateUserStudyTime(),
+        streak: calculateUserStreak(),
+        decks: app ? app.decks.length : 0,
+        cards: calculateMasteredCards(),
+        isCurrentUser: true
+    };
+}
+
 // CSS for notifications
 const notificationStyles = `
 @keyframes slideInRight {
@@ -8277,6 +9787,18 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         app = new FlashCardsApp();
         console.log('FlashCards app initialized successfully!');
+        
+        // Initialize authentication system
+        initializeAuth();
+        console.log('Authentication system initialized');
+        
+        // Initialize XP and profile system
+        initializeXPSystem();
+        console.log('XP and profile system initialized');
+        
+        // Initialize leaderboard system
+        initializeLeaderboard();
+        console.log('Leaderboard system initialized');
         
         // Make app globally available for debugging
         window.flashCardsApp = app;
