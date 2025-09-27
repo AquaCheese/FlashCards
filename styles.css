@@ -102,6 +102,19 @@ body {
     color: white;
 }
 
+.gcse-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(5px);
+}
+
 .welcome-title {
     font-size: 3rem;
     font-weight: 700;
@@ -112,8 +125,47 @@ body {
 .welcome-text {
     font-size: 1.2rem;
     opacity: 0.9;
-    max-width: 600px;
-    margin: 0 auto;
+    max-width: 700px;
+    margin: 0 auto 2rem;
+    line-height: 1.6;
+}
+
+.gcse-subjects-showcase {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.8rem;
+    margin: 2rem 0;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.subject-pill {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    padding: 0.6rem 1rem;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+}
+
+.subject-pill:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+.subject-pill.core {
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.2);
+    font-weight: 600;
+}
+
+.subject-pill.optional {
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .decks-section {
@@ -252,9 +304,27 @@ body {
     100% { opacity: 0.8; }
 }
 
+.deck-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
 .deck-subject {
     color: #718096;
     font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.deck-year-group {
+    color: #4299e1;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: rgba(66, 153, 225, 0.1);
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    display: inline-block;
+    width: fit-content;
 }
 
 .deck-actions {
@@ -2619,6 +2689,45 @@ button:disabled:hover {
     font-size: 0.9rem;
     color: #666;
     opacity: 0.8;
+    margin-bottom: 10px;
+}
+
+.subject-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.subject-badge.core {
+    background: #ef4444;
+    color: white;
+}
+
+.subject-badge.science {
+    background: #3b82f6;
+    color: white;
+}
+
+.subject-badge.optional {
+    background: #10b981;
+    color: white;
+}
+
+.core-subject {
+    border-left: 4px solid #ef4444;
+}
+
+.science-subject {
+    border-left: 4px solid #3b82f6;
+}
+
+.optional-subject {
+    border-left: 4px solid #10b981;
 }
 
 /* Confidence Levels */
@@ -2872,4 +2981,115 @@ button:disabled:hover {
         flex-direction: column;
         gap: 20px;
     }
+}
+
+/* Advanced AI Notifications and Features */
+@keyframes slideInAdvanced {
+    from {
+        transform: translateX(100%) scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutAdvanced {
+    from {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%) scale(0.9);
+        opacity: 0;
+    }
+}
+
+.advanced-ai-notification {
+    font-family: 'Inter', sans-serif;
+}
+
+.advanced-ai-notification-content.urgent {
+    background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%) !important;
+    animation: pulse 2s infinite;
+}
+
+.advanced-ai-badge {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 0.3rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.confidence-meter {
+    position: relative;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    height: 20px;
+    width: 80px;
+    overflow: hidden;
+    display: inline-block;
+    margin: 0 10px;
+}
+
+.confidence-fill {
+    background: rgba(255, 255, 255, 0.8);
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.3s ease;
+}
+
+.confidence-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.generation-details {
+    margin: 1rem 0;
+}
+
+.generation-reason {
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+}
+
+.generation-metadata {
+    font-size: 0.8rem;
+    opacity: 0.9;
+    line-height: 1.3;
+}
+
+.btn-ai.urgent {
+    background: #ff6b6b !important;
+    border-color: #ff5252 !important;
+    animation: pulse 1.5s infinite;
+}
+
+.learning-feedback {
+    font-family: 'Inter', sans-serif;
+}
+
+.feedback-content h4 {
+    margin-bottom: 0.8rem;
+    font-size: 1.1rem;
+}
+
+.progress-highlights {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
 }

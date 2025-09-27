@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FlashCards - Study Smart</title>
+    <title>GCSE FlashCards AI - Years 7-11 Study Platform</title>
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="FlashCards Logo.png">
     <link rel="apple-touch-icon" href="FlashCards Logo.png">
     <!-- Cache bust: Updated at 2025-09-27 -->
-    <link rel="stylesheet" href="styles.css?v=20250927b">
+    <link rel="stylesheet" href="styles.css?v=20250927c">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="gcse_ai_engine.js"></script>
 </head>
 <body>
     <div class="app">
@@ -22,7 +23,7 @@
                     <button class="nav-btn active" data-view="home">Home</button>
                     <button class="nav-btn" data-view="create">Create Deck</button>
                     <button class="nav-btn" data-view="study">Study</button>
-                    <button class="nav-btn" data-view="stats">📊 Stats</button>
+                    <button class="nav-btn" data-view="stats">Stats</button>
                 </nav>
             </div>
         </header>
@@ -33,10 +34,21 @@
                 <!-- Home View -->
                 <div class="view active" id="home-view">
                     <div class="welcome-section">
-                        <h2 class="welcome-title">FLASHCARDS!!!!</h2>
-                        <p class="welcome-text">Create custom study decks and master any subject with our interactive flashcard system.</p>
-                        <p class="version-info" style="color: rgba(255,255,255,0.7); font-size: 0.8rem; margin-top: 0.5rem;">v2025.09.26.2250</p>
-                        <!-- Version: 2025-09-26-22:50 - Force GitHub Pages refresh -->
+                        <div class="gcse-badge">Years 7-11 • GCSE Focused</div>
+                        <h2 class="welcome-title">GCSE FlashCards AI</h2>
+                        <p class="welcome-text">Master your GCSEs with AI-powered study decks tailored for Years 7-11. Core subjects, optional subjects, and adaptive learning that grows with you.</p>
+                        <div class="gcse-subjects-showcase">
+                            <div class="subject-pill core">📐 Mathematics</div>
+                            <div class="subject-pill core">🧪 Sciences</div>
+                            <div class="subject-pill core">📝 English</div>
+                            <div class="subject-pill optional">🌍 Geography</div>
+                            <div class="subject-pill optional">🏛️ History</div>
+                            <div class="subject-pill optional">🎨 Creative Arts</div>
+                            <div class="subject-pill optional">💻 Computer Science</div>
+                            <div class="subject-pill optional">🌐 Languages</div>
+                        </div>
+                        <p class="version-info" style="color: rgba(255,255,255,0.7); font-size: 0.8rem; margin-top: 1rem;">v2025.09.27 • Advanced AI Learning Engine</p>
+                        <!-- Version: 2025-09-27 - GCSE-focused with Advanced AI -->
                     </div>
                     
                     <div class="decks-section">
@@ -129,8 +141,62 @@
                         </div>
                         
                         <div class="form-group">
-                            <label for="deck-subject">Subject</label>
-                            <input type="text" id="deck-subject" placeholder="e.g., Languages, Science, History" required>
+                            <label for="deck-subject">GCSE Subject</label>
+                            <select id="deck-subject" required>
+                                <option value="">Select a GCSE subject...</option>
+                                <optgroup label="📚 Core Subjects">
+                                    <option value="GCSE Mathematics">Mathematics</option>
+                                    <option value="GCSE English Language">English Language</option>
+                                    <option value="GCSE English Literature">English Literature</option>
+                                    <option value="GCSE Biology">Biology</option>
+                                    <option value="GCSE Chemistry">Chemistry</option>
+                                    <option value="GCSE Physics">Physics</option>
+                                    <option value="GCSE Combined Science">Combined Science</option>
+                                </optgroup>
+                                <optgroup label="🌟 Popular Optional Subjects">
+                                    <option value="GCSE History">History</option>
+                                    <option value="GCSE Geography">Geography</option>
+                                    <option value="GCSE Computer Science">Computer Science</option>
+                                    <option value="GCSE Religious Studies">Religious Studies</option>
+                                    <option value="GCSE Art & Design">Art & Design</option>
+                                    <option value="GCSE Design & Technology">Design & Technology</option>
+                                    <option value="GCSE Business Studies">Business Studies</option>
+                                    <option value="GCSE Psychology">Psychology</option>
+                                </optgroup>
+                                <optgroup label="🌐 Modern Foreign Languages">
+                                    <option value="GCSE French">French</option>
+                                    <option value="GCSE Spanish">Spanish</option>
+                                    <option value="GCSE German">German</option>
+                                    <option value="GCSE Italian">Italian</option>
+                                    <option value="GCSE Chinese">Chinese</option>
+                                </optgroup>
+                                <optgroup label="🎵 Creative & Performance">
+                                    <option value="GCSE Music">Music</option>
+                                    <option value="GCSE Drama">Drama</option>
+                                    <option value="GCSE Dance">Dance</option>
+                                    <option value="GCSE Media Studies">Media Studies</option>
+                                    <option value="GCSE Photography">Photography</option>
+                                </optgroup>
+                                <optgroup label="🏃 Additional Subjects">
+                                    <option value="GCSE Physical Education">Physical Education</option>
+                                    <option value="GCSE Sociology">Sociology</option>
+                                    <option value="GCSE Economics">Economics</option>
+                                    <option value="GCSE Citizenship">Citizenship</option>
+                                    <option value="GCSE Food Technology">Food Technology</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="year-group">Year Group</label>
+                            <select id="year-group" required>
+                                <option value="">Select your year...</option>
+                                <option value="Year 7">Year 7 (Age 11-12)</option>
+                                <option value="Year 8">Year 8 (Age 12-13)</option>
+                                <option value="Year 9">Year 9 (Age 13-14)</option>
+                                <option value="Year 10">Year 10 (Age 14-15) - GCSE Year 1</option>
+                                <option value="Year 11">Year 11 (Age 15-16) - GCSE Year 2</option>
+                            </select>
                         </div>
                         
                         <div class="form-group">
@@ -522,8 +588,8 @@
         <div class="onboarding-content">
             <div class="onboarding-header">
                 <img src="FlashCards Logo.png" alt="FlashCards Logo" class="onboarding-logo">
-                <h2>Welcome to FlashCards AI! 🎓</h2>
-                <p>Let's personalize your learning experience</p>
+                <h2>Welcome to GCSE FlashCards AI! 🎓</h2>
+                <p>Your personalized GCSE study companion for Years 7-11</p>
             </div>
 
             <div class="onboarding-steps">
@@ -532,45 +598,82 @@
                     <h3>What subjects interest you? 📚</h3>
                     <p>Select all that apply - this helps our AI create relevant content for you.</p>
                     <div class="subject-grid">
-                        <div class="subject-card" data-subject="Mathematics">
+                        <!-- GCSE Core Subjects -->
+                        <div class="subject-card core-subject" data-subject="GCSE Mathematics" data-level="core">
                             <div class="subject-icon">🔢</div>
-                            <div class="subject-name">Mathematics</div>
-                            <div class="subject-desc">Algebra, Geometry, Calculus</div>
+                            <div class="subject-name">GCSE Mathematics</div>
+                            <div class="subject-desc">Core • Algebra, Geometry, Statistics</div>
+                            <div class="subject-badge core">CORE</div>
                         </div>
-                        <div class="subject-card" data-subject="Science">
-                            <div class="subject-icon">🔬</div>
-                            <div class="subject-name">Science</div>
-                            <div class="subject-desc">Biology, Chemistry, Physics</div>
+                        <div class="subject-card core-subject" data-subject="GCSE English Language" data-level="core">
+                            <div class="subject-icon">�</div>
+                            <div class="subject-name">GCSE English Language</div>
+                            <div class="subject-desc">Core • Reading, Writing, Speaking</div>
+                            <div class="subject-badge core">CORE</div>
                         </div>
-                        <div class="subject-card" data-subject="Languages">
-                            <div class="subject-icon">🗣️</div>
-                            <div class="subject-name">Languages</div>
-                            <div class="subject-desc">Spanish, French, etc.</div>
+                        <div class="subject-card core-subject" data-subject="GCSE English Literature" data-level="core">
+                            <div class="subject-icon">📚</div>
+                            <div class="subject-name">GCSE English Literature</div>
+                            <div class="subject-desc">Core • Poetry, Prose, Drama</div>
+                            <div class="subject-badge core">CORE</div>
                         </div>
-                        <div class="subject-card" data-subject="History">
-                            <div class="subject-icon">📜</div>
-                            <div class="subject-name">History</div>
-                            <div class="subject-desc">World History, Events</div>
+                        
+                        <!-- GCSE Science Subjects -->
+                        <div class="subject-card science-subject" data-subject="GCSE Biology" data-level="science">
+                            <div class="subject-icon">🧬</div>
+                            <div class="subject-name">GCSE Biology</div>
+                            <div class="subject-desc">Science • Cells, Genetics, Ecology</div>
+                            <div class="subject-badge science">SCIENCE</div>
                         </div>
-                        <div class="subject-card" data-subject="Literature">
-                            <div class="subject-icon">📖</div>
-                            <div class="subject-name">Literature</div>
-                            <div class="subject-desc">Classic & Modern Works</div>
+                        <div class="subject-card science-subject" data-subject="GCSE Chemistry" data-level="science">
+                            <div class="subject-icon">⚗️</div>
+                            <div class="subject-name">GCSE Chemistry</div>
+                            <div class="subject-desc">Science • Atoms, Reactions, Organic</div>
+                            <div class="subject-badge science">SCIENCE</div>
                         </div>
-                        <div class="subject-card" data-subject="Computer Science">
+                        <div class="subject-card science-subject" data-subject="GCSE Physics" data-level="science">
+                            <div class="subject-icon">⚡</div>
+                            <div class="subject-name">GCSE Physics</div>
+                            <div class="subject-desc">Science • Forces, Energy, Waves</div>
+                            <div class="subject-badge science">SCIENCE</div>
+                        </div>
+                        
+                        <!-- GCSE Optional Subjects -->
+                        <div class="subject-card optional-subject" data-subject="GCSE History" data-level="optional">
+                            <div class="subject-icon">🏛️</div>
+                            <div class="subject-name">GCSE History</div>
+                            <div class="subject-desc">Optional • Modern World, Medicine</div>
+                            <div class="subject-badge optional">OPTIONAL</div>
+                        </div>
+                        <div class="subject-card optional-subject" data-subject="GCSE Geography" data-level="optional">
+                            <div class="subject-icon">�️</div>
+                            <div class="subject-name">GCSE Geography</div>
+                            <div class="subject-desc">Optional • Physical, Human, Fieldwork</div>
+                            <div class="subject-badge optional">OPTIONAL</div>
+                        </div>
+                        <div class="subject-card optional-subject" data-subject="GCSE Computer Science" data-level="optional">
                             <div class="subject-icon">💻</div>
-                            <div class="subject-name">Computer Science</div>
-                            <div class="subject-desc">Programming, Algorithms</div>
+                            <div class="subject-name">GCSE Computer Science</div>
+                            <div class="subject-desc">Optional • Programming, Algorithms</div>
+                            <div class="subject-badge optional">OPTIONAL</div>
                         </div>
-                        <div class="subject-card" data-subject="Art">
+                        <div class="subject-card optional-subject" data-subject="GCSE Business Studies" data-level="optional">
+                            <div class="subject-icon">📊</div>
+                            <div class="subject-name">GCSE Business Studies</div>
+                            <div class="subject-desc">Optional • Marketing, Finance, Operations</div>
+                            <div class="subject-badge optional">OPTIONAL</div>
+                        </div>
+                        <div class="subject-card optional-subject" data-subject="GCSE Art & Design" data-level="optional">
                             <div class="subject-icon">🎨</div>
-                            <div class="subject-name">Art</div>
-                            <div class="subject-desc">History, Techniques, Artists</div>
+                            <div class="subject-name">GCSE Art & Design</div>
+                            <div class="subject-desc">Optional • Fine Art, Textiles, Photography</div>
+                            <div class="subject-badge optional">OPTIONAL</div>
                         </div>
-                        <div class="subject-card" data-subject="Music">
-                            <div class="subject-icon">🎵</div>
-                            <div class="subject-name">Music</div>
-                            <div class="subject-desc">Theory, History, Instruments</div>
+                        <div class="subject-card optional-subject" data-subject="GCSE Modern Foreign Languages" data-level="optional">
+                            <div class="subject-icon">🗣️</div>
+                            <div class="subject-name">Modern Foreign Languages</div>
+                            <div class="subject-desc">Optional • French, Spanish, German</div>
+                            <div class="subject-badge optional">OPTIONAL</div>
                         </div>
                     </div>
                 </div>
