@@ -8344,6 +8344,53 @@ function usernameExists(username) {
     return userDatabase.hasOwnProperty(username.toLowerCase());
 }
 
+// Test function to create a sample user (for debugging)
+window.createTestUser = function() {
+    const testUser = {
+        username: 'TestUser',
+        displayName: 'Test User',
+        email: 'test@example.com',
+        password: 'password123',
+        joinDate: new Date().toISOString(),
+        studySessions: 0,
+        preferences: {
+            theme: 'light',
+            autoPlay: false,
+            studyMode: 'cards',
+            notifications: true
+        },
+        profileData: {
+            displayName: 'Test User',
+            title: '',
+            bio: 'This is a test user account',
+            profileColor: 'blue',
+            profilePicture: null
+        }
+    };
+    
+    // Save to database
+    userDatabase['testuser'] = testUser;
+    saveUserDatabase();
+    
+    // Set as current user
+    currentUser = {
+        username: testUser.username,
+        displayName: testUser.displayName,
+        email: testUser.email,
+        joinDate: testUser.joinDate,
+        totalDecks: app ? app.decks.length : 0,
+        studySessions: testUser.studySessions,
+        preferences: testUser.preferences,
+        profileData: testUser.profileData
+    };
+    
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    updateAccountButton();
+    
+    console.log('Test user created and signed in:', currentUser);
+    return currentUser;
+};
+
 // Initialize authentication system
 function initializeAuth() {
     // Load user database
@@ -8352,9 +8399,26 @@ function initializeAuth() {
     // Check for existing session
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
-        currentUser = JSON.parse(savedUser);
-        updateAccountButton();
-        showAccountSettings();
+        try {
+            currentUser = JSON.parse(savedUser);
+            console.log('Loaded current user:', currentUser);
+            updateAccountButton();
+            
+            // Load profile settings if available
+            if (typeof loadProfileSettingsIntoForm === 'function') {
+                loadProfileSettingsIntoForm();
+            }
+            
+            // Update profile display
+            if (typeof updateProfileDisplay === 'function') {
+                updateProfileDisplay();
+            }
+        } catch (error) {
+            console.error('Error loading saved user:', error);
+            localStorage.removeItem('currentUser');
+        }
+    } else {
+        console.log('No saved user session found');
     }
     
     // Set up event listeners
@@ -8402,18 +8466,12 @@ function setupAuthEventListeners() {
 
 // Toggle account section visibility
 function toggleAccountSection() {
-    const accountSection = document.getElementById('account-section');
-    const isVisible = accountSection.style.display === 'block';
-    
-    if (isVisible) {
-        accountSection.style.display = 'none';
+    if (currentUser) {
+        // User is signed in, show account settings modal
+        showAccountSettings();
     } else {
-        accountSection.style.display = 'block';
-        if (currentUser) {
-            showAccountSettings();
-        } else {
-            showAuthForms();
-        }
+        // User is not signed in, show the account view with auth forms
+        showView('account');
     }
 }
 
@@ -8672,16 +8730,23 @@ async function handleRegister(e) {
 // Update account button based on login state
 function updateAccountButton() {
     const accountBtn = document.getElementById('account-btn');
-    if (!accountBtn) return;
+    if (!accountBtn) {
+        console.log('Account button not found');
+        return;
+    }
+    
+    console.log('Updating account button, currentUser:', currentUser);
     
     if (currentUser) {
         const displayName = currentUser.displayName || currentUser.username || 'User';
+        console.log('Setting account button to show user:', displayName);
         accountBtn.innerHTML = `
             <span class="account-icon">👤</span>
             <span class="account-text">${displayName}</span>
         `;
         accountBtn.title = `Signed in as ${displayName}`;
     } else {
+        console.log('Setting account button to show Account (no user)');
         accountBtn.innerHTML = `
             <span class="account-icon">👤</span>
             <span class="account-text">Account</span>
@@ -8703,19 +8768,49 @@ function showAccountSettings() {
         return;
     }
     
-    document.getElementById('auth-section').style.display = 'none';
-    document.getElementById('account-settings').style.display = 'block';
+    console.log('Showing account settings for user:', currentUser);
     
-    // Update user info
-    document.getElementById('user-avatar').textContent = currentUser.username.charAt(0).toUpperCase();
-    document.getElementById('user-name').textContent = currentUser.username;
-    document.getElementById('user-stats').textContent = `Member since ${new Date(currentUser.joinDate).toLocaleDateString()}`;
+    // Hide auth section and show account settings
+    const authSection = document.getElementById('auth-section');
+    const accountSettings = document.getElementById('account-settings');
     
-    // Update data stats
-    updateDataStats();
+    if (authSection) authSection.style.display = 'none';
+    if (accountSettings) {
+        accountSettings.style.display = 'block';
+        console.log('Account settings modal shown');
+    } else {
+        console.error('Account settings modal not found');
+        return;
+    }
+    
+    // Update user info in the header
+    const displayName = currentUser.displayName || currentUser.username || 'User';
+    const userDisplayName = document.getElementById('user-display-name');
+    const userJoinDate = document.getElementById('user-join-date');
+    const userLevelDisplay = document.getElementById('user-level-display');
+    const userTotalCoins = document.getElementById('user-total-coins');
+    const settingsAvatarInitial = document.getElementById('settings-avatar-initial');
+    
+    if (userDisplayName) userDisplayName.textContent = displayName;
+    if (userJoinDate) userJoinDate.textContent = `Joined ${new Date(currentUser.joinDate).toLocaleDateString()}`;
+    if (userLevelDisplay) userLevelDisplay.textContent = `Level ${calculateLevelFromXP(getUserXP())}`;
+    if (userTotalCoins) userTotalCoins.textContent = `${app?.coins || 0} coins`;
+    if (settingsAvatarInitial) settingsAvatarInitial.textContent = displayName.charAt(0).toUpperCase();
+    
+    // Load profile settings into forms
+    if (typeof loadProfileSettingsIntoForm === 'function') {
+        loadProfileSettingsIntoForm();
+    }
+    
+    // Update profile display
+    if (typeof updateProfileDisplay === 'function') {
+        updateProfileDisplay();
+    }
     
     // Load preferences
-    loadUserPreferences();
+    if (typeof loadUserPreferences === 'function') {
+        loadUserPreferences();
+    }
 }
 
 // Update data statistics
@@ -9030,6 +9125,11 @@ function calculateLevelFromXP(xp) {
         }
     }
     return 1;
+}
+
+// Get current user XP
+function getUserXP() {
+    return userXP || 0;
 }
 
 // Get XP required for next level
