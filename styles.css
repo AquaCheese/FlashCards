@@ -3093,3 +3093,31 @@ button:disabled:hover {
     font-size: 0.9rem;
     line-height: 1.6;
 }
+
+/* =========================== ADOPTION STYLING =========================== */
+.deck-card.adopted {
+    border: 2px solid #10b981;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%);
+}
+
+.adopted-badge {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.adopted-indicator {
+    color: #10b981;
+    font-weight: 600;
+}
+
+.btn.adopted-indicator {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    cursor: not-allowed;
+    opacity: 0.8;
+}

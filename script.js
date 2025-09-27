@@ -391,280 +391,279 @@ class FlashCardsApp {
             regenerateBtn.disabled = false;
         }
 
-        // Generate starter decks on first visit
-        this.generateStarterDecks();
+        // AI will generate content based on actual user study patterns
+        console.log('🤖 AI system ready - will generate content based on your study patterns');
     }
 
-    generateStarterDecks() {
-        // Check if this is the user's first time (no decks exist)
-        if (this.decks.length === 0) {
-            console.log('🎓 First time GCSE student - generating comprehensive starter decks...');
-            
-            const gcseStarterDecks = [
-                {
-                    id: 'gcse_starter_' + Date.now() + '_maths',
-                    name: 'GCSE Mathematics: Foundation Skills',
-                    subject: 'GCSE Mathematics',
-                    yearGroup: 'Year 9',
-                    difficulty: 'Foundation',
-                    examBoard: 'AQA/Edexcel/OCR',
-                    isGenerated: true,
-                    generatedAt: Date.now(),
-                    gcseMetadata: {
-                        topics: ['Algebra', 'Number', 'Geometry'],
-                        tier: 'Foundation',
-                        examSeason: 'May/June',
-                        curriculumAlignment: 'National Curriculum Key Stage 4'
-                    },
-                    cards: [
-                        { 
-                            front: 'Solve: <strong>3x + 7 = 22</strong><br><small>📊 Foundation Tier • Algebra</small>', 
-                            back: '<strong>x = 5</strong><br><em>Step-by-step method:</em><br>1) 3x + 7 = 22<br>2) 3x = 22 - 7 = 15<br>3) x = 15 ÷ 3 = 5<br>✅ <strong>Check:</strong> 3(5) + 7 = 15 + 7 = 22 ✓<br><br>🎯 <strong>GCSE Tip:</strong> Always show your working and check your answer!', 
-                            type: 'standard',
-                            gcseTopic: 'Linear Equations',
-                            difficulty: 'Foundation',
-                            examWeight: 'High'
-                        },
-                        { 
-                            front: 'Calculate: <strong>25% of £80</strong><br><small>💰 Foundation Tier • Percentages</small>', 
-                            back: '<strong>£20</strong><br><em>Multiple methods:</em><br><strong>Method 1:</strong> 25% = ¼, so £80 ÷ 4 = £20<br><strong>Method 2:</strong> 25% = 0.25, so 0.25 × £80 = £20<br><strong>Method 3:</strong> 10% of £80 = £8, so 25% = 2.5 × £8 = £20<br><br>💡 <strong>GCSE Tip:</strong> Use the method you find easiest in exams!', 
-                            type: 'standard',
-                            gcseTopic: 'Percentages',
-                            difficulty: 'Foundation',
-                            examWeight: 'Very High'
-                        },
-                        { 
-                            front: 'What is the area of a rectangle with length <strong>8cm</strong> and width <strong>5cm</strong>?<br><small>📐 Foundation Tier • Geometry</small>', 
-                            back: '<strong>40 cm²</strong><br><em>Formula: Area = length × width</em><br>Area = 8cm × 5cm = 40cm²<br><br>📏 <strong>Units matter!</strong> Always include cm² for area<br>🎯 <strong>GCSE Tip:</strong> Learn your formulas - they\'re in the formula sheet but practice helps!', 
-                            type: 'standard',
-                            gcseTopic: 'Area and Perimeter',
-                            difficulty: 'Foundation',
-                            examWeight: 'High'
-                        },
-                        { 
-                            front: 'Round <strong>47.386</strong> to 2 decimal places<br><small>🔢 Foundation Tier • Rounding</small>', 
-                            back: '<strong>47.39</strong><br><em>Method:</em><br>1) Look at the 3rd decimal place: 6<br>2) Since 6 ≥ 5, round UP<br>3) 47.38<u>6</u> → 47.39<br><br>📋 <strong>Rounding Rules:</strong><br>• 5 or more: round up<br>• 4 or less: round down<br>🎯 <strong>GCSE Tip:</strong> Rounding questions are easy marks - don\'t lose them!', 
-                            type: 'standard',
-                            gcseTopic: 'Rounding and Accuracy',
-                            difficulty: 'Foundation',
-                            examWeight: 'Medium'
-                        },
-                        { 
-                            front: 'What is <strong>2³</strong>?<br><small>⚡ Foundation Tier • Powers</small>', 
-                            back: '<strong>8</strong><br><em>Calculation:</em><br>2³ = 2 × 2 × 2 = 8<br><br>📚 <strong>Index Laws:</strong><br>• 2³ means "2 to the power of 3"<br>• The small 3 is called the "index" or "power"<br>• It tells you how many times to multiply the base number by itself<br>🎯 <strong>GCSE Tip:</strong> Don\'t confuse 2³ = 8 with 2 × 3 = 6!', 
-                            type: 'standard',
-                            gcseTopic: 'Powers and Indices',
-                            difficulty: 'Foundation',
-                            examWeight: 'Medium'
-                        },
-                        { 
-                            front: 'Convert <strong>0.6</strong> to a fraction in its simplest form<br><small>🔄 Foundation Tier • Fractions & Decimals</small>', 
-                            back: '<strong>3/5</strong><br><em>Method:</em><br>1) 0.6 = 6/10<br>2) Simplify by dividing both numbers by their HCF<br>3) HCF of 6 and 10 is 2<br>4) 6÷2 = 3, 10÷2 = 5<br>5) So 6/10 = 3/5<br><br>✅ <strong>Check:</strong> 3 ÷ 5 = 0.6 ✓<br>🎯 <strong>GCSE Tip:</strong> Always give fractions in simplest form unless told otherwise!', 
-                            type: 'standard',
-                            gcseTopic: 'Fractions and Decimals',
-                            difficulty: 'Foundation',
-                            examWeight: 'High'
-                        }
-                    ],
-                    titleCards: [
-                        { 
-                            title: '🎓 GCSE Mathematics Foundation', 
-                            description: 'Essential skills for GCSE Maths success. These topics appear in both Foundation (grades 1-5) and Higher (4-9) tiers. Master these fundamentals first!' 
-                        }
-                    ]
-                },
-                {
-                    id: 'gcse_starter_' + Date.now() + '_biology',
-                    name: 'GCSE Biology: Cell Biology Fundamentals',
-                    subject: 'GCSE Biology',
-                    yearGroup: 'Year 10',
-                    difficulty: 'Foundation',
-                    examBoard: 'AQA',
-                    isGenerated: true,
-                    generatedAt: Date.now(),
-                    gcseMetadata: {
-                        topics: ['Cell Biology', 'Organisation', 'Infection and Response'],
-                        tier: 'Foundation/Higher',
-                        examSeason: 'May/June',
-                        curriculumAlignment: 'AQA GCSE Biology Specification'
-                    },
-                    cards: [
-                        { 
-                            front: 'What are the <strong>5 main parts</strong> of an animal cell?<br><small>🔬 Required Practical • Cell Biology</small>', 
-                            back: '<strong>1. Cell membrane</strong> - controls what enters/leaves<br><strong>2. Nucleus</strong> - contains DNA/genetic material<br><strong>3. Cytoplasm</strong> - where chemical reactions occur<br><strong>4. Mitochondria</strong> - release energy (respiration)<br><strong>5. Ribosomes</strong> - make proteins<br><br>🧬 <strong>GCSE Tip:</strong> Learn these - they\'re tested every year!<br>📝 <strong>Exam Command:</strong> "State" means list without explanation', 
-                            type: 'standard',
-                            gcseTopic: 'Animal and Plant Cells',
-                            difficulty: 'Foundation',
-                            examWeight: 'Very High'
-                        },
-                        { 
-                            front: 'What is <strong>mitosis</strong> and why is it important?<br><small>🧬 Higher Tier • Cell Biology</small>', 
-                            back: '<strong>Mitosis = cell division producing identical cells</strong><br><br><em>Why it\'s important:</em><br>• <strong>Growth</strong> - makes new cells as organisms grow<br>• <strong>Repair</strong> - replaces damaged/dead cells<br>• <strong>Asexual reproduction</strong> - some organisms reproduce this way<br><br>🔑 <strong>Key Facts:</strong><br>• Produces 2 identical diploid cells<br>• Each cell has the full set of chromosomes<br>🎯 <strong>GCSE Tip:</strong> Don\'t confuse with meiosis (produces gametes)!', 
-                            type: 'standard',
-                            gcseTopic: 'Cell Division',
-                            difficulty: 'Higher',
-                            examWeight: 'High'
-                        },
-                        { 
-                            front: 'Complete the word equation for <strong>photosynthesis</strong><br><small>🌱 Foundation/Higher • Bioenergetics</small>', 
-                            back: '<strong>carbon dioxide + water → glucose + oxygen</strong><br><br><em>With light energy and chlorophyll</em><br><br>🌿 <strong>Symbol equation:</strong><br>6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂<br><br>💡 <strong>Remember:</strong><br>• Occurs in chloroplasts<br>• Needs light energy<br>• Chlorophyll absorbs light<br>🎯 <strong>GCSE Tip:</strong> This equation is worth 3-4 marks - learn it perfectly!', 
-                            type: 'standard',
-                            gcseTopic: 'Photosynthesis',
-                            difficulty: 'Foundation',
-                            examWeight: 'Very High'
-                        },
-                        { 
-                            front: 'What is an <strong>enzyme</strong> and how does it work?<br><small>⚗️ Foundation/Higher • Enzymes</small>', 
-                            back: '<strong>Enzyme = biological catalyst</strong><br><br><em>How they work:</em><br>• Have a specific <strong>active site</strong><br>• Substrate fits into active site (lock & key model)<br>• Enzyme-substrate complex forms<br>• Product(s) released, enzyme reused<br><br>🔥 <strong>Factors affecting enzymes:</strong><br>• Temperature (too hot = denatured)<br>• pH (wrong pH = denatured)<br>• Substrate concentration<br>🎯 <strong>GCSE Tip:</strong> "Denatured" means permanently damaged - shape changes!', 
-                            type: 'standard',
-                            gcseTopic: 'Enzymes',
-                            difficulty: 'Foundation',
-                            examWeight: 'Very High'
-                        },
-                        { 
-                            front: 'Name the <strong>3 main types of blood cells</strong> and their functions<br><small>🩸 Foundation/Higher • Organisation</small>', 
-                            back: '<strong>1. Red blood cells</strong> - carry oxygen<br>• No nucleus (more space for haemoglobin)<br>• Biconcave shape (large surface area)<br><br><strong>2. White blood cells</strong> - fight infection<br>• Some make antibodies<br>• Some engulf pathogens<br><br><strong>3. Platelets</strong> - blood clotting<br>• Help wounds heal<br>• Prevent blood loss<br><br>🩸 <strong>GCSE Tip:</strong> Know the adaptations (how structure relates to function)!', 
-                            type: 'standard',
-                            gcseTopic: 'Blood',
-                            difficulty: 'Foundation',
-                            examWeight: 'High'
-                        }
-                    ],
-                    titleCards: [
-                        { 
-                            title: '🧬 GCSE Biology: Cell Biology', 
-                            description: 'Master the fundamentals of life! Cell biology is the foundation of GCSE Biology and appears in Paper 1. These concepts are essential for understanding all other topics.' 
-                        }
-                    ]
-                },
-                {
-                    id: 'gcse_starter_' + Date.now() + '_chemistry',
-                    name: 'GCSE Chemistry: Atomic Structure & Periodic Table',
-                    subject: 'GCSE Chemistry',
-                    yearGroup: 'Year 10',
-                    difficulty: 'Foundation',
-                    examBoard: 'AQA',
-                    isGenerated: true,
-                    generatedAt: Date.now(),
-                    gcseMetadata: {
-                        topics: ['Atomic Structure', 'Periodic Table', 'Chemical Bonding'],
-                        tier: 'Foundation/Higher',
-                        examSeason: 'May/June',
-                        curriculumAlignment: 'AQA GCSE Chemistry Specification'
-                    },
-                    cards: [
-                        { 
-                            front: 'What are the <strong>3 subatomic particles</strong> in an atom?<br><small>⚛️ Foundation/Higher • Atomic Structure</small>', 
-                            back: '<strong>1. Protons</strong> - positive charge, in nucleus<br><strong>2. Neutrons</strong> - no charge, in nucleus<br><strong>3. Electrons</strong> - negative charge, in shells around nucleus<br><br>📊 <strong>Relative masses:</strong><br>• Proton = 1<br>• Neutron = 1<br>• Electron = almost 0 (1/1840)<br><br>🎯 <strong>GCSE Tip:</strong> Remember "PEN" - Positive Protons, Negative Electrons, Neutral Neutrons!', 
-                            type: 'standard',
-                            gcseTopic: 'Atomic Structure',
-                            difficulty: 'Foundation',
-                            examWeight: 'Very High'
-                        },
-                        { 
-                            front: 'How do you calculate the <strong>number of neutrons</strong> in an atom?<br><small>🧮 Foundation/Higher • Atomic Structure</small>', 
-                            back: '<strong>Neutrons = Mass number - Atomic number</strong><br><br><em>Example: Carbon-12</em><br>• Mass number = 12<br>• Atomic number = 6<br>• Neutrons = 12 - 6 = 6<br><br>📋 <strong>Remember:</strong><br>• Atomic number = number of protons<br>• Mass number = protons + neutrons<br>• In neutral atoms: protons = electrons<br>🎯 <strong>GCSE Tip:</strong> This calculation appears in every Chemistry paper!', 
-                            type: 'standard',
-                            gcseTopic: 'Atomic Structure',
-                            difficulty: 'Foundation',
-                            examWeight: 'Very High'
-                        },
-                        { 
-                            front: 'What happens when <strong>magnesium reacts with hydrochloric acid</strong>?<br><small>⚗️ Required Practical • Chemical Changes</small>', 
-                            back: '<strong>Mg + 2HCl → MgCl₂ + H₂</strong><br><br><em>Observations:</em><br>• Fizzing/bubbling (hydrogen gas produced)<br>• Metal dissolves<br>• Solution gets warm (exothermic)<br>• Squeaky pop test confirms hydrogen<br><br>⚡ <strong>General rule:</strong><br>Metal + Acid → Salt + Hydrogen<br><br>🎯 <strong>GCSE Tip:</strong> This is a classic Required Practical - know the observations!', 
-                            type: 'standard',
-                            gcseTopic: 'Metal Reactions',
-                            difficulty: 'Foundation',
-                            examWeight: 'High'
-                        },
-                        { 
-                            front: 'Calculate the relative formula mass (Mr) of <strong>CaCO₃</strong><br><small>🧮 Foundation/Higher • Quantitative Chemistry</small>', 
-                            back: '<strong>Mr = 100</strong><br><br><em>Calculation:</em><br>Ca: 40 × 1 = 40<br>C: 12 × 1 = 12<br>O: 16 × 3 = 48<br>Total: 40 + 12 + 48 = 100<br><br>📚 <strong>Method:</strong><br>1) Find atomic masses from periodic table<br>2) Multiply by number of atoms<br>3) Add them all together<br><br>🎯 <strong>GCSE Tip:</strong> Use the periodic table given in exams - don\'t try to memorise atomic masses!', 
-                            type: 'standard',
-                            gcseTopic: 'Relative Formula Mass',
-                            difficulty: 'Foundation',
-                            examWeight: 'High'
-                        },
-                        { 
-                            front: 'What is <strong>ionic bonding</strong>?<br><small>🔗 Foundation/Higher • Chemical Bonding</small>', 
-                            back: '<strong>Ionic bonding = transfer of electrons from metal to non-metal</strong><br><br><em>Process:</em><br>• Metal atoms lose electrons → positive ions<br>• Non-metal atoms gain electrons → negative ions<br>• Opposite charges attract (electrostatic attraction)<br><br>🧂 <strong>Example: NaCl</strong><br>• Na loses 1 electron → Na⁺<br>• Cl gains 1 electron → Cl⁻<br>• Na⁺ and Cl⁻ attract to form ionic bond<br><br>🎯 <strong>GCSE Tip:</strong> Remember "metal gives, non-metal takes"!', 
-                            type: 'standard',
-                            gcseTopic: 'Ionic Bonding',
-                            difficulty: 'Foundation',
-                            examWeight: 'Very High'
-                        }
-                    ],
-                    titleCards: [
-                        { 
-                            title: '⚛️ GCSE Chemistry: Atomic Structure', 
-                            description: 'Everything is made of atoms! Understanding atomic structure is crucial for GCSE Chemistry. This topic appears in Paper 1 and links to all other chemistry topics.' 
-                        }
-                    ]
-                },
-                {
-                    id: 'gcse_starter_' + Date.now() + '_english_lang',
-                    name: 'GCSE English Language: Creative Writing Techniques',
-                    subject: 'GCSE English Language',
-                    yearGroup: 'Year 10',
-                    difficulty: 'Foundation',
-                    examBoard: 'AQA',
-                    isGenerated: true,
-                    generatedAt: Date.now(),
-                    gcseMetadata: {
-                        topics: ['Creative Writing', 'Language Techniques', 'Paper 2 Section B'],
-                        tier: 'All students',
-                        examSeason: 'May/June',
-                        curriculumAlignment: 'AQA GCSE English Language Specification'
-                    },
-                    cards: [
-                        { 
-                            front: 'What is the effect of using <strong>short sentences</strong> in creative writing?<br><small>✍️ Paper 2 Section B • Language Techniques</small>', 
-                            back: '<strong>Effects of short sentences:</strong><br>• Create <strong>tension</strong> and <strong>suspense</strong><br>• Add <strong>impact</strong> and <strong>emphasis</strong><br>• Control <strong>pace</strong> - slow down the reader<br>• Create a sense of <strong>shock</strong> or <strong>drama</strong><br><br>📝 <strong>Example:</strong><br>"The door creaked open. Silence. Nothing but darkness ahead."<br><br>🎯 <strong>GCSE Tip:</strong> Use short sentences at key moments for maximum impact in your creative writing!', 
-                            type: 'standard',
-                            gcseTopic: 'Sentence Structure',
-                            difficulty: 'Foundation',
-                            examWeight: 'High'
-                        },
-                        { 
-                            front: 'Explain the difference between <strong>metaphor</strong> and <strong>simile</strong><br><small>🎨 Language Analysis • Figurative Language</small>', 
-                            back: '<strong>Simile:</strong> Compares using "like" or "as"<br>Example: "Her eyes sparkled <u>like</u> diamonds"<br><br><strong>Metaphor:</strong> Direct comparison (no "like" or "as")<br>Example: "Her eyes <u>were</u> sparkling diamonds"<br><br>💡 <strong>Effects:</strong><br>• Both create vivid imagery<br>• Help readers visualise/understand<br>• Make writing more engaging<br><br>🎯 <strong>GCSE Tip:</strong> In analysis, always explain the <em>effect</em> on the reader, not just identify the technique!', 
-                            type: 'standard',
-                            gcseTopic: 'Figurative Language',
-                            difficulty: 'Foundation',
-                            examWeight: 'Very High'
-                        },
-                        { 
-                            front: 'What makes a good <strong>opening</strong> for creative writing?<br><small>🚀 Paper 2 Section B • Story Structure</small>', 
-                            back: '<strong>Good opening techniques:</strong><br>• Start <strong>in the middle of action</strong> (in media res)<br>• Use <strong>dialogue</strong> to immediately engage<br>• Create <strong>mystery</strong> or ask questions<br>• Establish <strong>atmosphere</strong> and <strong>setting</strong><br>• Introduce an interesting <strong>character</strong><br><br>📝 <strong>Example openings:</strong><br>"The scream pierced the night air."<br>"I should never have opened that door."<br><br>🎯 <strong>GCSE Tip:</strong> Your first sentence must hook the reader immediately!', 
-                            type: 'standard',
-                            gcseTopic: 'Creative Writing Structure',
-                            difficulty: 'Foundation',
-                            examWeight: 'Very High'
-                        },
-                        { 
-                            front: 'What is <strong>pathetic fallacy</strong> and how do you use it?<br><small>🌦️ Higher Level • Advanced Techniques</small>', 
-                            back: '<strong>Pathetic fallacy = giving weather/nature human emotions</strong><br><br><em>Examples:</em><br>• "The <strong>angry</strong> storm" (weather can\'t be angry)<br>• "The <strong>weeping</strong> willow" (trees can\'t cry)<br>• "The <strong>cruel</strong> wind" (wind can\'t be cruel)<br><br>💫 <strong>Effects:</strong><br>• Reflects character\'s emotions<br>• Creates atmosphere<br>• Makes setting more engaging<br><br>🎯 <strong>GCSE Tip:</strong> Great for creating mood - use stormy weather for tension, sunshine for happiness!', 
-                            type: 'standard',
-                            gcseTopic: 'Advanced Language Techniques',
-                            difficulty: 'Higher',
-                            examWeight: 'Medium'
-                        }
-                    ],
-                    titleCards: [
-                        { 
-                            title: '✍️ GCSE English Language: Creative Writing', 
-                            description: 'Master the techniques that will make your creative writing stand out in Paper 2 Section B. These skills are worth 40 marks - almost half the paper!' 
-                        }
-                    ]
-                }
-            ];
+    // Removed generateStarterDecks - AI now creates decks without preset content
 
-            // Save generated decks separately
-            this.saveGeneratedDecks(gcseStarterDecks);
-            this.renderGeneratedDecks(gcseStarterDecks);
-            
-            console.log('🎓 Generated 4 comprehensive GCSE starter decks for new student');
+    generateIntelligentTemplates(deckName, subject, count = 10) {
+        // Analyze the deck name to understand what specific topic to focus on
+        const topicAnalysis = this.analyzeDeckTopic(deckName, subject);
+        
+        // Generate contextually relevant questions based on the specific topic
+        const templates = [];
+        
+        // Use AI-driven template generation based on the actual topic
+        if (topicAnalysis.isGCSE) {
+            templates.push(...this.generateGCSESpecificTemplates(topicAnalysis));
+        } else if (topicAnalysis.specificTopic) {
+            templates.push(...this.generateTopicSpecificTemplates(topicAnalysis));
+        } else {
+            templates.push(...this.generateSubjectBasedTemplates(subject));
         }
+        
+        // Ensure we have enough templates
+        while (templates.length < count) {
+            templates.push(...this.generateAdditionalRelevantTemplates(topicAnalysis, subject));
+        }
+        
+        // Return the requested number of templates, shuffled
+        return templates.slice(0, count).sort(() => Math.random() - 0.5);
+    }
+    
+    analyzeDeckTopic(deckName, subject) {
+        const name = deckName.toLowerCase();
+        const subj = subject.toLowerCase();
+        
+        const analysis = {
+            originalName: deckName,
+            originalSubject: subject,
+            isGCSE: name.includes('gcse') || name.includes('year') || subj.includes('gcse'),
+            specificTopic: null,
+            difficulty: 'intermediate',
+            yearGroup: null,
+            examBoard: null
+        };
+        
+        // Extract year group
+        const yearMatch = name.match(/year\s*(\d+)/);
+        if (yearMatch) {
+            analysis.yearGroup = parseInt(yearMatch[1]);
+        }
+        
+        // Extract exam board
+        if (name.includes('aqa')) analysis.examBoard = 'AQA';
+        if (name.includes('edexcel')) analysis.examBoard = 'Edexcel';
+        if (name.includes('ocr')) analysis.examBoard = 'OCR';
+        
+        // Identify specific topics within subjects
+        if (subj.includes('math') || name.includes('math')) {
+            if (name.includes('algebra')) analysis.specificTopic = 'algebra';
+            else if (name.includes('geometry')) analysis.specificTopic = 'geometry';
+            else if (name.includes('calculus')) analysis.specificTopic = 'calculus';
+            else if (name.includes('trigonometry')) analysis.specificTopic = 'trigonometry';
+            else if (name.includes('statistics')) analysis.specificTopic = 'statistics';
+            else if (name.includes('percentage')) analysis.specificTopic = 'percentages';
+            else if (name.includes('fraction')) analysis.specificTopic = 'fractions';
+        } else if (subj.includes('biology') || name.includes('biology')) {
+            if (name.includes('cell')) analysis.specificTopic = 'cell_biology';
+            else if (name.includes('genetics')) analysis.specificTopic = 'genetics';
+            else if (name.includes('evolution')) analysis.specificTopic = 'evolution';
+            else if (name.includes('photosynthesis')) analysis.specificTopic = 'photosynthesis';
+            else if (name.includes('respiration')) analysis.specificTopic = 'respiration';
+            else if (name.includes('organ')) analysis.specificTopic = 'organ_systems';
+        } else if (subj.includes('chemistry') || name.includes('chemistry')) {
+            if (name.includes('atomic')) analysis.specificTopic = 'atomic_structure';
+            else if (name.includes('periodic')) analysis.specificTopic = 'periodic_table';
+            else if (name.includes('bonding')) analysis.specificTopic = 'chemical_bonding';
+            else if (name.includes('acid')) analysis.specificTopic = 'acids_bases';
+            else if (name.includes('reaction')) analysis.specificTopic = 'chemical_reactions';
+        } else if (subj.includes('physics') || name.includes('physics')) {
+            if (name.includes('force')) analysis.specificTopic = 'forces';
+            else if (name.includes('energy')) analysis.specificTopic = 'energy';
+            else if (name.includes('wave')) analysis.specificTopic = 'waves';
+            else if (name.includes('electric')) analysis.specificTopic = 'electricity';
+            else if (name.includes('magnet')) analysis.specificTopic = 'magnetism';
+        } else if (subj.includes('history') || name.includes('history')) {
+            if (name.includes('world war')) analysis.specificTopic = 'world_wars';
+            else if (name.includes('medieval')) analysis.specificTopic = 'medieval';
+            else if (name.includes('roman')) analysis.specificTopic = 'roman_empire';
+            else if (name.includes('victorian')) analysis.specificTopic = 'victorian';
+        } else if (subj.includes('geography') || name.includes('geography')) {
+            if (name.includes('climate')) analysis.specificTopic = 'climate';
+            else if (name.includes('population')) analysis.specificTopic = 'population';
+            else if (name.includes('river')) analysis.specificTopic = 'rivers';
+            else if (name.includes('volcano')) analysis.specificTopic = 'volcanoes';
+        }
+        
+        return analysis;
+    }
+    
+    generateGCSESpecificTemplates(analysis) {
+        const templates = [];
+        const { specificTopic, yearGroup, originalSubject } = analysis;
+        
+        // Generate GCSE-appropriate questions based on curriculum
+        if (originalSubject.toLowerCase().includes('math')) {
+            if (specificTopic === 'algebra') {
+                templates.push(
+                    { question: 'Solve for x: 3x + 7 = 25', answer: 'x = 6' },
+                    { question: 'Expand: 3(x + 4)', answer: '3x + 12' },
+                    { question: 'Factorise: x² + 5x + 6', answer: '(x + 2)(x + 3)' },
+                    { question: 'If y = 2x + 1, find y when x = 4', answer: 'y = 9' }
+                );
+            } else if (specificTopic === 'geometry') {
+                templates.push(
+                    { question: 'What is the area of a rectangle 8cm × 5cm?', answer: '40 cm²' },
+                    { question: 'What is the circumference of a circle with radius 3cm? (use π = 3.14)', answer: '18.84 cm' },
+                    { question: 'Sum of interior angles in a pentagon?', answer: '540°' },
+                    { question: 'What type of triangle has all sides equal?', answer: 'Equilateral triangle' }
+                );
+            } else {
+                templates.push(
+                    { question: 'Calculate 25% of £80', answer: '£20' },
+                    { question: 'What is 2³?', answer: '8' },
+                    { question: 'Convert 0.75 to a fraction', answer: '3/4' },
+                    { question: 'Round 15.678 to 2 decimal places', answer: '15.68' }
+                );
+            }
+        } else if (originalSubject.toLowerCase().includes('biology')) {
+            if (specificTopic === 'cell_biology') {
+                templates.push(
+                    { question: 'What controls what enters and leaves a cell?', answer: 'Cell membrane' },
+                    { question: 'Where is DNA found in a cell?', answer: 'Nucleus' },
+                    { question: 'What do mitochondria do?', answer: 'Release energy for the cell' },
+                    { question: 'What do ribosomes make?', answer: 'Proteins' }
+                );
+            } else if (specificTopic === 'photosynthesis') {
+                templates.push(
+                    { question: 'Complete: Carbon dioxide + water → ? + oxygen', answer: 'Glucose' },
+                    { question: 'What gas is released during photosynthesis?', answer: 'Oxygen' },
+                    { question: 'Where does photosynthesis occur in plants?', answer: 'Chloroplasts' },
+                    { question: 'What absorbs light energy for photosynthesis?', answer: 'Chlorophyll' }
+                );
+            } else {
+                templates.push(
+                    { question: 'How many chambers does a human heart have?', answer: '4' },
+                    { question: 'What carries oxygen in blood?', answer: 'Red blood cells' },
+                    { question: 'What is the largest organ in the human body?', answer: 'Skin' },
+                    { question: 'What system includes the brain and spinal cord?', answer: 'Nervous system' }
+                );
+            }
+        } else if (originalSubject.toLowerCase().includes('chemistry')) {
+            if (specificTopic === 'atomic_structure') {
+                templates.push(
+                    { question: 'What are the three subatomic particles?', answer: 'Protons, neutrons, electrons' },
+                    { question: 'Where are protons and neutrons found?', answer: 'In the nucleus' },
+                    { question: 'What charge do electrons have?', answer: 'Negative' },
+                    { question: 'How do you calculate neutrons? (Formula)', answer: 'Mass number - Atomic number' }
+                );
+            } else if (specificTopic === 'periodic_table') {
+                templates.push(
+                    { question: 'What is the chemical symbol for sodium?', answer: 'Na' },
+                    { question: 'How many elements are in Group 1?', answer: '6 (plus hydrogen)' },
+                    { question: 'What are Group 1 elements called?', answer: 'Alkali metals' },
+                    { question: 'What is the atomic number of carbon?', answer: '6' }
+                );
+            } else {
+                templates.push(
+                    { question: 'What is the chemical formula for water?', answer: 'H₂O' },
+                    { question: 'What gas is produced when metals react with acids?', answer: 'Hydrogen' },
+                    { question: 'What is the pH of pure water?', answer: '7' },
+                    { question: 'What colour does litmus paper turn in acid?', answer: 'Red' }
+                );
+            }
+        }
+        
+        return templates;
+    }
+    
+    generateTopicSpecificTemplates(analysis) {
+        const templates = [];
+        const { specificTopic, originalName } = analysis;
+        
+        // Generate questions based on the specific topic extracted from the deck name
+        switch (specificTopic) {
+            case 'algebra':
+                templates.push(
+                    { question: `In ${originalName}: Solve 2x - 5 = 11`, answer: 'x = 8' },
+                    { question: `${originalName} problem: Expand (x + 3)²`, answer: 'x² + 6x + 9' },
+                    { question: `From ${originalName}: If 3y = 15, what is y?`, answer: 'y = 5' }
+                );
+                break;
+            case 'cell_biology':
+                templates.push(
+                    { question: `${originalName}: What is the function of the cell wall?`, answer: 'Provides structural support and protection' },
+                    { question: `From ${originalName}: Name two organelles found only in plant cells`, answer: 'Chloroplasts and cell wall' },
+                    { question: `${originalName} topic: What is cytoplasm?`, answer: 'Jelly-like substance where chemical reactions occur' }
+                );
+                break;
+            case 'atomic_structure':
+                templates.push(
+                    { question: `${originalName}: What is an isotope?`, answer: 'Atoms with same number of protons but different neutrons' },
+                    { question: `From ${originalName}: Define atomic number`, answer: 'Number of protons in an atom' },
+                    { question: `${originalName} concept: What is mass number?`, answer: 'Total number of protons and neutrons' }
+                );
+                break;
+            // Add more specific cases as needed
+            default:
+                templates.push(
+                    { question: `Related to ${originalName}: What is the main concept?`, answer: 'Check your study materials for key definitions' },
+                    { question: `From ${originalName}: What are the key principles?`, answer: 'Review the fundamental concepts in this topic' }
+                );
+        }
+        
+        return templates;
+    }
+    
+    generateSubjectBasedTemplates(subject) {
+        const templates = [];
+        const subj = subject.toLowerCase();
+        
+        if (subj.includes('math')) {
+            templates.push(
+                { question: 'What is 12 × 15?', answer: '180' },
+                { question: 'Calculate 30% of 250', answer: '75' },
+                { question: 'What is the square root of 169?', answer: '13' },
+                { question: 'Solve: x + 15 = 23', answer: 'x = 8' }
+            );
+        } else if (subj.includes('science') || subj.includes('biology') || subj.includes('chemistry') || subj.includes('physics')) {
+            templates.push(
+                { question: 'What is the chemical symbol for oxygen?', answer: 'O' },
+                { question: 'How many bones are in an adult human body?', answer: '206' },
+                { question: 'What is the speed of light in a vacuum?', answer: '299,792,458 m/s' },
+                { question: 'What gas do plants release during photosynthesis?', answer: 'Oxygen' }
+            );
+        } else if (subj.includes('history')) {
+            templates.push(
+                { question: 'In what year did World War II end?', answer: '1945' },
+                { question: 'Who was the first person to walk on the moon?', answer: 'Neil Armstrong' },
+                { question: 'What year was the Berlin Wall built?', answer: '1961' },
+                { question: 'Which empire was known for building Machu Picchu?', answer: 'Inca Empire' }
+            );
+        } else if (subj.includes('geography')) {
+            templates.push(
+                { question: 'What is the highest mountain in the world?', answer: 'Mount Everest' },
+                { question: 'Which river is the longest in the world?', answer: 'Nile River' },
+                { question: 'What is the smallest continent?', answer: 'Australia' },
+                { question: 'Which country has the most time zones?', answer: 'France (12 time zones)' }
+            );
+        } else {
+            templates.push(
+                { question: 'What is the capital of the United Kingdom?', answer: 'London' },
+                { question: 'How many days are there in a leap year?', answer: '366' },
+                { question: 'What is the largest ocean on Earth?', answer: 'Pacific Ocean' },
+                { question: 'Who wrote "Romeo and Juliet"?', answer: 'William Shakespeare' }
+            );
+        }
+        
+        return templates;
+    }
+    
+    generateAdditionalRelevantTemplates(analysis, subject) {
+        // Generate additional templates to ensure we have enough
+        const additionalTemplates = [];
+        const { originalName, specificTopic } = analysis;
+        
+        // Create contextual questions that reference the original deck name
+        additionalTemplates.push(
+            { question: `Key concept from "${originalName}": What should you remember most?`, answer: 'Focus on the main learning objectives of this topic' },
+            { question: `Important for "${originalName}": What are common mistakes?`, answer: 'Review errors and practice problem areas' },
+            { question: `From "${originalName}" study: How can you apply this knowledge?`, answer: 'Connect concepts to real-world examples' }
+        );
+        
+        return additionalTemplates;
     }
 
     saveGeneratedDecks(decks) {
@@ -690,17 +689,28 @@ class FlashCardsApp {
 
     createGeneratedDeckCard(deck) {
         const card = document.createElement('div');
-        card.className = 'deck-card generated-deck';
+        card.className = `deck-card generated-deck ${deck.isAdopted ? 'adopted' : ''}`;
+        
+        // Determine button content based on adoption status
+        const adoptButton = deck.isAdopted ? 
+            `<button class="btn btn-accent btn-small adopted-indicator" disabled title="Already adopted">
+                ✅ Adopted
+            </button>` :
+            `<button class="btn btn-accent btn-small" onclick="event.stopPropagation(); adoptDeck('${deck.id}')" title="Add to your personal collection">
+                📥 Adopt
+            </button>`;
+        
         card.innerHTML = `
             <div class="deck-header">
                 <div class="deck-info">
-                    <h4>${deck.name}</h4>
+                    <h4>${deck.name} ${deck.isAdopted ? '<span class="adopted-indicator">✅</span>' : ''}</h4>
                     <div class="deck-meta">
                         <span class="subject-badge">${deck.subject}</span>
                         <span class="difficulty-badge ${deck.difficulty.toLowerCase()}">${deck.difficulty}</span>
                         <span class="ai-badge">🤖 AI Generated</span>
+                        ${deck.isAdopted ? '<span class="adopted-badge">📚 In Collection</span>' : ''}
                     </div>
-                    <p class="deck-description">${deck.cards.length} cards • Generated ${new Date(deck.generatedAt).toLocaleDateString()}</p>
+                    <p class="deck-description">${deck.cards.length} cards • Generated ${new Date(deck.generatedAt).toLocaleDateString()}${deck.isAdopted ? ` • Adopted ${new Date(deck.adoptedAt).toLocaleDateString()}` : ''}</p>
                 </div>
             </div>
             <div class="deck-buttons">
@@ -710,9 +720,7 @@ class FlashCardsApp {
                 <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); viewGeneratedDeck('${deck.id}')" title="View deck contents">
                     👁️ View
                 </button>
-                <button class="btn btn-accent btn-small" onclick="event.stopPropagation(); adoptDeck('${deck.id}')" title="Add to your personal collection">
-                    📥 Adopt
-                </button>
+                ${adoptButton}
                 <button class="deck-delete" onclick="event.stopPropagation(); deleteGeneratedDeck('${deck.id}')" title="Remove generated deck">
                     🗑️
                 </button>
@@ -4518,58 +4526,8 @@ class FlashCardsApp {
         // This would ideally use AI/ML to generate contextual questions
         // For demo purposes, I'll create adaptive templates based on user patterns
         
-        const baseTemplates = {
-            'Languages': [
-                { question: 'What does "Hello" mean in Spanish?', answer: 'Hola' },
-                { question: 'Translate "Thank you" to French', answer: 'Merci' },
-                { question: 'What is "Goodbye" in German?', answer: 'Auf Wiedersehen' },
-                { question: 'How do you say "Yes" in Italian?', answer: 'Sì' },
-                { question: 'What does "Por favor" mean?', answer: 'Please' },
-                { question: 'Translate "Water" to Spanish', answer: 'Agua' },
-                { question: 'What is "Book" in French?', answer: 'Livre' },
-                { question: 'How do you say "Red" in German?', answer: 'Rot' }
-            ],
-            'Science': [
-                { question: 'What is the chemical symbol for Gold?', answer: 'Au' },
-                { question: 'How many bones are in the human body?', answer: '206' },
-                { question: 'What is the speed of light?', answer: '299,792,458 m/s' },
-                { question: 'What gas do plants absorb during photosynthesis?', answer: 'Carbon Dioxide' },
-                { question: 'What is the largest planet in our solar system?', answer: 'Jupiter' },
-                { question: 'What is H2O commonly known as?', answer: 'Water' },
-                { question: 'How many chambers does a human heart have?', answer: '4' },
-                { question: 'What is the hardest natural substance?', answer: 'Diamond' }
-            ],
-            'History': [
-                { question: 'In what year did World War II end?', answer: '1945' },
-                { question: 'Who was the first President of the United States?', answer: 'George Washington' },
-                { question: 'What ancient wonder was located in Alexandria?', answer: 'The Lighthouse of Alexandria' },
-                { question: 'Which empire was ruled by Julius Caesar?', answer: 'Roman Empire' },
-                { question: 'In what year did the Berlin Wall fall?', answer: '1989' },
-                { question: 'Who painted the Mona Lisa?', answer: 'Leonardo da Vinci' },
-                { question: 'What year did the Titanic sink?', answer: '1912' },
-                { question: 'Which country gifted the Statue of Liberty to the US?', answer: 'France' }
-            ],
-            'Mathematics': [
-                { question: 'What is 15 × 8?', answer: '120' },
-                { question: 'What is the square root of 144?', answer: '12' },
-                { question: 'What is π (pi) approximately equal to?', answer: '3.14159' },
-                { question: 'What is 25% of 200?', answer: '50' },
-                { question: 'What is the area of a circle with radius 5? (use π = 3.14)', answer: '78.5' },
-                { question: 'What is 2³ (2 to the power of 3)?', answer: '8' },
-                { question: 'What is the sum of angles in a triangle?', answer: '180 degrees' },
-                { question: 'What is 144 ÷ 12?', answer: '12' }
-            ]
-        };
-        
-        // Get templates for the subject or use general knowledge
-        let templates = baseTemplates[subject] || [
-            { question: 'What is the capital of France?', answer: 'Paris' },
-            { question: 'How many continents are there?', answer: '7' },
-            { question: 'What is the largest ocean?', answer: 'Pacific Ocean' },
-            { question: 'Who wrote Romeo and Juliet?', answer: 'William Shakespeare' },
-            { question: 'What is the smallest country in the world?', answer: 'Vatican City' },
-            { question: 'In what year was the internet invented?', answer: '1969' }
-        ];
+        // Intelligent template generation based on deck name and subject
+        let templates = this.generateIntelligentTemplates(deckName, subject, count);
         
         // Modify difficulty based on user analysis
         if (type === 'challenge' && analysis.challengeLevel !== 'challenging') {
@@ -4743,15 +4701,19 @@ class FlashCardsApp {
         // Create a new regular deck from the generated deck
         const adoptedDeck = {
             id: 'adopted_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-            name: deck.name + ' (Adopted)',
+            name: deck.name, // Keep original name, user can edit it
             subject: deck.subject,
+            yearGroup: deck.yearGroup || 'Year 10', // Ensure yearGroup is present
             difficulty: deck.difficulty,
             cards: deck.cards.map(card => ({
-                front: card.front,
-                back: card.back,
+                question: card.front || card.question,
+                answer: card.back || card.answer,
                 type: card.type || 'standard'
             })),
-            titleCards: deck.titleCards || [],
+            titleCards: (deck.titleCards || []).map(titleCard => ({
+                title: titleCard.title,
+                content: titleCard.content || titleCard.description
+            })),
             style: 'modern',
             color: 'purple', // Special color for adopted decks
             createdAt: Date.now(),
@@ -4765,13 +4727,31 @@ class FlashCardsApp {
         
         // Add to user's personal decks
         this.decks.push(adoptedDeck);
-        this.saveData();
+        this.saveDecks();
         this.renderDecks();
+        
+        // Mark the original generated deck as adopted (optional)
+        this.markGeneratedDeckAsAdopted(deckId);
         
         // Show success message
         this.showAdoptionSuccessMessage(adoptedDeck);
         
         console.log('✅ Adopted AI-generated deck:', adoptedDeck.name);
+    }
+    
+    markGeneratedDeckAsAdopted(deckId) {
+        const generatedDecks = this.loadGeneratedDecks();
+        const deckIndex = generatedDecks.findIndex(d => d.id === deckId);
+        
+        if (deckIndex !== -1) {
+            // Mark as adopted instead of removing completely
+            generatedDecks[deckIndex].adoptedAt = Date.now();
+            generatedDecks[deckIndex].isAdopted = true;
+            this.saveGeneratedDecks(generatedDecks);
+            
+            // Update the generated decks display to show the adopted status
+            this.renderGeneratedDecks(generatedDecks);
+        }
     }
     
     showAdoptionSuccessMessage(adoptedDeck) {
@@ -4782,6 +4762,7 @@ class FlashCardsApp {
                 <div class="adoption-icon">📚</div>
                 <h4>Deck Adopted Successfully! 🎉</h4>
                 <p><strong>"${adoptedDeck.name}"</strong> has been added to your personal collection.</p>
+                <p><small>✨ You can now edit, study, and customize this deck like any other!</small></p>
                 <button onclick="this.parentElement.parentElement.remove()" class="btn btn-ai btn-small">Awesome!</button>
             </div>
         `;
@@ -5333,13 +5314,23 @@ class FlashCardsApp {
         this.currentDeck = deck;
         
         // Use adaptive learning to prioritize difficult cards
-        this.currentCards = this.weightedShuffle([...deck.cards], deckId);
+        // Add original index to each card for tracking
+        this.currentCards = this.weightedShuffle([...deck.cards], deckId).map((card, index) => ({
+            ...card,
+            originalIndex: deck.cards.findIndex(originalCard => 
+                originalCard.question === card.question && originalCard.answer === card.answer
+            )
+        }));
         
         this.currentCardIndex = 0;
         this.score = 0;
         this.cardCount = 0;
         this.currentTitleCardIndex = 0;
         this.sessionStartTime = Date.now();
+        
+        // Track which cards have been completed correctly
+        this.completedCards = new Set();
+        this.totalUniqueCards = deck.cards.length;
         
         this.showView('study');
         this.updateStudyHeader();
@@ -5426,9 +5417,14 @@ class FlashCardsApp {
 
     updateStudyHeader() {
         document.getElementById('study-deck-name').textContent = this.currentDeck.name;
+        
+        // Show progress as completed cards / total cards
+        const completedCount = this.completedCards ? this.completedCards.size : this.score;
+        const totalCards = this.totalUniqueCards || this.currentDeck.cards.length;
         document.getElementById('card-counter').textContent = 
-            `${this.cardCount} / ${this.currentDeck.cards.length}`;
-        document.getElementById('score').textContent = `Score: ${this.score}`;
+            `Progress: ${completedCount} / ${totalCards} completed`;
+            
+        document.getElementById('score').textContent = `Cards Remaining: ${this.currentCards.length}`;
     }
 
     showCurrentCard() {
@@ -5482,8 +5478,9 @@ class FlashCardsApp {
 
         const currentCard = this.currentCards[this.currentCardIndex];
         // Use answerText for comparison (plain text) but answer for display (formatted HTML)
-        const correctAnswerText = (currentCard.answerText || currentCard.answer).toLowerCase();
-        const isCorrect = userAnswer.toLowerCase() === correctAnswerText;
+        const correctAnswerText = (currentCard.answerText || currentCard.answer);
+        const answerResult = this.smartAnswerComparison(userAnswer, correctAnswerText);
+        const isCorrect = answerResult.isCorrect;
 
         // Calculate response time for learning algorithm
         const responseTime = Date.now() - this.sessionStartTime;
@@ -5500,8 +5497,21 @@ class FlashCardsApp {
         this.cardCount++;
         
         if (isCorrect) {
-            this.score++;
-            this.showFeedback('Correct! Well done! 🎉', 'correct');
+            // Track unique card completion
+            const cardOriginalIndex = currentCard.originalIndex;
+            if (cardOriginalIndex !== undefined && !this.completedCards.has(cardOriginalIndex)) {
+                this.completedCards.add(cardOriginalIndex);
+                this.score = this.completedCards.size; // Score = number of unique cards completed
+            }
+            
+            // Provide encouraging feedback based on how they got it right
+            let feedbackMessage = 'Correct! Well done! 🎉';
+            if (answerResult.reason === 'key_terms') {
+                feedbackMessage = 'Correct! You got the key points! 🎯';
+            } else if (answerResult.reason === 'high_similarity') {
+                feedbackMessage = 'Correct! Close enough - great understanding! ✨';
+            }
+            this.showFeedback(feedbackMessage, 'correct');
             
             // Trigger fall animation for correct answer
             this.animateCorrectAnswer();
@@ -5514,7 +5524,12 @@ class FlashCardsApp {
                 this.currentCardIndex = 0;
             }
         } else {
-            this.showFeedback(`Incorrect. The correct answer is: "${currentCard.answerText || currentCard.answer}"`, 'incorrect', currentCard.answer);
+            // Provide helpful feedback based on how close they were
+            let feedbackMessage = `Incorrect. The correct answer is: "${currentCard.answerText || currentCard.answer}"`;
+            if (answerResult.reason === 'close') {
+                feedbackMessage = `Close! You were on the right track. The correct answer is: "${currentCard.answerText || currentCard.answer}"`;
+            }
+            this.showFeedback(feedbackMessage, 'incorrect', currentCard.answer);
             
             // Trigger slide animation for incorrect answer
             this.animateIncorrectAnswer();
@@ -5658,7 +5673,7 @@ class FlashCardsApp {
         document.getElementById('study-card-container').style.display = 'none';
         document.getElementById('study-complete').classList.add('show');
         document.getElementById('final-score').textContent = 
-            `${this.score} / ${this.currentDeck.cards.length}`;
+            `${this.score} / ${this.totalUniqueCards}`;
 
         // Record study session for analytics
         if (this.currentDeck) {
@@ -5714,6 +5729,129 @@ class FlashCardsApp {
             notification.style.animation = 'slideOutRight 0.3s ease';
             setTimeout(() => notification.remove(), 300);
         }, 3000);
+    }
+
+    smartAnswerComparison(userAnswer, correctAnswer) {
+        // Clean both answers for comparison
+        const cleanUser = this.cleanAnswerForComparison(userAnswer);
+        const cleanCorrect = this.cleanAnswerForComparison(correctAnswer);
+        
+        // Direct match - fastest check
+        if (cleanUser === cleanCorrect) {
+            return { isCorrect: true, reason: 'exact' };
+        }
+        
+        // Extract key terms from both answers
+        const userTerms = this.extractKeyTerms(cleanUser);
+        const correctTerms = this.extractKeyTerms(cleanCorrect);
+        
+        // Check if user answer contains all essential terms
+        const essentialTermsPresent = this.checkEssentialTerms(userTerms, correctTerms);
+        
+        // Calculate similarity score
+        const similarityScore = this.calculateSimilarity(cleanUser, cleanCorrect);
+        
+        // Determine if answer is correct and why
+        if (essentialTermsPresent && similarityScore >= 0.6) {
+            return { isCorrect: true, reason: 'key_terms', similarity: similarityScore };
+        } else if (similarityScore >= 0.8) {
+            return { isCorrect: true, reason: 'high_similarity', similarity: similarityScore };
+        } else if (similarityScore >= 0.6) {
+            return { isCorrect: false, reason: 'close', similarity: similarityScore };
+        } else {
+            return { isCorrect: false, reason: 'different', similarity: similarityScore };
+        }
+    }
+    
+    cleanAnswerForComparison(answer) {
+        return answer
+            .toLowerCase()
+            .replace(/<[^>]*>/g, '') // Remove HTML tags
+            .replace(/[^\w\s]/g, ' ') // Replace punctuation with spaces
+            .replace(/\s+/g, ' ') // Normalize whitespace
+            .trim();
+    }
+    
+    extractKeyTerms(text) {
+        // Common words to ignore
+        const stopWords = new Set([
+            'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+            'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did',
+            'will', 'would', 'could', 'should', 'may', 'might', 'can', 'must', 'shall',
+            'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they',
+            'my', 'your', 'his', 'her', 'its', 'our', 'their', 'me', 'him', 'her', 'us', 'them'
+        ]);
+        
+        return text
+            .split(' ')
+            .filter(word => word.length > 2 && !stopWords.has(word))
+            .filter(word => /[a-zA-Z]/.test(word)); // Must contain at least one letter
+    }
+    
+    checkEssentialTerms(userTerms, correctTerms) {
+        if (correctTerms.length === 0) return true;
+        
+        // For short answers (1-2 key terms), require all terms
+        // For longer answers, require majority of terms
+        const requiredRatio = correctTerms.length <= 2 ? 1.0 : 0.7;
+        const requiredTerms = Math.ceil(correctTerms.length * requiredRatio);
+        
+        let matchedTerms = 0;
+        for (const correctTerm of correctTerms) {
+            // Check for exact matches or close matches (allowing for minor typos)
+            const hasMatch = userTerms.some(userTerm => 
+                userTerm === correctTerm || 
+                this.isCloseMatch(userTerm, correctTerm)
+            );
+            if (hasMatch) matchedTerms++;
+        }
+        
+        return matchedTerms >= requiredTerms;
+    }
+    
+    isCloseMatch(word1, word2) {
+        // Allow for single character differences for words longer than 3 characters
+        if (word1.length < 4 || word2.length < 4) return false;
+        if (Math.abs(word1.length - word2.length) > 1) return false;
+        
+        const maxDistance = Math.floor(Math.max(word1.length, word2.length) * 0.2);
+        return this.levenshteinDistance(word1, word2) <= maxDistance;
+    }
+    
+    calculateSimilarity(str1, str2) {
+        const maxLen = Math.max(str1.length, str2.length);
+        if (maxLen === 0) return 1.0;
+        
+        const distance = this.levenshteinDistance(str1, str2);
+        return (maxLen - distance) / maxLen;
+    }
+    
+    levenshteinDistance(str1, str2) {
+        const matrix = [];
+        
+        for (let i = 0; i <= str2.length; i++) {
+            matrix[i] = [i];
+        }
+        
+        for (let j = 0; j <= str1.length; j++) {
+            matrix[0][j] = j;
+        }
+        
+        for (let i = 1; i <= str2.length; i++) {
+            for (let j = 1; j <= str1.length; j++) {
+                if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                    matrix[i][j] = matrix[i - 1][j - 1];
+                } else {
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j - 1] + 1, // substitution
+                        matrix[i][j - 1] + 1,     // insertion
+                        matrix[i - 1][j] + 1      // deletion
+                    );
+                }
+            }
+        }
+        
+        return matrix[str2.length][str1.length];
     }
 
     escapeHtml(text) {
