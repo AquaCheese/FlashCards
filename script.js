@@ -7262,12 +7262,33 @@ Hint:`
     }
 
     smartAnswerComparison(userAnswer, correctAnswer) {
-        // Clean both answers for comparison
+        // Debug logging for troubleshooting
+        console.log('🔍 Answer Comparison Debug:');
+        console.log('User Answer:', `"${userAnswer}"`);
+        console.log('Correct Answer:', `"${correctAnswer}"`);
+        
+        // First try exact match with just trimming and case normalization
+        const simpleUser = userAnswer.toString().trim().toLowerCase();
+        const simpleCorrect = correctAnswer.toString().trim().toLowerCase();
+        
+        console.log('Simple User:', `"${simpleUser}"`);
+        console.log('Simple Correct:', `"${simpleCorrect}"`);
+        
+        if (simpleUser === simpleCorrect) {
+            console.log('✅ EXACT MATCH (simple)');
+            return { isCorrect: true, reason: 'exact_simple' };
+        }
+        
+        // Clean both answers for comparison (more aggressive cleaning)
         const cleanUser = this.cleanAnswerForComparison(userAnswer);
         const cleanCorrect = this.cleanAnswerForComparison(correctAnswer);
         
-        // Direct match - fastest check
+        console.log('Clean User:', `"${cleanUser}"`);
+        console.log('Clean Correct:', `"${cleanCorrect}"`);
+        
+        // Direct match after cleaning
         if (cleanUser === cleanCorrect) {
+            console.log('✅ EXACT MATCH (cleaned)');
             return { isCorrect: true, reason: 'exact' };
         }
         
@@ -7295,10 +7316,13 @@ Hint:`
     
     cleanAnswerForComparison(answer) {
         return answer
+            .toString()
             .toLowerCase()
             .replace(/<[^>]*>/g, '') // Remove HTML tags
-            .replace(/[^\w\s]/g, ' ') // Replace punctuation with spaces
+            .replace(/[""'']/g, '"') // Normalize quotes
+            .replace(/[–—]/g, '-') // Normalize dashes
             .replace(/\s+/g, ' ') // Normalize whitespace
+            .replace(/[^\w\s%$£€¥₹.,;:!?()[\]{}/"'-]/g, '') // Keep important punctuation
             .trim();
     }
     
@@ -7550,7 +7574,21 @@ CREATE ${dynamicCardCount} cards that:
         
         prompt += `\n\nFORMAT REQUIREMENTS:
 Q: [Clear, specific question]
-A: [Concise, accurate answer]
+A: [Primary answer]
+ALT: [Alternative answer 1] (if applicable)
+ALT: [Alternative answer 2] (if applicable)
+EXP: [Brief explanation providing context or additional learning information]
+
+EXAMPLES:
+Q: What percentage of Earth's surface is covered by water?
+A: 71%
+ALT: 70%
+ALT: approximately 71%
+EXP: About 71% of Earth's surface is covered by water, with the vast majority being ocean water. This includes all oceans, seas, lakes, and other bodies of water.
+
+Q: What is the chemical symbol for gold?
+A: Au
+EXP: The symbol Au comes from the Latin word "aurum" meaning gold. Gold is element 79 on the periodic table.
 
 Make cards educational, engaging, and perfectly matched to this student's learning level.`;
 
@@ -7701,7 +7739,9 @@ Make cards educational, engaging, and perfectly matched to this student's learni
         
         let currentQuestion = '';
         let currentAnswer = '';
-        let parsingAnswer = false;
+        let currentAlternatives = [];
+        let currentExplanation = '';
+        let currentSection = '';
         
         for (const line of lines) {
             const trimmedLine = line.trim();
@@ -7709,39 +7749,86 @@ Make cards educational, engaging, and perfectly matched to this student's learni
             if (trimmedLine.startsWith('Q:')) {
                 // Save previous card if we have both question and answer
                 if (currentQuestion && currentAnswer) {
-                    cards.push({
+                    const card = {
                         id: Date.now() + Math.random(),
                         question: currentQuestion.trim(),
-                        answer: currentAnswer.trim()
-                    });
+                        answer: currentAnswer.trim(),
+                        questionText: currentQuestion.trim(),
+                        answerText: currentAnswer.trim()
+                    };
+                    
+                    // Add alternatives if available
+                    if (currentAlternatives.length > 0) {
+                        card.alternativeAnswers = currentAlternatives;
+                    }
+                    
+                    // Add explanation if available
+                    if (currentExplanation) {
+                        card.explanation = currentExplanation.trim();
+                        card.explanationText = currentExplanation.trim();
+                    }
+                    
+                    cards.push(card);
                 }
                 
                 // Start new question
                 currentQuestion = trimmedLine.substring(2).trim();
                 currentAnswer = '';
-                parsingAnswer = false;
+                currentAlternatives = [];
+                currentExplanation = '';
+                currentSection = 'question';
                 
             } else if (trimmedLine.startsWith('A:')) {
                 currentAnswer = trimmedLine.substring(2).trim();
-                parsingAnswer = true;
+                currentSection = 'answer';
                 
-            } else if (trimmedLine && parsingAnswer) {
+            } else if (trimmedLine.startsWith('ALT:')) {
+                const altAnswer = trimmedLine.substring(4).trim();
+                if (altAnswer) {
+                    currentAlternatives.push(altAnswer);
+                }
+                currentSection = 'alternative';
+                
+            } else if (trimmedLine.startsWith('EXP:')) {
+                currentExplanation = trimmedLine.substring(4).trim();
+                currentSection = 'explanation';
+                
+            } else if (trimmedLine && currentSection === 'question') {
+                // Continue building question
+                currentQuestion += ' ' + trimmedLine;
+                
+            } else if (trimmedLine && currentSection === 'answer') {
                 // Continue building answer
                 currentAnswer += ' ' + trimmedLine;
                 
-            } else if (trimmedLine && !parsingAnswer && currentQuestion) {
-                // Continue building question
-                currentQuestion += ' ' + trimmedLine;
+            } else if (trimmedLine && currentSection === 'explanation') {
+                // Continue building explanation
+                currentExplanation += ' ' + trimmedLine;
             }
         }
         
         // Don't forget the last card
         if (currentQuestion && currentAnswer) {
-            cards.push({
+            const card = {
                 id: Date.now() + Math.random(),
                 question: currentQuestion.trim(),
-                answer: currentAnswer.trim()
-            });
+                answer: currentAnswer.trim(),
+                questionText: currentQuestion.trim(),
+                answerText: currentAnswer.trim()
+            };
+            
+            // Add alternatives if available
+            if (currentAlternatives.length > 0) {
+                card.alternativeAnswers = currentAlternatives;
+            }
+            
+            // Add explanation if available
+            if (currentExplanation) {
+                card.explanation = currentExplanation.trim();
+                card.explanationText = currentExplanation.trim();
+            }
+            
+            cards.push(card);
         }
         
         // Fallback parsing if the above didn't work
@@ -7757,24 +7844,84 @@ Make cards educational, engaging, and perfectly matched to this student's learni
     fallbackCardParsing(aiResponse) {
         // Try to extract question-answer pairs using different patterns
         const cards = [];
-        const patterns = [
-            /(?:Question|Q):\s*(.+?)(?:Answer|A):\s*(.+?)(?=(?:Question|Q):|$)/gis,
-            /(\d+\.\s*.+?)\n(.+?)(?=\d+\.|$)/gis,
-            /(.+\?)\s*(.+?)(?=.+\?|$)/gis
-        ];
         
-        for (const pattern of patterns) {
-            const matches = aiResponse.matchAll(pattern);
-            for (const match of matches) {
-                if (match[1] && match[2]) {
-                    cards.push({
-                        id: Date.now() + Math.random(),
-                        question: match[1].trim().replace(/^(Question|Q):\s*/i, ''),
-                        answer: match[2].trim().replace(/^(Answer|A):\s*/i, '')
-                    });
+        // Enhanced pattern to capture Q:, A:, ALT:, EXP: format
+        const enhancedPattern = /(?:Question|Q):\s*(.+?)(?:Answer|A):\s*(.+?)(?=(?:Question|Q):|$)/gis;
+        const matches = aiResponse.matchAll(enhancedPattern);
+        
+        for (const match of matches) {
+            if (match[1] && match[2]) {
+                const fullAnswer = match[2];
+                const card = {
+                    id: Date.now() + Math.random(),
+                    question: match[1].trim().replace(/^(Question|Q):\s*/i, ''),
+                    questionText: match[1].trim().replace(/^(Question|Q):\s*/i, ''),
+                    answer: '',
+                    answerText: '',
+                    alternativeAnswers: [],
+                    explanation: '',
+                    explanationText: ''
+                };
+                
+                // Parse the answer section for ALT and EXP
+                const answerLines = fullAnswer.split('\n');
+                let mainAnswer = '';
+                let explanation = '';
+                const alternatives = [];
+                
+                for (const line of answerLines) {
+                    const trimmedLine = line.trim();
+                    if (trimmedLine.startsWith('ALT:')) {
+                        alternatives.push(trimmedLine.substring(4).trim());
+                    } else if (trimmedLine.startsWith('EXP:')) {
+                        explanation = trimmedLine.substring(4).trim();
+                    } else if (!trimmedLine.startsWith('ALT:') && !trimmedLine.startsWith('EXP:') && trimmedLine) {
+                        if (!mainAnswer) {
+                            mainAnswer = trimmedLine;
+                        } else {
+                            mainAnswer += ' ' + trimmedLine;
+                        }
+                    }
                 }
+                
+                card.answer = mainAnswer.trim() || fullAnswer.trim();
+                card.answerText = card.answer;
+                
+                if (alternatives.length > 0) {
+                    card.alternativeAnswers = alternatives;
+                }
+                
+                if (explanation) {
+                    card.explanation = explanation;
+                    card.explanationText = explanation;
+                }
+                
+                cards.push(card);
             }
-            if (cards.length > 0) break; // Use first successful pattern
+        }
+        
+        // If still no cards, try simpler patterns
+        if (cards.length === 0) {
+            const simplePatterns = [
+                /(\d+\.\s*.+?)\n(.+?)(?=\d+\.|$)/gis,
+                /(.+\?)\s*(.+?)(?=.+\?|$)/gis
+            ];
+            
+            for (const pattern of simplePatterns) {
+                const matches = aiResponse.matchAll(pattern);
+                for (const match of matches) {
+                    if (match[1] && match[2]) {
+                        cards.push({
+                            id: Date.now() + Math.random(),
+                            question: match[1].trim(),
+                            answer: match[2].trim(),
+                            questionText: match[1].trim(),
+                            answerText: match[2].trim()
+                        });
+                    }
+                }
+                if (cards.length > 0) break;
+            }
         }
         
         return cards;
