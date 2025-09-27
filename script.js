@@ -7078,48 +7078,226 @@ Hint:`
         const trends = profile.preferences.accuracyTrends;
         const recentTrends = trends.slice(-10);
         
-        // Calculate user statistics
-        const avgAccuracy = this.calculateAverageAccuracy(profile);
-        const weakSubjects = this.identifyTopWeaknesses(profile);
-        const strongSubjects = this.identifyTopStrengths(profile);
-        const difficultyPrefs = profile.preferences.difficultyPreference;
+        // Advanced user performance analysis
+        const performanceAnalysis = this.analyzeUserPerformance(profile);
+        const learningPatterns = this.identifyLearningPatterns(profile);
+        const adaptiveDifficulty = this.calculateAdaptiveDifficulty(profile);
         
-        // Determine learning focus
-        let focusArea = 'review';
-        if (avgAccuracy < 60) {
-            focusArea = 'remedial';
-        } else if (avgAccuracy > 80) {
-            focusArea = 'advanced';
+        // Dynamic card count based on performance
+        const dynamicCardCount = this.calculateOptimalCardCount(profile, options);
+        
+        // Build intelligent, personalized prompt
+        let prompt = '';
+        
+        if (performanceAnalysis.strugglingAreas.length > 0) {
+            // Focus on remedial content
+            prompt = `Create targeted remedial flashcards for a student who needs help with:
+${performanceAnalysis.strugglingAreas.map(area => `- ${area.subject}: ${area.accuracy}% accuracy (needs improvement)`).join('\n')}
+
+LEARNING PROFILE:
+- Overall accuracy: ${performanceAnalysis.overallAccuracy}%
+- Study pattern: ${learningPatterns.studyPattern}
+- Attention span: ${learningPatterns.optimalSessionLength} minutes
+- Best performance time: ${learningPatterns.bestTimeOfDay}
+
+CREATE ${dynamicCardCount} cards that:
+1. Address the weakest areas first (${performanceAnalysis.strugglingAreas[0]?.subject})
+2. Use ${adaptiveDifficulty.recommendedLevel} difficulty level
+3. Include step-by-step explanations for complex concepts
+4. Focus on fundamental understanding before advanced topics`;
+
+        } else if (performanceAnalysis.overallAccuracy > 85) {
+            // Create advanced/challenge content
+            prompt = `Create advanced challenge flashcards for a high-performing student:
+
+STRENGTHS TO BUILD ON:
+${performanceAnalysis.strongAreas.map(area => `- ${area.subject}: ${area.accuracy}% accuracy`).join('\n')}
+
+PERFORMANCE PROFILE:
+- Mastery level: ${performanceAnalysis.overallAccuracy}%
+- Ready for: ${adaptiveDifficulty.recommendedLevel} content
+- Learning style: ${learningPatterns.preferredStyle}
+
+CREATE ${dynamicCardCount} advanced cards that:
+1. Challenge existing knowledge with complex scenarios
+2. Connect concepts across different subjects
+3. Include real-world applications and case studies
+4. Prepare for higher-level examinations`;
+
+        } else {
+            // Balanced improvement approach
+            prompt = `Create balanced flashcards for steady improvement:
+
+CURRENT PERFORMANCE:
+- Overall accuracy: ${performanceAnalysis.overallAccuracy}%
+- Improving areas: ${performanceAnalysis.improvingAreas.map(a => a.subject).join(', ')}
+- Areas needing attention: ${performanceAnalysis.strugglingAreas.map(a => a.subject).join(', ')}
+
+LEARNING INSIGHTS:
+- Study consistency: ${learningPatterns.consistencyScore}/10
+- Preferred difficulty: ${adaptiveDifficulty.recommendedLevel}
+- Response time: ${learningPatterns.averageResponseTime}s
+
+CREATE ${dynamicCardCount} cards that:
+1. 60% focus on improvement areas (${performanceAnalysis.strugglingAreas.map(a => a.subject).join(', ')})
+2. 40% reinforcement of strong areas (${performanceAnalysis.strongAreas.map(a => a.subject).slice(0, 2).join(', ')})
+3. Match ${adaptiveDifficulty.recommendedLevel} difficulty level
+4. Include variety to maintain engagement`;
         }
         
-        // Build comprehensive prompt
-        const prompt = `Create educational flashcards based on this user's learning profile:
+        // Add subject-specific focus if requested
+        if (options.subject) {
+            prompt += `\n\nSPECIFIC SUBJECT FOCUS: ${options.subject}
+- Tailor all cards to this subject area
+- Use appropriate terminology and concepts
+- Consider GCSE curriculum requirements`;
+        }
+        
+        prompt += `\n\nFORMAT REQUIREMENTS:
+Q: [Clear, specific question]
+A: [Concise, accurate answer]
 
-PERFORMANCE ANALYSIS:
-- Average accuracy: ${avgAccuracy}% 
-- Total study sessions: ${trends.length}
-- Learning focus needed: ${focusArea}
-
-SUBJECT STRENGTHS: ${strongSubjects.map(s => `${s.subject} (${s.score}% avg)`).join(', ') || 'Still identifying'}
-
-AREAS NEEDING IMPROVEMENT: ${weakSubjects.map(w => `${w.subject} (${w.score}% avg)`).join(', ') || 'None identified'}
-
-DIFFICULTY PREFERENCES: ${Object.entries(difficultyPrefs).map(([diff, data]) => `${diff}: ${data.averageAccuracy}% avg`).join(', ') || 'Still analyzing'}
-
-INSTRUCTIONS:
-Generate ${options.cardCount || 8} flashcards that:
-1. Target the user's weak areas for improvement
-2. Match their preferred difficulty level
-3. Include a mix of review and challenge content
-4. Focus on ${options.subject || this.determineSubjectFromProfile(profile)}
-
-Format each card as:
-Q: [Question text]
-A: [Answer text]
-
-Make cards educational, specific, and appropriate for the user's current skill level.`;
+Make cards educational, engaging, and perfectly matched to this student's learning level.`;
 
         return prompt;
+    }
+    
+    analyzeUserPerformance(profile) {
+        const trends = profile.preferences?.accuracyTrends || [];
+        const recentTrends = trends.slice(-15); // Last 15 sessions
+        
+        const overallAccuracy = this.calculateAverageAccuracy(profile);
+        
+        // Identify struggling areas (below 70% accuracy)
+        const strugglingAreas = this.identifyTopWeaknesses(profile)
+            .filter(area => area.score < 70)
+            .map(area => ({ subject: area.subject, accuracy: area.score }));
+        
+        // Identify strong areas (above 80% accuracy)
+        const strongAreas = this.identifyTopStrengths(profile)
+            .filter(area => area.score > 80)
+            .map(area => ({ subject: area.subject, accuracy: area.score }));
+        
+        // Identify improving areas (positive trend)
+        const improvingAreas = [];
+        if (trends.length > 5) {
+            const recent = trends.slice(-5);
+            const earlier = trends.slice(-10, -5);
+            
+            const recentAvg = recent.reduce((sum, t) => sum + t.accuracy, 0) / recent.length;
+            const earlierAvg = earlier.reduce((sum, t) => sum + t.accuracy, 0) / earlier.length;
+            
+            if (recentAvg > earlierAvg + 5) {
+                improvingAreas.push({ subject: 'General', improvement: recentAvg - earlierAvg });
+            }
+        }
+        
+        return {
+            overallAccuracy,
+            strugglingAreas,
+            strongAreas,
+            improvingAreas,
+            sessionCount: trends.length
+        };
+    }
+    
+    identifyLearningPatterns(profile) {
+        const trends = profile.preferences?.accuracyTrends || [];
+        
+        // Calculate study consistency
+        let consistencyScore = 5; // Default
+        if (trends.length > 3) {
+            const intervals = [];
+            for (let i = 1; i < trends.length; i++) {
+                intervals.push(trends[i].timestamp - trends[i-1].timestamp);
+            }
+            const avgInterval = intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length;
+            const variance = intervals.reduce((sum, interval) => sum + Math.pow(interval - avgInterval, 2), 0) / intervals.length;
+            consistencyScore = Math.max(1, Math.min(10, 10 - (variance / avgInterval) * 5));
+        }
+        
+        // Determine optimal session length
+        const optimalSessionLength = profile.studyHabits?.preferredSessionLength || 15;
+        
+        // Calculate average response time (estimated)
+        const averageResponseTime = Math.round(optimalSessionLength / Math.max(1, trends.length) * 60);
+        
+        // Determine study pattern
+        let studyPattern = 'Regular';
+        if (consistencyScore > 7) studyPattern = 'Highly consistent';
+        else if (consistencyScore < 4) studyPattern = 'Irregular';
+        
+        // Determine preferred learning style based on accuracy patterns
+        const preferredStyle = profile.preferences?.accuracyTrends?.length > 10 ? 'Analytical' : 'Exploratory';
+        
+        return {
+            consistencyScore: Math.round(consistencyScore),
+            optimalSessionLength,
+            averageResponseTime,
+            studyPattern,
+            preferredStyle,
+            bestTimeOfDay: 'Variable' // Could be enhanced with timestamp analysis
+        };
+    }
+    
+    calculateAdaptiveDifficulty(profile) {
+        const avgAccuracy = this.calculateAverageAccuracy(profile);
+        const trends = profile.preferences?.accuracyTrends || [];
+        
+        let recommendedLevel = 'Intermediate';
+        let confidenceLevel = 'Medium';
+        
+        if (avgAccuracy < 50) {
+            recommendedLevel = 'Beginner';
+            confidenceLevel = 'Building';
+        } else if (avgAccuracy < 70) {
+            recommendedLevel = 'Intermediate';
+            confidenceLevel = 'Developing';
+        } else if (avgAccuracy < 85) {
+            recommendedLevel = 'Advanced';
+            confidenceLevel = 'Strong';
+        } else {
+            recommendedLevel = 'Expert';
+            confidenceLevel = 'Mastery';
+        }
+        
+        // Adjust based on recent performance trend
+        if (trends.length > 5) {
+            const recentAvg = trends.slice(-5).reduce((sum, t) => sum + t.accuracy, 0) / 5;
+            if (recentAvg > avgAccuracy + 10) {
+                // User is improving rapidly, can handle higher difficulty
+                if (recommendedLevel === 'Beginner') recommendedLevel = 'Intermediate';
+                else if (recommendedLevel === 'Intermediate') recommendedLevel = 'Advanced';
+            }
+        }
+        
+        return {
+            recommendedLevel,
+            confidenceLevel,
+            avgAccuracy
+        };
+    }
+    
+    calculateOptimalCardCount(profile, options) {
+        const baseCount = options.cardCount || 8;
+        const avgAccuracy = this.calculateAverageAccuracy(profile);
+        const sessionCount = profile.preferences?.accuracyTrends?.length || 0;
+        
+        // Adjust based on performance and experience
+        let multiplier = 1;
+        
+        if (avgAccuracy < 60) {
+            multiplier = 0.75; // Fewer cards for struggling students
+        } else if (avgAccuracy > 85) {
+            multiplier = 1.25; // More cards for advanced students
+        }
+        
+        // Adjust based on experience
+        if (sessionCount > 20) {
+            multiplier += 0.25; // More cards for experienced users
+        }
+        
+        return Math.round(baseCount * multiplier);
     }
     
     parseAICardResponse(aiResponse) {
