@@ -1270,7 +1270,7 @@ class FlashCardsApp {
     }
 
     async generateAIHint(question, answer) {
-        console.log('🤖 Generating AI hint for:', question);
+        console.log('🤖 Generating AI hint for:', question, 'Answer:', answer);
         
         try {
             // Show loading state to user
@@ -1282,13 +1282,17 @@ class FlashCardsApp {
             // Hide loading state
             this.hideHintLoadingState();
             
+            console.log('✅ AI hint successful:', hint);
             return hint;
         } catch (error) {
-            console.log('AI hint generation failed, using smart fallback...', error);
+            console.log('❌ AI hint generation failed, using smart fallback...', error);
             
             // Hide loading state and provide fallback
             this.hideHintLoadingState();
-            return this.generateMinimalSmartHint(question, answer);
+            
+            const fallbackHint = this.generateMinimalSmartHint(question, answer);
+            console.log('🧠 Using smart fallback hint:', fallbackHint);
+            return fallbackHint;
         }
     }
     
@@ -1310,30 +1314,27 @@ class FlashCardsApp {
 
 
     async getHuggingFaceHint(question, answer) {
-        // Try multiple AI models for the best educational hints
+        // Try multiple AI models with better prompts
         const models = [
             {
                 name: 'microsoft/DialoGPT-medium',
-                prompt: `You are a helpful tutor. Create a study hint for this flashcard that guides the student to think about the answer without revealing it directly.
+                prompt: `Create a study hint for: "${question}" (Answer: ${answer})
 
-Question: ${question}
-Answer: ${answer}
-
-Create a hint that:
-- Gives clues about the topic or context
-- Helps the student think in the right direction
-- Does NOT reveal the actual answer
-- Is educational and encouraging
+Give a helpful clue about the context or topic without revealing the answer. Be specific to the subject matter.
 
 Hint:`
             },
             {
-                name: 'facebook/blenderbot-400M-distill',
-                prompt: `Create a helpful study hint for this question: "${question}". The answer is "${answer}". Give a clue that helps the student think about it without revealing the answer directly.`
+                name: 'facebook/blenderbot-400M-distill',  
+                prompt: `Help a student with this question: "${question}". The answer is "${answer}". Give them a contextual hint about what to think about, without giving away the answer.`
             },
             {
-                name: 'google/flan-t5-base',
-                prompt: `Question: ${question}\nAnswer: ${answer}\nCreate an educational hint that guides the student to the answer without revealing it:`
+                name: 'huggingface/CodeBERTa-small-v1',
+                prompt: `Educational hint needed for: ${question}\nAnswer: ${answer}\nHint:`
+            },
+            {
+                name: 'distilbert-base-uncased-distilled-squad',
+                prompt: `Question: ${question}\nAnswer: ${answer}\nProvide a study hint:`
             }
         ];
 
@@ -1415,6 +1416,33 @@ Hint:`
         // Reject if hint contains the full answer (unless it's a very short common word)
         if (answerLower.length > 4 && hintLower.includes(answerLower)) {
             return false;
+        }
+        
+        // Reject hints that are completely irrelevant to the question context
+        const contextMismatches = [
+            // Mathematical hints for non-math questions
+            {
+                hint: ['calculation', 'mathematical', 'formula', 'operation', 'step by step', 'work through'],
+                question: ['school', 'number of', 'how many', 'what is', 'name', 'capital', 'country', 'city'],
+                notQuestion: ['calculate', 'solve', 'equation', 'sum', 'multiply', 'divide']
+            },
+            // Statistical hints for factual questions
+            {
+                hint: ['percentage', 'statistical', 'statistics', 'rate', 'proportion'],
+                question: ['school', 'name', 'capital', 'author', 'wrote', 'invented'],
+                notQuestion: ['percent', '%', 'rate of', 'proportion of']
+            }
+        ];
+        
+        for (const mismatch of contextMismatches) {
+            const hasHintPattern = mismatch.hint.some(pattern => hintLower.includes(pattern));
+            const hasQuestionPattern = mismatch.question.some(pattern => questionLower.includes(pattern));
+            const hasNotQuestionPattern = mismatch.notQuestion.some(pattern => questionLower.includes(pattern));
+            
+            if (hasHintPattern && hasQuestionPattern && !hasNotQuestionPattern) {
+                console.log('❌ Rejecting contextually irrelevant hint:', hintText);
+                return false;
+            }
         }
         
         // Reject hints that are too generic or unhelpful
@@ -1500,58 +1528,120 @@ Hint:`
 
     generateMinimalSmartHint(question, answer) {
         const questionLower = question.toLowerCase();
-        const answerWords = answer.split(' ').filter(word => word.length > 2);
+        const answerLower = answer.toLowerCase();
         
-        // Extract meaningful words from question, excluding common words
-        const stopWords = ['what', 'when', 'where', 'which', 'who', 'how', 'why', 'this', 'that', 'they', 'have', 'been', 'will', 'from', 'with', 'much', 'many', 'some', 'more', 'most', 'does', 'would', 'could', 'should', 'about', 'into', 'over', 'under', 'between', 'through'];
+        // Analyze the question for specific contexts and provide targeted hints
         
-        const questionWords = questionLower
-            .split(' ')
-            .filter(word => word.length > 3 && !stopWords.includes(word))
-            .filter(word => /^[a-zA-Z]+$/.test(word)); // Only alphabetic words
-        
-        // Find the most meaningful context words
-        const contextWords = questionWords.slice(0, 3);
-        const context = contextWords.length > 0 ? contextWords.join(', ') : 'this topic';
-        
-        // Different hint strategies based on answer format
-        if (answer.includes('%') || answer.match(/^\d+(\.\d+)?%?$/)) {
-            if (questionLower.includes('school') || questionLower.includes('education')) {
-                return `💡 Think about education statistics. Look for a percentage that represents school enrollment or attendance.`;
+        // Lagos/Nigeria geography contexts
+        if (questionLower.includes('lagos') || (questionLower.includes('nigeria') && !questionLower.includes('percentage'))) {
+            if (questionLower.includes('school') && questionLower.includes('number')) {
+                return `💡 Think about Lagos as a major African city. What would be a reasonable estimate for educational institutions in such a large urban area?`;
             }
-            if (questionLower.includes('rural') || questionLower.includes('urban')) {
-                return `💡 Consider demographic statistics. What percentage represents the data about population distribution?`;
+            if (questionLower.includes('population') || questionLower.includes('people')) {
+                return `💡 Consider Lagos as one of Africa's largest cities. Think about major metropolitan population figures.`;
             }
-            return `💡 Look for a statistical percentage related to ${context}.`;
+            if (questionLower.includes('industry') || questionLower.includes('economy')) {
+                return `💡 Think about what Lagos is known for economically. What major industries drive this West African economic hub?`;
+            }
         }
         
-        if (answer.match(/^\d{4}$/)) {
-            return `💡 Think about a significant year. When did something important happen related to ${context}?`;
+        // Educational/Exam contexts
+        if (questionLower.includes('spag') || questionLower.includes('spelling') || questionLower.includes('grammar')) {
+            if (answer.match(/^\d+$/)) {
+                return `💡 Think about exam marking schemes. SPaG (Spelling, Punctuation and Grammar) has a specific point allocation in assessments.`;
+            }
         }
         
+        if (questionLower.includes('marks') && questionLower.includes('worth')) {
+            if (answer.match(/^\d+$/)) {
+                return `💡 Consider the scoring system. How many points are typically allocated for this component in the assessment?`;
+            }
+        }
+        
+        // GCSE/Educational assessment hints
+        if (questionLower.includes('gcse') || questionLower.includes('exam') || questionLower.includes('assessment')) {
+            if (answer.match(/^\d+$/)) {
+                return `💡 Think about standard exam marking criteria. What's the typical point value for this component?`;
+            }
+        }
+        
+        // Science contexts
+        if (questionLower.includes('element') || questionLower.includes('atomic') || questionLower.includes('periodic')) {
+            const firstLetter = answer.charAt(0).toUpperCase();
+            return `💡 Look at the periodic table. This element's symbol starts with "${firstLetter}".`;
+        }
+        
+        // Historical contexts
+        if (questionLower.includes('when') || questionLower.includes('year') || questionLower.includes('date')) {
+            if (answer.match(/^\d{4}$/)) {
+                const year = parseInt(answer);
+                const century = Math.ceil(year / 100);
+                return `💡 This historical event occurred in the ${century}${this.getOrdinalSuffix(century)} century.`;
+            }
+        }
+        
+        // Geography contexts
+        if (questionLower.includes('capital') || questionLower.includes('country') || questionLower.includes('city')) {
+            const firstLetter = answer.charAt(0).toUpperCase();
+            return `💡 This geographical location starts with "${firstLetter}" and is significant to the region mentioned.`;
+        }
+        
+        // Literature contexts
+        if (questionLower.includes('author') || questionLower.includes('writer') || questionLower.includes('wrote')) {
+            const words = answer.split(' ');
+            if (words.length > 1) {
+                return `💡 This person's name has ${words.length} parts. Think about famous writers in this context.`;
+            }
+        }
+        
+        // Mathematical contexts
+        if (questionLower.includes('calculate') || questionLower.includes('solve') || /[\+\-\*\/\=]/.test(question)) {
+            return `💡 Work through the calculation step by step. What mathematical process applies here?`;
+        }
+        
+        // Percentage/Statistics (only when actually relevant)
+        if (answer.includes('%') && (questionLower.includes('percent') || questionLower.includes('rate') || questionLower.includes('proportion'))) {
+            return `💡 Look for the statistical data mentioned. What percentage is being asked about?`;
+        }
+        
+        // Factual "how many" or "number of" questions
+        if ((questionLower.includes('how many') || questionLower.includes('number of')) && answer.match(/^\d+$/)) {
+            const num = parseInt(answer);
+            if (questionLower.includes('school') || questionLower.includes('university') || questionLower.includes('college')) {
+                if (num > 1000) {
+                    return `💡 Think about the scale of education in a major city or region. The answer is in the thousands.`;
+                } else if (num > 100) {
+                    return `💡 Consider the educational infrastructure. The answer is in the hundreds.`;
+                } else {
+                    return `💡 Think about the number of educational institutions in this context.`;
+                }
+            }
+            if (num > 1000000) {
+                return `💡 This is a very large number - think millions. Consider the scale of what's being asked about.`;
+            } else if (num > 1000) {
+                return `💡 This number is in the thousands. Think about the magnitude of what's being counted.`;
+            }
+        }
+        
+        // Generic but intelligent fallback based on answer structure
         if (answer.match(/^\d+$/)) {
-            return `💡 Look for a specific number. What numerical value is associated with ${context}?`;
+            const num = parseInt(answer);
+            if (num < 10) {
+                return `💡 The answer is a single digit number. Think about the specific value related to what's being asked.`;
+            } else if (num < 100) {
+                return `💡 The answer is a two-digit number. Consider the typical ranges for this type of measurement or value.`;
+            }
         }
         
-        if (answerWords.length === 1) {
+        if (answer.split(' ').length === 1) {
             const firstLetter = answer.charAt(0).toUpperCase();
             const lastLetter = answer.charAt(answer.length - 1).toLowerCase();
-            return `💡 Think about ${context}. The answer is a single word starting with "${firstLetter}" and ending with "${lastLetter}".`;
+            return `💡 The answer is one word starting with "${firstLetter}" and ending with "${lastLetter}".`;
         }
         
-        if (answerWords.length > 1) {
-            const wordCount = answerWords.length;
-            const firstWord = answerWords[0];
-            const hint = firstWord.length > 4 ? firstWord.substring(0, 3) + '...' : firstWord.charAt(0).toUpperCase();
-            return `💡 The answer has ${wordCount} words. The first word starts with "${hint}". Think about ${context}.`;
-        }
-        
-        // Generic but more specific fallback
-        if (contextWords.length > 0) {
-            return `💡 Focus on the key concepts: ${context}. What specific information relates to these topics?`;
-        }
-        
-        return `💡 Think carefully about the question. The answer has ${answer.length} characters and relates to the topic mentioned.`;
+        // Last resort - give structural information
+        const wordCount = answer.split(' ').length;
+        return `💡 The answer has ${wordCount} word${wordCount === 1 ? '' : 's'}. Think about what specifically relates to the question being asked.`;
     }
     
     getWordCategory(word) {
@@ -1676,6 +1766,10 @@ Hint:`
         // Create hint modal
         const modal = document.createElement('div');
         modal.className = 'hint-modal';
+        
+        const aiDisclaimer = hint.source === 'AI-generated hint' ? 
+            `<div class="hint-disclaimer">⚠️ This hint is AI-generated and may not be fully accurate</div>` : '';
+        
         modal.innerHTML = `
             <div class="hint-content">
                 <div class="hint-header">
@@ -1684,6 +1778,7 @@ Hint:`
                 </div>
                 <div class="hint-text">${hint.text}</div>
                 <div class="hint-source">${hint.source}</div>
+                ${aiDisclaimer}
                 <div class="hint-actions">
                     <button class="btn btn-primary" onclick="this.parentElement.parentElement.parentElement.remove()">Got it!</button>
                 </div>

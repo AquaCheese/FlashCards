@@ -3654,6 +3654,18 @@ button:disabled:hover {
     font-style: italic;
 }
 
+.hint-disclaimer {
+    font-size: 0.8rem;
+    color: #8B4513;
+    background: rgba(139, 69, 19, 0.1);
+    padding: 0.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    border-left: 3px solid #D2691E;
+    font-weight: 500;
+}
+
 .hint-actions {
     text-align: center;
 }
