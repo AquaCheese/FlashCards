@@ -464,6 +464,38 @@
                                     <div class="stat-label">Study Streak (days)</div>
                                 </div>
                             </div>
+                            
+                            <div class="stat-card">
+                                <div class="stat-icon">🪙</div>
+                                <div class="stat-content">
+                                    <div class="stat-value" id="total-coins-earned">0</div>
+                                    <div class="stat-label">Total Coins Earned</div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card">
+                                <div class="stat-icon">💡</div>
+                                <div class="stat-content">
+                                    <div class="stat-value" id="hints-used-stat">0</div>
+                                    <div class="stat-label">Hints Used</div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card">
+                                <div class="stat-icon">⏭️</div>
+                                <div class="stat-content">
+                                    <div class="stat-value" id="skips-used-stat">0</div>
+                                    <div class="stat-label">Cards Skipped</div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card">
+                                <div class="stat-icon">💰</div>
+                                <div class="stat-content">
+                                    <div class="stat-value" id="double-coins-used-stat">0</div>
+                                    <div class="stat-label">2x Coins Used</div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Charts Section -->
@@ -502,6 +534,12 @@
                             <div class="chart-container">
                                 <h3>🔥 Study Heatmap</h3>
                                 <div id="heatmap-container"></div>
+                            </div>
+                            
+                            <!-- Power-up Usage Chart -->
+                            <div class="chart-container">
+                                <h3>🚀 Power-up Usage Statistics</h3>
+                                <canvas id="powerup-usage-chart"></canvas>
                             </div>
                         </div>
 

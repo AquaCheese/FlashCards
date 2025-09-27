@@ -296,6 +296,9 @@ class FlashCardsApp {
         this.powerUps = this.loadPowerUps();
         this.initializePowerUpSystem();
         
+        // Power-up usage statistics
+        this.powerUpUsageStats = this.loadPowerUpUsageStats();
+        
         // Chart instances for cleanup
         this.chartInstances = {};
         
@@ -999,8 +1002,55 @@ class FlashCardsApp {
         this.powerUps[type]--;
         this.savePowerUps();
         this.updatePowerUpDisplay();
+        
+        // Track power-up usage for statistics
+        this.trackPowerUpUsage(type);
+        
         console.log(`🚀 Used ${type} power-up`);
         return true;
+    }
+    
+    trackPowerUpUsage(type) {
+        // Initialize power-up usage tracking if not exists
+        if (!this.powerUpUsageStats) {
+            this.powerUpUsageStats = this.loadPowerUpUsageStats();
+        }
+        
+        // Update usage count
+        if (!this.powerUpUsageStats[type]) {
+            this.powerUpUsageStats[type] = 0;
+        }
+        this.powerUpUsageStats[type]++;
+        
+        // Track usage in current session
+        if (this.currentSession) {
+            if (!this.currentSession.powerUpsUsed) {
+                this.currentSession.powerUpsUsed = {};
+            }
+            if (!this.currentSession.powerUpsUsed[type]) {
+                this.currentSession.powerUpsUsed[type] = 0;
+            }
+            this.currentSession.powerUpsUsed[type]++;
+        }
+        
+        // Save to localStorage
+        this.savePowerUpUsageStats();
+        
+        console.log(`📊 Tracked ${type} usage - Total: ${this.powerUpUsageStats[type]}`);
+    }
+    
+    loadPowerUpUsageStats() {
+        const saved = localStorage.getItem('flashcards-powerup-usage');
+        return saved ? JSON.parse(saved) : {
+            hints: 0,
+            skipCards: 0,
+            doubleCoins: 0,
+            streakShields: 0
+        };
+    }
+    
+    savePowerUpUsageStats() {
+        localStorage.setItem('flashcards-powerup-usage', JSON.stringify(this.powerUpUsageStats));
     }
 
     activateDoubleCoins() {
@@ -1892,7 +1942,9 @@ Hint:`
                 generationType: deck.generationType,
                 aiConfidence: deck.confidence,
                 targetWeakness: deck.aiMetadata.targetWeakness
-            } : {})
+            } : {}),
+            // Power-up usage tracking
+            powerUpsUsed: this.currentSession?.powerUpsUsed || {}
         };
         
         sessions.push(session);
@@ -4801,11 +4853,27 @@ Hint:`
         // Calculate study streak
         const studyStreak = this.calculateStudyStreak();
         
+        // Calculate total coins earned from coin history
+        const totalCoinsEarned = this.calculateTotalCoinsEarned();
+        
+        // Get power-up usage stats
+        const powerUpStats = this.powerUpUsageStats || {};
+        
         // Update DOM
-        document.getElementById('overall-accuracy-stat').textContent = `${overallAccuracy}%`;
-        document.getElementById('total-cards-studied').textContent = totalCards.toLocaleString();
-        document.getElementById('avg-response-time-stat').textContent = `${avgResponseTime}s`;
-        document.getElementById('study-streak').textContent = studyStreak;
+        // Update DOM elements safely
+        const updateElement = (id, value) => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = value;
+        };
+        
+        updateElement('overall-accuracy-stat', `${overallAccuracy}%`);
+        updateElement('total-cards-studied', totalCards.toLocaleString());
+        updateElement('avg-response-time-stat', `${avgResponseTime}s`);
+        updateElement('study-streak', studyStreak);
+        updateElement('total-coins-earned', totalCoinsEarned.toLocaleString());
+        updateElement('hints-used-stat', (powerUpStats.hints || 0).toLocaleString());
+        updateElement('skips-used-stat', (powerUpStats.skipCards || 0).toLocaleString());
+        updateElement('double-coins-used-stat', (powerUpStats.doubleCoins || 0).toLocaleString());
     }
 
     calculateStudyStreak() {
@@ -4832,6 +4900,13 @@ Hint:`
         
         return streak;
     }
+    
+    calculateTotalCoinsEarned() {
+        const coinHistory = this.loadCoinHistory();
+        return coinHistory
+            .filter(transaction => transaction.amount > 0)
+            .reduce((total, transaction) => total + transaction.amount, 0);
+    }
 
     renderCharts() {
         // Destroy existing charts to prevent memory leaks
@@ -4848,6 +4923,7 @@ Hint:`
         this.renderResponseTimeChart();
         this.renderDeckPerformanceChart();
         this.renderStudyHeatmap();
+        this.renderPowerUpUsageChart();
     }
 
     renderAccuracyChart() {
@@ -5174,6 +5250,79 @@ Hint:`
         
         container.innerHTML = heatmapHTML.join('');
     }
+    
+    renderPowerUpUsageChart() {
+        const ctx = document.getElementById('powerup-usage-chart');
+        if (!ctx) return;
+        
+        const powerUpStats = this.powerUpUsageStats || {};
+        
+        // Prepare data
+        const data = {
+            labels: ['💡 Hints', '⏭️ Skip Cards', '💰 2x Coins', '🛡️ Streak Shields'],
+            datasets: [{
+                label: 'Times Used',
+                data: [
+                    powerUpStats.hints || 0,
+                    powerUpStats.skipCards || 0,
+                    powerUpStats.doubleCoins || 0,
+                    powerUpStats.streakShields || 0
+                ],
+                backgroundColor: [
+                    'rgba(255, 206, 84, 0.8)',
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(75, 192, 192, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(255, 206, 84, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(75, 192, 192, 1)'
+                ],
+                borderWidth: 2
+            }]
+        };
+        
+        this.chartInstances.powerupUsage = new Chart(ctx, {
+            type: 'doughnut',
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Power-up Usage Distribution',
+                        font: { size: 16, weight: 'bold' }
+                    },
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                return `${label}: ${value} times (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                cutout: '50%',
+                animation: {
+                    animateScale: true,
+                    animateRotate: true
+                }
+            }
+        });
+    }
 
     generateAdvancedInsights() {
         const sessions = this.getFilteredSessions();
@@ -5223,6 +5372,45 @@ Hint:`
                     title: 'Building Good Habits',
                     description: `${studyStreak} days of consistent studying! Try to maintain this streak for optimal learning.`
                 });
+            }
+            
+            // Power-up usage insights
+            const powerUpStats = this.powerUpUsageStats || {};
+            const totalPowerUpsUsed = Object.values(powerUpStats).reduce((sum, count) => sum + count, 0);
+            
+            if (totalPowerUpsUsed > 0) {
+                const mostUsedPowerUp = Object.keys(powerUpStats).reduce((a, b) => 
+                    (powerUpStats[a] || 0) > (powerUpStats[b] || 0) ? a : b
+                );
+                
+                const powerUpNames = {
+                    hints: 'Hints',
+                    skipCards: 'Skip Cards',
+                    doubleCoins: '2x Coins',
+                    streakShields: 'Streak Shields'
+                };
+                
+                const powerUpEmojis = {
+                    hints: '💡',
+                    skipCards: '⏭️', 
+                    doubleCoins: '💰',
+                    streakShields: '🛡️'
+                };
+                
+                insights.push({
+                    icon: '🚀',
+                    title: 'Power-up Activity',
+                    description: `You've used ${totalPowerUpsUsed} power-ups total! Your favorite is ${powerUpEmojis[mostUsedPowerUp]} ${powerUpNames[mostUsedPowerUp]} (${powerUpStats[mostUsedPowerUp]} times).`
+                });
+                
+                // Strategic insight about power-up usage
+                if (powerUpStats.hints > powerUpStats.skipCards * 2) {
+                    insights.push({
+                        icon: '🧠',
+                        title: 'Learning Strategy',
+                        description: 'You prefer hints over skipping cards - great approach! This shows you want to understand rather than avoid difficult content.'
+                    });
+                }
             }
             
             // Time of day analysis
@@ -6395,6 +6583,11 @@ Hint:`
         this.cardCount = 0;
         this.currentTitleCardIndex = 0;
         this.sessionStartTime = Date.now();
+        
+        // Initialize current session for power-up tracking
+        this.currentSession = {
+            powerUpsUsed: {}
+        };
         
         // Reset streak for new study session
         this.resetStreak();
