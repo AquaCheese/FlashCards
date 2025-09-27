@@ -1422,15 +1422,27 @@ Hint:`
         const contextMismatches = [
             // Mathematical hints for non-math questions
             {
-                hint: ['calculation', 'mathematical', 'formula', 'operation', 'step by step', 'work through'],
-                question: ['school', 'number of', 'how many', 'what is', 'name', 'capital', 'country', 'city'],
-                notQuestion: ['calculate', 'solve', 'equation', 'sum', 'multiply', 'divide']
+                hint: ['calculation', 'mathematical', 'formula', 'operation', 'step by step', 'work through', 'mathematical process'],
+                question: ['what is', 'name', 'capital', 'country', 'city', 'equivalent', 'similar', 'like', 'called', 'known as', 'famous for'],
+                notQuestion: ['calculate', 'solve', 'equation', 'sum', 'multiply', 'divide', 'add', 'subtract', 'formula', 'compute']
+            },
+            // Mathematical hints specifically for "What is" questions that aren't math
+            {
+                hint: ['calculation', 'mathematical', 'step by step', 'work through', 'process applies'],
+                question: ['what is lagos', 'what is the', 'what is nigeria', 'equivalent to', 'similar to', 'like hollywood'],
+                notQuestion: ['what is 2+2', 'what is the result', 'what is the sum', 'what is the product']
             },
             // Statistical hints for factual questions
             {
                 hint: ['percentage', 'statistical', 'statistics', 'rate', 'proportion'],
-                question: ['school', 'name', 'capital', 'author', 'wrote', 'invented'],
-                notQuestion: ['percent', '%', 'rate of', 'proportion of']
+                question: ['school', 'name', 'capital', 'author', 'wrote', 'invented', 'equivalent', 'similar', 'called'],
+                notQuestion: ['percent', '%', 'rate of', 'proportion of', 'percentage of']
+            },
+            // Calculation hints for cultural/geographic questions
+            {
+                hint: ['calculation', 'mathematical', 'work through', 'step by step'],
+                question: ['hollywood', 'entertainment', 'district', 'area', 'quarter', 'neighborhood', 'culture', 'film', 'movie'],
+                notQuestion: ['calculate', 'math', 'equation']
             }
         ];
         
@@ -1534,6 +1546,9 @@ Hint:`
         
         // Lagos/Nigeria geography contexts
         if (questionLower.includes('lagos') || (questionLower.includes('nigeria') && !questionLower.includes('percentage'))) {
+            if (questionLower.includes('equivalent') && questionLower.includes('hollywood')) {
+                return `💡 Think about Lagos' entertainment industry. What district or area is known for film production and entertainment, similar to Hollywood's role in America?`;
+            }
             if (questionLower.includes('school') && questionLower.includes('number')) {
                 return `💡 Think about Lagos as a major African city. What would be a reasonable estimate for educational institutions in such a large urban area?`;
             }
@@ -1542,6 +1557,9 @@ Hint:`
             }
             if (questionLower.includes('industry') || questionLower.includes('economy')) {
                 return `💡 Think about what Lagos is known for economically. What major industries drive this West African economic hub?`;
+            }
+            if (questionLower.includes('film') || questionLower.includes('movie') || questionLower.includes('entertainment')) {
+                return `💡 Consider Lagos' role in African entertainment and film industry. What area or district is famous for this?`;
             }
         }
         
@@ -1578,6 +1596,12 @@ Hint:`
                 const century = Math.ceil(year / 100);
                 return `💡 This historical event occurred in the ${century}${this.getOrdinalSuffix(century)} century.`;
             }
+        }
+        
+        // "Equivalent to" or "similar to" questions
+        if (questionLower.includes('equivalent') || questionLower.includes('similar to') || questionLower.includes('like hollywood') || questionLower.includes('known as')) {
+            const firstLetter = answer.charAt(0).toUpperCase();
+            return `💡 Think about what area or district serves a similar function to the comparison being made. The answer starts with "${firstLetter}".`;
         }
         
         // Geography contexts
