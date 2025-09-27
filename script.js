@@ -8345,6 +8345,14 @@ function usernameExists(username) {
 }
 
 // Test function to create a sample user (for debugging)
+// Close account settings modal
+window.closeAccountSettings = function() {
+    const accountSettingsOverlay = document.getElementById('account-settings-overlay');
+    if (accountSettingsOverlay) {
+        accountSettingsOverlay.style.display = 'none';
+    }
+};
+
 window.createTestUser = function() {
     const testUser = {
         username: 'TestUser',
@@ -8770,16 +8778,15 @@ function showAccountSettings() {
     
     console.log('Showing account settings for user:', currentUser);
     
-    // Hide auth section and show account settings
-    const authSection = document.getElementById('auth-section');
+    // Show account settings modal overlay
+    const accountSettingsOverlay = document.getElementById('account-settings-overlay');
     const accountSettings = document.getElementById('account-settings');
     
-    if (authSection) authSection.style.display = 'none';
-    if (accountSettings) {
-        accountSettings.style.display = 'block';
-        console.log('Account settings modal shown');
+    if (accountSettingsOverlay) {
+        accountSettingsOverlay.style.display = 'flex';
+        console.log('Account settings modal overlay shown');
     } else {
-        console.error('Account settings modal not found');
+        console.error('Account settings modal overlay not found');
         return;
     }
     
@@ -8910,9 +8917,9 @@ function handleSignOut() {
         updateAccountButton();
         
         // Hide account settings if open
-        const settingsModal = document.getElementById('account-settings');
-        if (settingsModal) {
-            settingsModal.style.display = 'none';
+        const accountSettingsOverlay = document.getElementById('account-settings-overlay');
+        if (accountSettingsOverlay) {
+            accountSettingsOverlay.style.display = 'none';
         }
         
         const accountSection = document.getElementById('account-section');
