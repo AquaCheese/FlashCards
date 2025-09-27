@@ -8326,9 +8326,29 @@ A: This concept is significant because it helps bridge basic understanding with 
 
 // User session management
 let currentUser = null;
+let userDatabase = {}; // Simple user database
+
+// Load user database from localStorage
+function loadUserDatabase() {
+    const savedDatabase = localStorage.getItem('userDatabase');
+    userDatabase = savedDatabase ? JSON.parse(savedDatabase) : {};
+}
+
+// Save user database to localStorage
+function saveUserDatabase() {
+    localStorage.setItem('userDatabase', JSON.stringify(userDatabase));
+}
+
+// Check if username exists
+function usernameExists(username) {
+    return userDatabase.hasOwnProperty(username.toLowerCase());
+}
 
 // Initialize authentication system
 function initializeAuth() {
+    // Load user database
+    loadUserDatabase();
+    
     // Check for existing session
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
@@ -8432,9 +8452,15 @@ async function handleSignIn(e) {
     e.preventDefault();
     
     const formData = new FormData(e.target);
-    const username = formData.get('username');
+    const username = formData.get('username').trim();
     const password = formData.get('password');
     const rememberMe = formData.get('remember') === 'on';
+    
+    // Validation
+    if (!username || !password) {
+        showNotification('Please enter both username and password', 'error');
+        return;
+    }
     
     // Show loading state
     const submitBtn = e.target.querySelector('.auth-btn');
@@ -8443,22 +8469,35 @@ async function handleSignIn(e) {
     submitBtn.disabled = true;
     
     try {
-        // Simulate API call (replace with actual authentication)
+        // Simulate API call
         await simulateAuthRequest();
         
-        // For demo purposes, accept any credentials
+        // Check if user exists and password matches
+        const userKey = username.toLowerCase();
+        if (!userDatabase[userKey]) {
+            throw new Error('Username not found. Please register first.');
+        }
+        
+        if (userDatabase[userKey].password !== password) {
+            throw new Error('Incorrect password. Please try again.');
+        }
+        
+        // Get user data
+        const userData = userDatabase[userKey];
         const user = {
-            username: username,
-            email: `${username}@example.com`,
-            joinDate: new Date().toISOString(),
+            username: userData.username,
+            displayName: userData.displayName || userData.username,
+            email: userData.email,
+            joinDate: userData.joinDate,
             totalDecks: app ? app.decks.length : 0,
-            studySessions: 0,
-            preferences: {
+            studySessions: userData.studySessions || 0,
+            preferences: userData.preferences || {
                 theme: localStorage.getItem('theme') || 'light',
                 autoPlay: false,
                 studyMode: 'cards',
                 notifications: true
-            }
+            },
+            profileData: userData.profileData || {}
         };
         
         currentUser = user;
@@ -8466,6 +8505,22 @@ async function handleSignIn(e) {
         
         if (rememberMe) {
             localStorage.setItem('rememberUser', 'true');
+        }
+        
+        // Special handling for developer account
+        if (username.toLowerCase() === 'aquacheese') {
+            // Enable developer title
+            const devOption = document.getElementById('dev-title-option');
+            if (devOption) {
+                devOption.style.display = 'block';
+            }
+            
+            // Auto-set developer title if not already set
+            if (!user.profileData.title) {
+                user.profileData.title = '👑 Developer';
+                userDatabase[userKey].profileData = user.profileData;
+                saveUserDatabase();
+            }
         }
         
         updateAccountButton();
@@ -8481,11 +8536,11 @@ async function handleSignIn(e) {
             updateProfileDisplay();
         }
         
-        showNotification('Successfully signed in!', 'success');
+        showNotification(`Welcome back, ${user.displayName || user.username}!`, 'success');
         
     } catch (error) {
         console.error('Sign in error:', error);
-        showNotification('Sign in failed. Please try again.', 'error');
+        showNotification(error.message || 'Sign in failed. Please try again.', 'error');
     } finally {
         // Reset button
         submitBtn.innerHTML = originalText;
@@ -8498,13 +8553,28 @@ async function handleRegister(e) {
     e.preventDefault();
     
     const formData = new FormData(e.target);
-    const username = formData.get('username');
-    const email = formData.get('email');
+    const username = formData.get('username').trim();
+    const email = formData.get('email').trim();
     const password = formData.get('password');
     const confirmPassword = formData.get('confirmPassword');
     const agreeTerms = formData.get('terms') === 'on';
     
     // Validation
+    if (!username || !email || !password || !confirmPassword) {
+        showNotification('Please fill in all fields', 'error');
+        return;
+    }
+    
+    if (username.length < 3) {
+        showNotification('Username must be at least 3 characters long', 'error');
+        return;
+    }
+    
+    if (password.length < 6) {
+        showNotification('Password must be at least 6 characters long', 'error');
+        return;
+    }
+    
     if (password !== confirmPassword) {
         showNotification('Passwords do not match!', 'error');
         return;
@@ -8512,6 +8582,12 @@ async function handleRegister(e) {
     
     if (!agreeTerms) {
         showNotification('Please agree to the terms and conditions.', 'error');
+        return;
+    }
+    
+    // Check if username already exists
+    if (usernameExists(username)) {
+        showNotification('Username already taken. Please choose a different one.', 'error');
         return;
     }
     
@@ -8526,18 +8602,43 @@ async function handleRegister(e) {
         await simulateAuthRequest();
         
         // Create user account
-        const user = {
+        const joinDate = new Date().toISOString();
+        const userData = {
             username: username,
+            displayName: username, // Default display name to username
             email: email,
-            joinDate: new Date().toISOString(),
-            totalDecks: app ? app.decks.length : 0,
+            password: password, // In real app, this would be hashed
+            joinDate: joinDate,
             studySessions: 0,
             preferences: {
                 theme: localStorage.getItem('theme') || 'light',
                 autoPlay: false,
                 studyMode: 'cards',
                 notifications: true
+            },
+            profileData: {
+                displayName: username,
+                title: '',
+                bio: '',
+                profileColor: 'blue',
+                profilePicture: null
             }
+        };
+        
+        // Save to database
+        userDatabase[username.toLowerCase()] = userData;
+        saveUserDatabase();
+        
+        // Create current user session
+        const user = {
+            username: username,
+            displayName: username,
+            email: email,
+            joinDate: joinDate,
+            totalDecks: app ? app.decks.length : 0,
+            studySessions: 0,
+            preferences: userData.preferences,
+            profileData: userData.profileData
         };
         
         currentUser = user;
@@ -8545,7 +8646,18 @@ async function handleRegister(e) {
         
         updateAccountButton();
         showAccountSettings();
-        showNotification('Account created successfully!', 'success');
+        
+        // Load profile settings into form
+        if (typeof loadProfileSettingsIntoForm === 'function') {
+            loadProfileSettingsIntoForm();
+        }
+        
+        // Update profile display
+        if (typeof updateProfileDisplay === 'function') {
+            updateProfileDisplay();
+        }
+        
+        showNotification(`Welcome to FlashCards, ${username}!`, 'success');
         
     } catch (error) {
         console.error('Registration error:', error);
@@ -8563,11 +8675,12 @@ function updateAccountButton() {
     if (!accountBtn) return;
     
     if (currentUser) {
+        const displayName = currentUser.displayName || currentUser.username || 'User';
         accountBtn.innerHTML = `
             <span class="account-icon">👤</span>
-            <span class="account-text">${currentUser.username}</span>
+            <span class="account-text">${displayName}</span>
         `;
-        accountBtn.title = `Signed in as ${currentUser.username}`;
+        accountBtn.title = `Signed in as ${displayName}`;
     } else {
         accountBtn.innerHTML = `
             <span class="account-icon">👤</span>
@@ -8688,13 +8801,57 @@ function setupSettingsHandlers() {
 
 // Handle sign out
 function handleSignOut() {
+    if (!currentUser) {
+        return;
+    }
+    
     if (confirm('Are you sure you want to sign out?')) {
+        // Clear current user data
         currentUser = null;
         localStorage.removeItem('currentUser');
         localStorage.removeItem('rememberUser');
         
+        // Update UI to show signed out state
         updateAccountButton();
-        document.getElementById('account-section').style.display = 'none';
+        
+        // Hide account settings if open
+        const settingsModal = document.getElementById('account-settings');
+        if (settingsModal) {
+            settingsModal.style.display = 'none';
+        }
+        
+        const accountSection = document.getElementById('account-section');
+        if (accountSection) {
+            accountSection.style.display = 'none';
+        }
+        
+        // Reset profile display elements
+        const profileAvatar = document.querySelector('.profile-avatar');
+        if (profileAvatar) {
+            profileAvatar.textContent = '👤';
+            profileAvatar.style.backgroundImage = '';
+        }
+        
+        // Clear any profile form data
+        const displayNameInput = document.getElementById('displayName');
+        const bioInput = document.getElementById('bio');
+        const profileColorSelect = document.getElementById('profileColor');
+        
+        if (displayNameInput) displayNameInput.value = '';
+        if (bioInput) bioInput.value = '';
+        if (profileColorSelect) profileColorSelect.value = 'blue';
+        
+        // Reset title display
+        const titleSelect = document.getElementById('titleSelect');
+        if (titleSelect) {
+            titleSelect.value = '';
+            // Remove developer option if it exists
+            const developerOption = titleSelect.querySelector('option[value="Developer"]');
+            if (developerOption) {
+                developerOption.remove();
+            }
+        }
+        
         showNotification('Successfully signed out!', 'success');
     }
 }
@@ -9146,11 +9303,28 @@ function loadProfileSettingsIntoForm() {
     const bioTextarea = document.getElementById('profile-bio');
     const bioCount = document.getElementById('bio-count');
     
-    if (displayNameInput) displayNameInput.value = userProfile.displayName || '';
-    if (titleSelect) titleSelect.value = userProfile.title || '';
-    if (bioTextarea) {
-        bioTextarea.value = userProfile.bio || '';
-        if (bioCount) bioCount.textContent = userProfile.bio?.length || 0;
+    if (displayNameInput && currentUser) {
+        displayNameInput.value = (currentUser.profileData && currentUser.profileData.displayName) || currentUser.displayName || currentUser.username || '';
+    }
+    
+    // Add developer option if user is AquaCheese
+    if (titleSelect && currentUser && currentUser.username === 'AquaCheese') {
+        const developerOption = titleSelect.querySelector('option[value="Developer"]');
+        if (!developerOption) {
+            const option = document.createElement('option');
+            option.value = 'Developer';
+            option.textContent = 'Developer';
+            titleSelect.appendChild(option);
+        }
+    }
+    
+    if (titleSelect && currentUser && currentUser.profileData) {
+        titleSelect.value = currentUser.profileData.title || '';
+    }
+    
+    if (bioTextarea && currentUser && currentUser.profileData) {
+        bioTextarea.value = currentUser.profileData.bio || '';
+        if (bioCount) bioCount.textContent = (currentUser.profileData.bio || '').length;
     }
     
     // Set color selection

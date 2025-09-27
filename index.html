@@ -909,19 +909,20 @@
                         <div class="account-settings" id="account-settings" style="display: none;">
                             <div class="settings-header">
                                 <div class="user-info">
-                                    <div class="user-avatar">
-                                        <span class="avatar-icon" id="user-avatar">👤</span>
+                                    <div class="user-avatar" id="settings-user-avatar">
+                                        <img id="settings-profile-pic" src="" alt="Profile Picture" style="display: none;">
+                                        <span class="avatar-icon" id="settings-avatar-initial">👤</span>
                                     </div>
                                     <div class="user-details">
                                         <h2 id="user-display-name">Username</h2>
                                         <p class="user-stats">
                                             <span id="user-join-date">Joined Today</span> • 
-                                            <span id="user-level">Level 1</span> • 
+                                            <span id="user-level-display">Level 1</span> • 
                                             <span id="user-total-coins">100 coins</span>
                                         </p>
                                     </div>
                                 </div>
-                                <button class="btn btn-secondary" onclick="app.signOut()">Sign Out</button>
+                                <button class="btn btn-secondary" onclick="handleSignOut()">Sign Out</button>
                             </div>
                             
                             <div class="settings-content">
@@ -1014,6 +1015,7 @@
                                                 <option value="🔥 Streak Legend">🔥 Streak Legend</option>
                                                 <option value="💎 Flashcard Pro">💎 Flashcard Pro</option>
                                                 <option value="🌟 Rising Star">🌟 Rising Star</option>
+                                                <option value="👑 Developer" id="dev-title-option" style="display: none;">👑 Developer</option>
                                             </select>
                                             <small class="form-help">Unlock more titles by reaching higher levels!</small>
                                         </div>
