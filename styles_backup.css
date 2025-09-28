@@ -4297,7 +4297,27 @@ button:disabled:hover {
 
 /* Authentication and Leaderboard sections removed */
 
+.auth-tab {
+    background: none;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+}
 
+.auth-tab.active {
+    color: #667eea;
+    border-bottom-color: #667eea;
+}
+
+.auth-tab:hover {
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.05);
+}
 
 /* Auth Forms */
 .auth-form {

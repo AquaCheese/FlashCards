@@ -884,10 +884,7 @@ class FlashCardsApp {
             setTimeout(() => {
                 this.initializeStatsPage();
             }, 100);
-        } else if (viewName === 'leaderboard') {
-            // Refresh leaderboard data when view is shown
-            updateUserStats();
-            switchLeaderboard(currentLeaderboard);
+
         }
     }
 
@@ -1136,10 +1133,7 @@ class FlashCardsApp {
         // Check for coin milestones
         this.checkCoinMilestones(previousCoins, this.coins);
         
-        // Update leaderboard stats if coins changed significantly
-        if (finalAmount >= 10 && typeof updateUserStats === 'function') {
-            updateUserStats();
-        }
+
         
         // Check coin achievements
         if (typeof checkAchievements === 'function') {
@@ -1992,10 +1986,7 @@ Hint:`
         // Update AI learning patterns
         this.updateAILearningPatterns(session);
         
-        // Update leaderboard stats if logged in
-        if (typeof updateUserStats === 'function') {
-            updateUserStats();
-        }
+
     }
 
     updateAILearningPatterns(session) {
@@ -8353,6 +8344,123 @@ window.closeAccountSettings = function() {
     }
 };
 
+// Global functions for profile management
+window.saveProfile = function() {
+    if (!currentUser) {
+        showNotification('Please sign in first', 'error');
+        return;
+    }
+    
+    const displayName = document.getElementById('display-name').value.trim();
+    const title = document.getElementById('profile-title').value;
+    const bio = document.getElementById('profile-bio').value.trim();
+    const selectedColor = document.querySelector('.color-option.selected')?.dataset.color || 'blue';
+    
+    // Update current user data
+    currentUser.displayName = displayName || currentUser.username;
+    currentUser.profileData = {
+        displayName: displayName || currentUser.username,
+        title: title,
+        bio: bio,
+        profileColor: selectedColor,
+        profilePicture: currentUser.profileData?.profilePicture || null
+    };
+    
+    // Update database
+    const userKey = currentUser.username.toLowerCase();
+    if (userDatabase[userKey]) {
+        userDatabase[userKey].displayName = currentUser.displayName;
+        userDatabase[userKey].profileData = currentUser.profileData;
+        saveUserDatabase();
+    }
+    
+    // Update localStorage
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    
+    // Update UI
+    updateAccountButton();
+    showNotification('Profile updated successfully!', 'success');
+};
+
+window.removeProfilePicture = function() {
+    if (!currentUser) return;
+    
+    const preview = document.getElementById('profile-pic-preview');
+    const initial = document.getElementById('profile-initial-large');
+    
+    if (preview && initial) {
+        preview.style.display = 'none';
+        initial.style.display = 'flex';
+    }
+    
+    // Update user data
+    if (currentUser.profileData) {
+        currentUser.profileData.profilePicture = null;
+    }
+    
+    showNotification('Profile picture removed', 'success');
+};
+
+window.changePassword = function() {
+    showNotification('Password change functionality coming soon!', 'info');
+};
+
+window.deleteAccount = function() {
+    if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+        if (currentUser) {
+            const userKey = currentUser.username.toLowerCase();
+            delete userDatabase[userKey];
+            saveUserDatabase();
+            
+            // Sign out
+            handleSignOut();
+            showNotification('Account deleted successfully', 'success');
+        }
+    }
+};
+
+window.exportData = function() {
+    showNotification('Data export functionality coming soon!', 'info');
+};
+
+window.importData = function() {
+    showNotification('Data import functionality coming soon!', 'info');
+};
+
+window.syncData = function() {
+    showNotification('Data sync functionality coming soon!', 'info');
+};
+
+
+
+// Test function to test registration (for debugging)
+window.testRegistration = function() {
+    console.log('Testing registration form...');
+    
+    // Switch to register tab and show account view
+    showView('account');
+    setTimeout(() => {
+        switchAuthTab('register');
+        
+        // Fill out the registration form programmatically
+        const usernameInput = document.getElementById('register-username');
+        const emailInput = document.getElementById('register-email');
+        const passwordInput = document.getElementById('register-password');
+        const confirmPasswordInput = document.getElementById('register-password-confirm');
+        const termsCheckbox = document.getElementById('agree-terms');
+        
+        if (usernameInput) usernameInput.value = 'TestUser' + Math.floor(Math.random() * 1000);
+        if (emailInput) emailInput.value = 'test@example.com';
+        if (passwordInput) passwordInput.value = 'password123';
+        if (confirmPasswordInput) confirmPasswordInput.value = 'password123';
+        if (termsCheckbox) termsCheckbox.checked = true;
+        
+        console.log('Form filled with test data - ready to click Create Account');
+    }, 100);
+    
+    return 'Registration form ready for testing';
+};
+
 window.createTestUser = function() {
     const testUser = {
         username: 'TestUser',
@@ -8399,39 +8507,7 @@ window.createTestUser = function() {
     return currentUser;
 };
 
-// Initialize authentication system
-function initializeAuth() {
-    // Load user database
-    loadUserDatabase();
-    
-    // Check for existing session
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-        try {
-            currentUser = JSON.parse(savedUser);
-            console.log('Loaded current user:', currentUser);
-            updateAccountButton();
-            
-            // Load profile settings if available
-            if (typeof loadProfileSettingsIntoForm === 'function') {
-                loadProfileSettingsIntoForm();
-            }
-            
-            // Update profile display
-            if (typeof updateProfileDisplay === 'function') {
-                updateProfileDisplay();
-            }
-        } catch (error) {
-            console.error('Error loading saved user:', error);
-            localStorage.removeItem('currentUser');
-        }
-    } else {
-        console.log('No saved user session found');
-    }
-    
-    // Set up event listeners
-    setupAuthEventListeners();
-}
+
 
 function setupAuthEventListeners() {
     // Account button click
@@ -8457,18 +8533,22 @@ function setupAuthEventListeners() {
     });
     
     // Form submissions
-    const signInForm = document.getElementById('signin-form');
-    const registerForm = document.getElementById('register-form');
+    const signInForm = document.getElementById('signin-form-element');
+    const registerForm = document.getElementById('register-form-element');
     
     if (signInForm) {
         signInForm.addEventListener('submit', handleSignIn);
+    } else {
+        console.error('Sign in form not found');
     }
     
     if (registerForm) {
         registerForm.addEventListener('submit', handleRegister);
+    } else {
+        console.error('Register form not found');
     }
     
-    // Account settings forms (we'll add these handlers later)
+    // Account settings forms
     setupSettingsHandlers();
 }
 
@@ -8510,7 +8590,7 @@ function switchSettingsTab(tabName) {
     document.querySelectorAll('.settings-tab-content').forEach(content => {
         content.classList.remove('active');
     });
-    document.getElementById(`${tabName}-settings`).classList.add('active');
+    document.getElementById(`${tabName}-tab`).classList.add('active');
 }
 
 // Handle sign in
@@ -8882,6 +8962,51 @@ function setupSettingsHandlers() {
         });
     }
     
+    // Profile color selection
+    const colorOptions = document.querySelectorAll('.color-option');
+    colorOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            colorOptions.forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+        });
+    });
+    
+    // Bio character count
+    const bioTextarea = document.getElementById('profile-bio');
+    const bioCount = document.getElementById('bio-count');
+    if (bioTextarea && bioCount) {
+        bioTextarea.addEventListener('input', () => {
+            bioCount.textContent = bioTextarea.value.length;
+        });
+    }
+    
+    // Profile picture upload
+    const profilePicUpload = document.getElementById('profile-pic-upload');
+    if (profilePicUpload) {
+        profilePicUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const preview = document.getElementById('profile-pic-preview');
+                    const initial = document.getElementById('profile-initial-large');
+                    
+                    if (preview && initial) {
+                        preview.src = e.target.result;
+                        preview.style.display = 'block';
+                        initial.style.display = 'none';
+                    }
+                    
+                    // Update user data
+                    if (currentUser && currentUser.profileData) {
+                        currentUser.profileData.profilePicture = e.target.result;
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    
     // Sign out button
     const signOutBtn = document.getElementById('sign-out-btn');
     if (signOutBtn) {
@@ -9165,10 +9290,7 @@ function awardXP(amount, reason = 'Great job!') {
     updateLevelDisplay();
     updateAchievements();
     
-    // Update leaderboard stats
-    if (typeof updateUserStats === 'function') {
-        updateUserStats();
-    }
+
     
     console.log(`🌟 Gained ${amount} XP! Total: ${userXP} (Level ${userLevel}) - ${reason}`);
 }
@@ -9635,7 +9757,7 @@ let userStats = null;
 // Initialize leaderboard system
 function initializeLeaderboard() {
     setupLeaderboardEventListeners();
-    generateSampleLeaderboardData();
+    generateRealLeaderboardData();
     updateUserStats();
     switchLeaderboard('coins');
 }
@@ -9675,26 +9797,43 @@ function switchLeaderboard(boardType) {
 }
 
 // Generate sample leaderboard data (replace with actual API calls)
-function generateSampleLeaderboardData() {
-    const sampleUsers = [
-        { username: 'StudyMaster2025', coins: 15420, accuracy: 94.2, studyTime: 145.5, streak: 89, decks: 23, cards: 456 },
-        { username: 'FlashCardPro', coins: 12890, accuracy: 96.8, studyTime: 132.3, streak: 127, decks: 18, cards: 389 },
-        { username: 'BrainBooster', coins: 11750, accuracy: 91.5, studyTime: 168.2, streak: 73, decks: 31, cards: 523 },
-        { username: 'QuizWiz2024', coins: 10340, accuracy: 93.7, studyTime: 98.7, streak: 156, decks: 15, cards: 298 },
-        { username: 'MemoryMaster', coins: 9820, accuracy: 89.3, studyTime: 201.4, streak: 62, decks: 42, cards: 687 },
-        { username: 'StudySensei', coins: 8650, accuracy: 97.1, studyTime: 89.6, streak: 203, decks: 12, cards: 234 },
-        { username: 'CardCrusher', coins: 7890, accuracy: 86.2, studyTime: 156.8, streak: 45, decks: 28, cards: 412 },
-        { username: 'LearnLegend', coins: 6420, accuracy: 92.6, studyTime: 234.5, streak: 91, decks: 35, cards: 578 },
-        { username: 'FlashGenius', coins: 5340, accuracy: 88.9, studyTime: 67.3, streak: 134, decks: 9, cards: 167 },
-        { username: 'StudyStorm', coins: 4230, accuracy: 95.4, studyTime: 123.7, streak: 78, decks: 21, cards: 345 }
-    ];
+function generateRealLeaderboardData() {
+    const realUsers = [];
     
-    // Add current user if logged in
-    if (currentUser) {
-        const userPosition = Math.floor(Math.random() * 8) + 3; // Random position between 3-10
+    // Get all registered users from the database
+    Object.keys(userDatabase).forEach(username => {
+        const user = userDatabase[username];
+        const userData = {
+            username: user.displayName || user.username,
+            coins: 100, // Default starting coins
+            accuracy: 85.0, // Default accuracy
+            studyTime: 0,
+            streak: 0,
+            decks: 0,
+            cards: 0,
+            isCurrentUser: false
+        };
+        
+        // If this is the current user, get their actual stats
+        if (currentUser && user.username === currentUser.username) {
+            userData.coins = app ? app.coins : 100;
+            userData.accuracy = calculateUserAccuracy();
+            userData.studyTime = calculateUserStudyTime();
+            userData.streak = calculateUserStreak();
+            userData.decks = app ? app.decks.length : 0;
+            userData.cards = calculateMasteredCards();
+            userData.isCurrentUser = true;
+            userStats = userData;
+        }
+        
+        realUsers.push(userData);
+    });
+    
+    // If no users are registered yet, just show current user if logged in
+    if (realUsers.length === 0 && currentUser) {
         userStats = {
-            username: currentUser.username,
-            coins: app ? (JSON.parse(localStorage.getItem('coins')) || 100) : 100,
+            username: currentUser.displayName || currentUser.username,
+            coins: app ? app.coins : 100,
             accuracy: calculateUserAccuracy(),
             studyTime: calculateUserStudyTime(),
             streak: calculateUserStreak(),
@@ -9702,18 +9841,17 @@ function generateSampleLeaderboardData() {
             cards: calculateMasteredCards(),
             isCurrentUser: true
         };
-        
-        sampleUsers.splice(userPosition, 0, userStats);
+        realUsers.push(userStats);
     }
     
     // Sort and organize data by different criteria
     leaderboardData = {
-        coins: [...sampleUsers].sort((a, b) => b.coins - a.coins),
-        accuracy: [...sampleUsers].sort((a, b) => b.accuracy - a.accuracy),
-        studytime: [...sampleUsers].sort((a, b) => b.studyTime - a.studyTime),
-        streak: [...sampleUsers].sort((a, b) => b.streak - a.streak),
-        decks: [...sampleUsers].sort((a, b) => b.decks - a.decks),
-        cards: [...sampleUsers].sort((a, b) => b.cards - a.cards)
+        coins: [...realUsers].sort((a, b) => b.coins - a.coins),
+        accuracy: [...realUsers].sort((a, b) => b.accuracy - a.accuracy),
+        studytime: [...realUsers].sort((a, b) => b.studyTime - a.studyTime),
+        streak: [...realUsers].sort((a, b) => b.streak - a.streak),
+        decks: [...realUsers].sort((a, b) => b.decks - a.decks),
+        cards: [...realUsers].sort((a, b) => b.cards - a.cards)
     };
 }
 
@@ -9956,7 +10094,7 @@ function refreshLeaderboard() {
     
     // Simulate API refresh
     setTimeout(() => {
-        generateSampleLeaderboardData();
+        generateRealLeaderboardData();
         updateUserStats();
         switchLeaderboard(currentLeaderboard);
         showNotification('Leaderboard updated!', 'success');
@@ -10069,17 +10207,9 @@ document.addEventListener('DOMContentLoaded', () => {
         app = new FlashCardsApp();
         console.log('FlashCards app initialized successfully!');
         
-        // Initialize authentication system
-        initializeAuth();
-        console.log('Authentication system initialized');
-        
         // Initialize XP and profile system
         initializeXPSystem();
         console.log('XP and profile system initialized');
-        
-        // Initialize leaderboard system
-        initializeLeaderboard();
-        console.log('Leaderboard system initialized');
         
         // Make app globally available for debugging
         window.flashCardsApp = app;
