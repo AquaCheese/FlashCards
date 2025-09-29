@@ -138,6 +138,30 @@ window.exitStudy = function() {
     }
 };
 
+window.endSession = function() {
+    console.log('endSession called, app:', !!app);
+    if (app && app.endSession) {
+        app.endSession();
+    } else {
+        console.log('App not ready or endSession method missing');
+    }
+};
+
+// Debug functions for statistics verification
+window.validateStats = function(deckId) {
+    if (app && app.validateStatisticsAccuracy) {
+        return app.validateStatisticsAccuracy(deckId || (app.currentDeck ? app.currentDeck.id : null));
+    }
+    console.log('App not ready or method missing');
+};
+
+window.showWeights = function(deckId) {
+    if (app && app.showLearningWeights) {
+        return app.showLearningWeights(deckId || (app.currentDeck ? app.currentDeck.id : null));
+    }
+    console.log('App not ready or method missing');
+};
+
 window.importDeck = function() {
     console.log('importDeck called, app:', !!app);
     if (app && app.importDeck) {
@@ -599,33 +623,129 @@ class FlashCardsApp {
         if (originalSubject.toLowerCase().includes('math')) {
             if (specificTopic === 'algebra') {
                 templates.push(
-                    { question: 'Solve for x: 3x + 7 = 25', answer: 'x = 6' },
-                    { question: 'Expand: 3(x + 4)', answer: '3x + 12' },
-                    { question: 'Factorise: x² + 5x + 6', answer: '(x + 2)(x + 3)' },
-                    { question: 'If y = 2x + 1, find y when x = 4', answer: 'y = 9' }
+                    { 
+                        question: 'Solve for x: 3x + 7 = 25', 
+                        answer: 'x = 6',
+                        alternativeAnswers: ['6', 'x = 6.0', 'x equals 6'],
+                        explanation: 'To solve: 3x + 7 = 25<br>Subtract 7 from both sides: 3x = 18<br>Divide both sides by 3: x = 6',
+                        customHint: 'First subtract 7 from both sides, then divide by the coefficient of x'
+                    },
+                    { 
+                        question: 'Expand: 3(x + 4)', 
+                        answer: '3x + 12',
+                        alternativeAnswers: ['3x+12', '12 + 3x', '12+3x'],
+                        explanation: 'Use the distributive property: multiply 3 by each term inside the brackets<br>3 × x = 3x<br>3 × 4 = 12<br>Result: 3x + 12',
+                        customHint: 'Multiply the number outside the brackets by each term inside the brackets'
+                    },
+                    { 
+                        question: 'Factorise: x² + 5x + 6', 
+                        answer: '(x + 2)(x + 3)',
+                        alternativeAnswers: ['(x+2)(x+3)', '(x + 3)(x + 2)', '(x+3)(x+2)'],
+                        explanation: 'Find two numbers that multiply to 6 and add to 5<br>2 × 3 = 6 and 2 + 3 = 5<br>So the factors are (x + 2) and (x + 3)',
+                        customHint: 'Look for two numbers that multiply to give the constant term (6) and add to give the coefficient of x (5)'
+                    },
+                    { 
+                        question: 'If y = 2x + 1, find y when x = 4', 
+                        answer: 'y = 9',
+                        alternativeAnswers: ['9', 'y equals 9', 'y=9'],
+                        explanation: 'Substitute x = 4 into the equation y = 2x + 1<br>y = 2(4) + 1<br>y = 8 + 1<br>y = 9',
+                        customHint: 'Replace x with 4 in the equation and calculate step by step'
+                    }
                 );
             } else if (specificTopic === 'geometry') {
                 templates.push(
-                    { question: 'What is the area of a rectangle 8cm × 5cm?', answer: '40 cm²' },
-                    { question: 'What is the circumference of a circle with radius 3cm? (use π = 3.14)', answer: '18.84 cm' },
-                    { question: 'Sum of interior angles in a pentagon?', answer: '540°' },
-                    { question: 'What type of triangle has all sides equal?', answer: 'Equilateral triangle' }
+                    { 
+                        question: 'What is the area of a rectangle 8cm × 5cm?', 
+                        answer: '40 cm²',
+                        alternativeAnswers: ['40 cm2', '40 square cm', '40cm²', '40 square centimeters'],
+                        explanation: 'Area of rectangle = length × width<br>Area = 8cm × 5cm = 40cm²',
+                        customHint: 'Use the formula: Area = length × width'
+                    },
+                    { 
+                        question: 'What is the circumference of a circle with radius 3cm? (use π = 3.14)', 
+                        answer: '18.84 cm',
+                        alternativeAnswers: ['18.84cm', '18.84 centimetres', '18.84 centimeters'],
+                        explanation: 'Circumference = 2πr<br>C = 2 × 3.14 × 3<br>C = 18.84 cm',
+                        customHint: 'Use the formula C = 2πr, where r is the radius'
+                    },
+                    { 
+                        question: 'Sum of interior angles in a pentagon?', 
+                        answer: '540°',
+                        alternativeAnswers: ['540 degrees', '540°', '540 deg'],
+                        explanation: 'Formula for sum of interior angles: (n-2) × 180°<br>For pentagon: n = 5<br>(5-2) × 180° = 3 × 180° = 540°',
+                        customHint: 'Use the formula (n-2) × 180°, where n is the number of sides'
+                    },
+                    { 
+                        question: 'What type of triangle has all sides equal?', 
+                        answer: 'Equilateral triangle',
+                        alternativeAnswers: ['Equilateral', 'equilateral triangle', 'Equal-sided triangle'],
+                        explanation: 'An equilateral triangle has all three sides of equal length and all three angles of 60°',
+                        customHint: 'Think about the prefix "equi-" which means equal'
+                    }
                 );
             } else {
                 templates.push(
-                    { question: 'Calculate 25% of £80', answer: '£20' },
-                    { question: 'What is 2³?', answer: '8' },
-                    { question: 'Convert 0.75 to a fraction', answer: '3/4' },
-                    { question: 'Round 15.678 to 2 decimal places', answer: '15.68' }
+                    { 
+                        question: 'Calculate 25% of £80', 
+                        answer: '£20',
+                        alternativeAnswers: ['20 pounds', '£20.00', '20', 'Twenty pounds'],
+                        explanation: '25% = 25/100 = 0.25<br>25% of £80 = 0.25 × £80 = £20',
+                        customHint: 'Convert the percentage to a decimal and multiply'
+                    },
+                    { 
+                        question: 'What is 2³?', 
+                        answer: '8',
+                        alternativeAnswers: ['eight', '2×2×2'],
+                        explanation: '2³ means 2 × 2 × 2 = 8<br>This is "2 to the power of 3" or "2 cubed"',
+                        customHint: 'Multiply 2 by itself 3 times'
+                    },
+                    { 
+                        question: 'Convert 0.75 to a fraction', 
+                        answer: '3/4',
+                        alternativeAnswers: ['3/4', 'three quarters', '3 over 4', '3÷4'],
+                        explanation: '0.75 = 75/100<br>Simplify by dividing both by 25: 75÷25 = 3, 100÷25 = 4<br>Therefore 0.75 = 3/4',
+                        customHint: 'Think of it as 75 hundredths, then simplify the fraction'
+                    },
+                    { 
+                        question: 'Round 15.678 to 2 decimal places', 
+                        answer: '15.68',
+                        alternativeAnswers: ['15.68'],
+                        explanation: 'Look at the third decimal place (8)<br>Since 8 ≥ 5, round up the second decimal place<br>15.678 → 15.68',
+                        customHint: 'Look at the digit in the third decimal place to decide whether to round up or down'
+                    }
                 );
             }
         } else if (originalSubject.toLowerCase().includes('biology')) {
             if (specificTopic === 'cell_biology') {
                 templates.push(
-                    { question: 'What controls what enters and leaves a cell?', answer: 'Cell membrane' },
-                    { question: 'Where is DNA found in a cell?', answer: 'Nucleus' },
-                    { question: 'What do mitochondria do?', answer: 'Release energy for the cell' },
-                    { question: 'What do ribosomes make?', answer: 'Proteins' }
+                    { 
+                        question: 'What controls what enters and leaves a cell?', 
+                        answer: 'Cell membrane',
+                        alternativeAnswers: ['plasma membrane', 'cell surface membrane', 'membrane'],
+                        explanation: 'The cell membrane is a selectively permeable barrier that controls what substances can enter and leave the cell',
+                        customHint: 'Think about the outer boundary of a cell'
+                    },
+                    { 
+                        question: 'Where is DNA found in a cell?', 
+                        answer: 'Nucleus',
+                        alternativeAnswers: ['the nucleus', 'cell nucleus'],
+                        explanation: 'DNA (genetic material) is stored in the nucleus, which is the control center of the cell',
+                        customHint: 'It\'s in the control center of the cell'
+                    },
+                    { 
+                        question: 'What do mitochondria do?', 
+                        answer: 'Release energy for the cell',
+                        alternativeAnswers: ['produce energy', 'make ATP', 'cellular respiration', 'release energy'],
+                        explanation: 'Mitochondria are the powerhouses of the cell, releasing energy through cellular respiration',
+                        customHint: 'They\'re known as the powerhouses of the cell'
+                    },
+                    { 
+                        question: 'What do ribosomes make?', 
+                        answer: 'Proteins',
+                        alternativeAnswers: ['protein molecules', 'polypeptides'],
+                        explanation: 'Ribosomes are the protein factories of the cell, assembling amino acids into proteins',
+                        customHint: 'They\'re the factories that make the building blocks of life'
+                    }
                 );
             } else if (specificTopic === 'photosynthesis') {
                 templates.push(
@@ -1822,42 +1942,555 @@ Hint:`
 
 
     generateSmartHint(question, answer) {
-        // Fallback smart hint generation based on analysis
+        // Advanced subject-specific hint generation
         const questionLower = question.toLowerCase();
         const answerLower = answer.toLowerCase();
         
-        // Math hints
-        if (questionLower.includes('solve') || questionLower.includes('calculate') || questionLower.includes('find')) {
+        // Mathematics-specific hints
+        if (this.isMathQuestion(questionLower, answerLower)) {
+            return this.generateMathHint(questionLower, answerLower, question, answer);
+        }
+        
+        // Science-specific hints
+        if (this.isScienceQuestion(questionLower, answerLower)) {
+            return this.generateScienceHint(questionLower, answerLower, question, answer);
+        }
+        
+        // English/Literature hints
+        if (this.isEnglishQuestion(questionLower, answerLower)) {
+            return this.generateEnglishHint(questionLower, answerLower, question, answer);
+        }
+        
+        // History hints
+        if (this.isHistoryQuestion(questionLower, answerLower)) {
+            return this.generateHistoryHint(questionLower, answerLower, question, answer);
+        }
+        
+        // Geography hints
+        if (this.isGeographyQuestion(questionLower, answerLower)) {
+            return this.generateGeographyHint(questionLower, answerLower, question, answer);
+        }
+        
+        // Foreign language hints
+        if (this.isLanguageQuestion(questionLower, answerLower)) {
+            return this.generateLanguageHint(questionLower, answerLower, question, answer);
+        }
+        
+        // Generic contextual hint
+        return this.generateContextualHint(questionLower, answerLower, question, answer);
+    }
+
+    isMathQuestion(questionLower, answerLower) {
+        const mathKeywords = ['solve', 'calculate', 'find', 'equation', 'formula', 'algebra', 'geometry', 'trigonometry', 'derivative', 'integral', 'factor', 'expand', 'simplify', 'area', 'volume', 'angle', 'triangle', 'circle', 'radius', 'diameter', 'percentage', 'fraction', 'decimal'];
+        const mathSymbols = /[+\-×÷=<>²³√π]/;
+        return mathKeywords.some(keyword => questionLower.includes(keyword)) || mathSymbols.test(questionLower);
+    }
+
+    generateMathHint(questionLower, answerLower, question, answer) {
+        // Equation solving
+        if (questionLower.includes('solve') && (questionLower.includes('x') || questionLower.includes('='))) {
+            // Extract numbers from the question for more specific guidance
+            const numbers = question.match(/\d+/g) || [];
+            if (numbers.length >= 2) {
+                return {
+                    type: 'smart',
+                    text: `🔢 Step-by-step approach: 1) Look at what's being done TO the variable 2) Undo those operations in reverse order 3) First, deal with addition/subtraction 4) Then handle multiplication/division 5) Check your answer by substituting back`,
+                    source: 'Smart Math System'
+                };
+            }
             return {
                 type: 'smart',
-                text: 'Think about what mathematical operation or formula might be needed here. Look for key numbers or variables in the question.',
-                source: 'Smart hint system'
+                text: '🔢 How to solve: 1) Identify what operations are applied to the variable 2) Apply the inverse operations in reverse order 3) Keep the equation balanced by doing the same to both sides',
+                source: 'Smart Math System'
             };
         }
         
-        // Science hints
+        // Area/geometry with step-by-step guidance
+        if (questionLower.includes('area') || questionLower.includes('volume') || questionLower.includes('perimeter')) {
+            const shapes = ['rectangle', 'square', 'circle', 'triangle', 'cylinder', 'sphere'];
+            const shapeFound = shapes.find(shape => questionLower.includes(shape));
+            if (shapeFound) {
+                const guidance = {
+                    'rectangle': 'Steps: 1) Identify length and width from the question 2) Use formula Area = length × width 3) Substitute the values 4) Calculate and include units',
+                    'square': 'Steps: 1) Find the side length 2) Use formula Area = side² 3) Square the side length 4) Include square units',
+                    'circle': 'Steps: 1) Identify if you have radius or diameter 2) If diameter, divide by 2 to get radius 3) Use Area = πr² or Circumference = 2πr 4) Substitute π = 3.14 if specified',
+                    'triangle': 'Steps: 1) Identify the base and height (height is perpendicular to base) 2) Use Area = ½ × base × height 3) Calculate step by step',
+                    'cylinder': 'Steps: 1) Find radius and height 2) Use Volume = πr²h 3) Calculate πr² first, then multiply by height',
+                    'sphere': 'Steps: 1) Find the radius 2) Use Volume = ⁴⁄₃πr³ 3) Calculate r³ first, then multiply by ⁴⁄₃π'
+                };
+                return {
+                    type: 'smart',
+                    text: `📐 ${guidance[shapeFound]}`,
+                    source: 'Smart Math System'
+                };
+            }
+        }
+        
+        // Percentages with detailed process
+        if (questionLower.includes('percent') || questionLower.includes('%')) {
+            return {
+                type: 'smart',
+                text: '📊 How to calculate percentages: 1) Convert percentage to decimal by dividing by 100 2) Multiply the decimal by the given number 3) For example: 25% → 0.25, then 0.25 × [number] 4) Round if necessary',
+                source: 'Smart Math System'
+            };
+        }
+        
+        // Factoring/expanding with methods
+        if (questionLower.includes('factor')) {
+            return {
+                type: 'smart',
+                text: '🧮 Factoring method: 1) Look for common factors first 2) For quadratics: find two numbers that multiply to give the constant term AND add to give the middle coefficient 3) Write as (x + first number)(x + second number)',
+                source: 'Smart Math System'
+            };
+        }
+        
+        if (questionLower.includes('expand')) {
+            return {
+                type: 'smart',
+                text: '🧮 Expanding method: 1) Multiply the term outside brackets by EACH term inside 2) For (a+b)(c+d): multiply a×c, a×d, b×c, b×d 3) Combine like terms 4) Simplify',
+                source: 'Smart Math System'
+            };
+        }
+        
+        // Fraction/decimal conversion
+        if (questionLower.includes('convert') && (questionLower.includes('fraction') || questionLower.includes('decimal'))) {
+            return {
+                type: 'smart',
+                text: '🔄 Conversion steps: Decimal to fraction: 1) Count decimal places 2) Put digits over power of 10 3) Simplify by finding common factors. Fraction to decimal: divide numerator by denominator',
+                source: 'Smart Math System'
+            };
+        }
+        
+        // Rounding
+        if (questionLower.includes('round')) {
+            return {
+                type: 'smart',
+                text: '🎯 Rounding method: 1) Find the digit at the required place 2) Look at the digit immediately to the right 3) If it\'s 5 or more, round up 4) If it\'s less than 5, round down 5) Replace following digits with zeros',
+                source: 'Smart Math System'
+            };
+        }
+        
+        return {
+            type: 'smart',
+            text: '🔢 Problem-solving approach: 1) Identify what you need to find 2) List what information you have 3) Choose the appropriate formula or method 4) Substitute values carefully 5) Calculate step by step',
+            source: 'Smart Math System'
+        };
+    }
+
+    isScienceQuestion(questionLower, answerLower) {
+        const scienceKeywords = ['cell', 'atom', 'molecule', 'energy', 'force', 'reaction', 'photosynthesis', 'respiration', 'mitochondria', 'nucleus', 'electron', 'proton', 'neutron', 'periodic', 'element', 'compound', 'gas', 'liquid', 'solid', 'temperature', 'pressure', 'wave', 'frequency', 'voltage', 'current'];
+        return scienceKeywords.some(keyword => questionLower.includes(keyword));
+    }
+
+    generateScienceHint(questionLower, answerLower, question, answer) {
+        // Biology - Cell structures and processes
+        if (questionLower.includes('cell') || questionLower.includes('membrane') || questionLower.includes('nucleus')) {
+            return {
+                type: 'smart',
+                text: '🔬 Cell biology approach: 1) Think about what this structure looks like 2) Consider where it\'s located in the cell 3) Ask "what job does this do for the cell?" 4) Remember: structure relates to function',
+                source: 'Smart Biology System'
+            };
+        }
+        
+        if (questionLower.includes('photosynthesis')) {
+            return {
+                type: 'smart',
+                text: '🌱 Photosynthesis method: 1) Identify the reactants (what goes in) 2) Think about what plants need from environment 3) Consider what plants produce 4) Remember: light energy converts simple molecules to complex ones',
+                source: 'Smart Biology System'
+            };
+        }
+        
+        if (questionLower.includes('respiration')) {
+            return {
+                type: 'smart',
+                text: '💨 Respiration approach: 1) Think about what cells need energy for 2) Consider what molecule stores energy 3) Ask "what waste products are made?" 4) Remember: opposite process to photosynthesis',
+                source: 'Smart Biology System'
+            };
+        }
+        
+        // Chemistry - Atomic structure and reactions
+        if (questionLower.includes('atom') || questionLower.includes('electron') || questionLower.includes('proton')) {
+            return {
+                type: 'smart',
+                text: '⚗️ Atomic structure method: 1) Recall the three main particles 2) Think about their charges (+, -, neutral) 3) Consider their locations (nucleus vs electron shells) 4) Remember: atoms are mostly empty space',
+                source: 'Smart Chemistry System'
+            };
+        }
+        
+        if (questionLower.includes('periodic') || questionLower.includes('element')) {
+            return {
+                type: 'smart',
+                text: '📊 Periodic table approach: 1) Find the element\'s position 2) Group number tells you outer electrons 3) Period number tells you electron shells 4) Position predicts properties and behavior',
+                source: 'Smart Chemistry System'
+            };
+        }
+        
+        if (questionLower.includes('reaction') || questionLower.includes('chemical')) {
+            return {
+                type: 'smart',
+                text: '🧪 Chemical reaction method: 1) Identify reactants (starting materials) 2) Think about what bonds break and form 3) Consider energy changes (heat given out/taken in) 4) Check: atoms are conserved, only rearranged',
+                source: 'Smart Chemistry System'
+            };
+        }
+        
+        // Physics - Forces and energy
+        if (questionLower.includes('force') || questionLower.includes('newton')) {
+            return {
+                type: 'smart',
+                text: '⚡ Forces approach: 1) Identify all forces acting 2) Determine their directions 3) Use F = ma if acceleration involved 4) Remember: forces come in pairs (Newton\'s 3rd law)',
+                source: 'Smart Physics System'
+            };
+        }
+        
+        if (questionLower.includes('energy') || questionLower.includes('kinetic') || questionLower.includes('potential')) {
+            return {
+                type: 'smart',
+                text: '🔋 Energy method: 1) Identify types of energy present 2) Consider energy transformations 3) Apply conservation of energy 4) Remember: energy cannot be created or destroyed, only transferred',
+                source: 'Smart Physics System'
+            };
+        }
+        
+        if (questionLower.includes('wave') || questionLower.includes('frequency') || questionLower.includes('wavelength')) {
+            return {
+                type: 'smart',
+                text: '🌊 Wave analysis: 1) Identify wave properties (amplitude, frequency, wavelength) 2) Use wave equation: speed = frequency × wavelength 3) Consider how waves behave (reflection, refraction) 4) Think about energy carried',
+                source: 'Smart Physics System'
+            };
+        }
+        
+        if (questionLower.includes('electric') || questionLower.includes('current') || questionLower.includes('voltage')) {
+            return {
+                type: 'smart',
+                text: '⚡ Electricity method: 1) Identify the circuit components 2) Apply Ohm\'s law: V = IR 3) Consider series vs parallel circuits 4) Remember: current flows from positive to negative',
+                source: 'Smart Physics System'
+            };
+        }
+        
+        return {
+            type: 'smart',
+            text: '🔬 Scientific method: 1) Identify what type of science question this is 2) Recall the key principles for that topic 3) Apply the relevant laws or theories 4) Check if your reasoning makes logical sense',
+            source: 'Smart Science System'
+        };
+    }
+
+    isEnglishQuestion(questionLower, answerLower) {
+        const englishKeywords = ['author', 'wrote', 'character', 'theme', 'metaphor', 'simile', 'novel', 'poem', 'shakespeare', 'literature', 'verb', 'noun', 'adjective', 'adverb', 'grammar', 'sentence', 'paragraph'];
+        return englishKeywords.some(keyword => questionLower.includes(keyword));
+    }
+
+    generateEnglishHint(questionLower, answerLower, question, answer) {
+        if (questionLower.includes('author') || questionLower.includes('wrote')) {
+            return {
+                type: 'smart',
+                text: '📚 Finding the author: 1) Look for clues about time period in the question 2) Consider the genre mentioned 3) Think about famous authors from that era 4) Match writing style to well-known works 5) Consider the themes and setting described',
+                source: 'Smart Literature System'
+            };
+        }
+        
+        if (questionLower.includes('character') || questionLower.includes('protagonist')) {
+            return {
+                type: 'smart',
+                text: '👤 Character analysis method: 1) Consider the character\'s actions and motivations 2) Look at how they change throughout the story 3) Think about their relationships with other characters 4) Consider what they represent thematically',
+                source: 'Smart Literature System'
+            };
+        }
+        
+        if (questionLower.includes('theme') || questionLower.includes('message')) {
+            return {
+                type: 'smart',
+                text: '💭 Theme identification: 1) Look for repeated ideas or symbols 2) Consider the main conflict and resolution 3) Think about what the author is commenting on 4) Ask "what lesson or insight does this offer?" 5) Consider universal human experiences',
+                source: 'Smart Literature System'
+            };
+        }
+        
+        if (questionLower.includes('metaphor') || questionLower.includes('simile') || questionLower.includes('technique')) {
+            return {
+                type: 'smart',
+                text: '🎨 Literary technique approach: 1) Identify the comparison being made 2) Consider what effect this creates 3) Think about why the author chose this technique 4) Ask "what deeper meaning does this add?"',
+                source: 'Smart Literature System'
+            };
+        }
+        
+        if (questionLower.includes('grammar') || questionLower.includes('verb') || questionLower.includes('noun')) {
+            return {
+                type: 'smart',
+                text: '📝 Grammar analysis: 1) Identify the word\'s function in the sentence 2) Consider what it describes or what action it shows 3) Think about the word\'s relationship to other words 4) Apply grammar rules systematically',
+                source: 'Smart Grammar System'
+            };
+        }
+        
+        if (questionLower.includes('shakespeare')) {
+            return {
+                type: 'smart',
+                text: '🎭 Shakespeare approach: 1) Consider the play\'s main themes (love, power, revenge, etc.) 2) Think about character relationships and conflicts 3) Remember the historical context (Elizabethan era) 4) Consider both literal and symbolic meanings',
+                source: 'Smart Literature System'
+            };
+        }
+        
+        return {
+            type: 'smart',
+            text: '✍️ English analysis method: 1) Read the question carefully for key terms 2) Consider context (time, place, situation) 3) Think about purpose and audience 4) Apply relevant literary or language concepts 5) Support with evidence from the text',
+            source: 'Smart English System'
+        };
+    }
+
+    isHistoryQuestion(questionLower, answerLower) {
+        const historyKeywords = ['war', 'battle', 'king', 'queen', 'empire', 'revolution', 'century', 'ancient', 'medieval', 'victorian', 'roman', 'treaty', 'conquest', 'independence'];
+        return historyKeywords.some(keyword => questionLower.includes(keyword));
+    }
+
+    generateHistoryHint(questionLower, answerLower, question, answer) {
+        if (questionLower.includes('war') || questionLower.includes('battle')) {
+            return {
+                type: 'smart',
+                text: '⚔️ War/Battle analysis: 1) Identify the time period and countries involved 2) Consider the causes (why did it start?) 3) Think about key turning points 4) Consider the consequences (what changed after?) 5) Remember major figures and their roles',
+                source: 'Smart History System'
+            };
+        }
+        
+        if (questionLower.includes('king') || questionLower.includes('queen') || questionLower.includes('monarch')) {
+            return {
+                type: 'smart',
+                text: '👑 Monarchy approach: 1) Consider the time period and country 2) Think about what they\'re famous for (wars, reforms, scandals) 3) Consider their relationships (marriages, alliances) 4) Remember their impact on history',
+                source: 'Smart History System'
+            };
+        }
+        
+        if (questionLower.includes('revolution') || questionLower.includes('independence')) {
+            return {
+                type: 'smart',
+                text: '🔥 Revolution method: 1) Identify what people were unhappy about 2) Consider who led the change 3) Think about key events and turning points 4) Consider what changed as a result 5) Remember the long-term impacts',
+                source: 'Smart History System'
+            };
+        }
+        
+        if (questionLower.includes('treaty') || questionLower.includes('agreement')) {
+            return {
+                type: 'smart',
+                text: '📜 Treaty analysis: 1) Consider what conflict or issue it resolved 2) Think about which countries were involved 3) Consider the main terms (what was agreed?) 4) Remember the consequences (did it work?)',
+                source: 'Smart History System'
+            };
+        }
+        
+        if (questionLower.includes('victorian') || questionLower.includes('medieval') || questionLower.includes('ancient')) {
+            return {
+                type: 'smart',
+                text: '📅 Historical period approach: 1) Think about the dates of this era 2) Consider typical lifestyle and society 3) Remember key features of daily life 4) Think about major events of that time 5) Consider how it connects to other periods',
+                source: 'Smart History System'
+            };
+        }
+        
+        return {
+            type: 'smart',
+            text: '🏛️ Historical analysis method: 1) Establish when and where this happened 2) Identify the key people involved 3) Consider the causes (why did this happen?) 4) Think about the effects (what changed?) 5) Connect to broader historical patterns',
+            source: 'Smart History System'
+        };
+    }
+
+    isGeographyQuestion(questionLower, answerLower) {
+        const geoKeywords = ['capital', 'country', 'continent', 'river', 'mountain', 'climate', 'population', 'city', 'ocean', 'desert', 'forest', 'volcano', 'earthquake'];
+        return geoKeywords.some(keyword => questionLower.includes(keyword));
+    }
+
+    generateGeographyHint(questionLower, answerLower, question, answer) {
+        if (questionLower.includes('capital')) {
+            return {
+                type: 'smart',
+                text: '🗺️ Finding capitals: 1) Think about the country mentioned 2) Consider the largest or most important city 3) Remember: it\'s usually the political/government center 4) Sometimes it\'s NOT the biggest city (e.g., Washington vs New York) 5) Think about any cities you know from that country',
+                source: 'Smart Geography System'
+            };
+        }
+        
+        if (questionLower.includes('river') || questionLower.includes('mountain') || questionLower.includes('desert')) {
+            return {
+                type: 'smart',
+                text: '🏔️ Physical features method: 1) Consider which continent or region is mentioned 2) Think about famous features in that area 3) Consider the climate and environment 4) Remember major physical landmarks you\'ve studied',
+                source: 'Smart Geography System'
+            };
+        }
+        
+        if (questionLower.includes('climate') || questionLower.includes('weather')) {
+            return {
+                type: 'smart',
+                text: '🌤️ Climate analysis: 1) Consider the location (latitude, distance from equator) 2) Think about distance from sea/ocean 3) Consider altitude and physical features 4) Remember climate zones (tropical, temperate, polar, etc.)',
+                source: 'Smart Geography System'
+            };
+        }
+        
+        if (questionLower.includes('population') || questionLower.includes('city')) {
+            return {
+                type: 'smart',
+                text: '👥 Population geography: 1) Consider economic opportunities in the area 2) Think about physical geography (climate, resources) 3) Consider transport links and accessibility 4) Remember: people cluster where conditions are favorable',
+                source: 'Smart Geography System'
+            };
+        }
+        
+        if (questionLower.includes('continent') || questionLower.includes('country')) {
+            return {
+                type: 'smart',
+                text: '🌍 Location method: 1) Think about the size and position 2) Consider neighboring countries/continents 3) Think about distinctive shapes or features 4) Remember relative sizes and positions on world map',
+                source: 'Smart Geography System'
+            };
+        }
+        
+        if (questionLower.includes('volcano') || questionLower.includes('earthquake')) {
+            return {
+                type: 'smart',
+                text: '🌋 Geological hazards approach: 1) Think about tectonic plate boundaries 2) Consider the "Ring of Fire" around Pacific 3) Remember that these occur where plates meet 4) Think about famous examples you\'ve studied',
+                source: 'Smart Geography System'
+            };
+        }
+        
+        return {
+            type: 'smart',
+            text: '🌍 Geographic analysis: 1) Identify if this is physical or human geography 2) Consider the scale (local, national, global) 3) Think about location, place, and connections 4) Apply geographic concepts and patterns 5) Consider cause and effect relationships',
+            source: 'Smart Geography System'
+        };
+    }
+
+    isLanguageQuestion(questionLower, answerLower) {
+        const langKeywords = ['translate', 'french', 'spanish', 'german', 'italian', 'chinese', 'japanese', 'means', 'language'];
+        return langKeywords.some(keyword => questionLower.includes(keyword));
+    }
+
+    generateLanguageHint(questionLower, answerLower, question, answer) {
+        if (questionLower.includes('translate') || questionLower.includes('means')) {
+            return {
+                type: 'smart',
+                text: '🌐 Translation method: 1) Look for word roots similar to English 2) Consider the context of the sentence 3) Think about word families and patterns 4) Use grammar clues (verb endings, noun articles) 5) Consider cognates (words that look similar in both languages)',
+                source: 'Smart Language System'
+            };
+        }
+        
+        if (questionLower.includes('verb') || questionLower.includes('conjugat')) {
+            return {
+                type: 'smart',
+                text: '🔄 Verb conjugation approach: 1) Identify the infinitive (base form) 2) Determine the tense needed 3) Identify the subject (I, you, he/she, etc.) 4) Apply the correct ending pattern 5) Remember irregular verbs may be different',
+                source: 'Smart Language System'
+            };
+        }
+        
+        if (questionLower.includes('gender') || questionLower.includes('masculine') || questionLower.includes('feminine')) {
+            return {
+                type: 'smart',
+                text: '⚥ Gender system method: 1) Look for patterns in word endings 2) Consider if there are clues in the article (le/la, der/die/das, etc.) 3) Remember that gender often follows patterns 4) Some words you just need to memorize',
+                source: 'Smart Language System'
+            };
+        }
+        
+        if (questionLower.includes('plural') || questionLower.includes('singular')) {
+            return {
+                type: 'smart',
+                text: '📝 Number forms approach: 1) Identify the singular form first 2) Look for standard plural patterns 3) Consider if this is a regular or irregular plural 4) Check if the article/determiner changes too',
+                source: 'Smart Language System'
+            };
+        }
+        
+        // French specific hints
+        if (questionLower.includes('french')) {
+            return {
+                type: 'smart',
+                text: '🇫🇷 French method: 1) Look for cognates (words similar to English) 2) Remember French pronunciation rules 3) Consider gender patterns (-e often feminine, -tion always feminine) 4) Think about verb groups (-er, -ir, -re)',
+                source: 'Smart French System'
+            };
+        }
+        
+        // Spanish specific hints
+        if (questionLower.includes('spanish')) {
+            return {
+                type: 'smart',
+                text: '🇪🇸 Spanish method: 1) Spanish pronunciation is very regular 2) Look for English cognates 3) Remember gender patterns (-a usually feminine, -o usually masculine) 4) Verb endings tell you who\'s doing the action',
+                source: 'Smart Spanish System'
+            };
+        }
+        
+        // German specific hints
+        if (questionLower.includes('german')) {
+            return {
+                type: 'smart',
+                text: '🇩🇪 German method: 1) Look for compound words (German loves combining words) 2) Remember the three genders (der/die/das) 3) Word order can be different from English 4) Verb often goes to the end in subordinate clauses',
+                source: 'Smart German System'
+            };
+        }
+        
+        return {
+            type: 'smart',
+            text: '🌐 Language learning approach: 1) Break down unfamiliar words into parts 2) Look for connections to words you know 3) Use context clues from the surrounding text 4) Apply grammar rules you\'ve learned 5) Don\'t translate word-for-word, think about meaning',
+            source: 'Smart Language System'
+        };
+    }
+
+    generateContextualHint(questionLower, answerLower, question, answer) {
+        // Give a hint based on answer characteristics
+        if (answer.length < 10) {
+            const wordCount = answer.split(' ').length;
+            if (wordCount === 1) {
+                return {
+                    type: 'smart',
+                    text: `💡 Method: The answer is a single word. 1) Read the question carefully for key terms 2) Think about the most direct, specific response 3) Avoid overthinking - go with your first instinct 4) The answer is concise and to the point`,
+                    source: 'Smart Hint System'
+                };
+            } else {
+                return {
+                    type: 'smart',
+                    text: `💡 Method: The answer is a short phrase (${wordCount} words). 1) Look for the main concept in the question 2) Think about how to express it briefly 3) Include essential descriptive words 4) Keep it simple and direct`,
+                    source: 'Smart Hint System'
+                };
+            }
+        }
+        
         if (questionLower.includes('what is') || questionLower.includes('define')) {
             return {
                 type: 'smart',
-                text: 'Think about the key characteristics or properties. What category does this belong to?',
-                source: 'Smart hint system'
+                text: '🤔 Definition approach: 1) Identify the term to be defined 2) Think about its category or type 3) Consider its key characteristics or properties 4) Think about its main purpose or function 5) Use precise, specific language',
+                source: 'Smart Definition System'
             };
         }
         
-        // Give a hint based on answer length
-        if (answer.length < 10) {
+        if (questionLower.includes('why') || questionLower.includes('because')) {
             return {
                 type: 'smart',
-                text: `The answer is a short ${answer.split(' ').length === 1 ? 'single word' : 'phrase'}. Think about the most direct response to the question.`,
-                source: 'Smart hint system'
+                text: '❓ Explanation method: 1) Identify what needs explaining 2) Think about cause and effect relationships 3) Consider underlying principles or reasons 4) Structure your thinking: "This happens because..." 5) Think about multiple contributing factors',
+                source: 'Smart Explanation System'
             };
         }
         
-        // Generic hint
+        if (questionLower.includes('how') || questionLower.includes('method') || questionLower.includes('process')) {
+            return {
+                type: 'smart',
+                text: '⚙️ Process approach: 1) Think about the steps involved 2) Consider what happens first, then next 3) Think about the tools or conditions needed 4) Consider the end result or goal 5) Break complex processes into simple steps',
+                source: 'Smart Process System'
+            };
+        }
+        
+        if (questionLower.includes('when') || questionLower.includes('date') || questionLower.includes('year')) {
+            return {
+                type: 'smart',
+                text: '📅 Timeline method: 1) Think about the historical period or context 2) Consider what else was happening at that time 3) Use relative timing (before/after major events) 4) Think about patterns or sequences 5) Consider approximate time if exact date is unknown',
+                source: 'Smart Timeline System'
+            };
+        }
+        
+        if (questionLower.includes('where') || questionLower.includes('location')) {
+            return {
+                type: 'smart',
+                text: '📍 Location approach: 1) Consider the geographical context 2) Think about regions, countries, or specific places 3) Use relative positioning (north of, near, between) 4) Consider physical or political boundaries 5) Think about why this location is significant',
+                source: 'Smart Location System'
+            };
+        }
+        
+        if (questionLower.includes('who') || questionLower.includes('person') || questionLower.includes('people')) {
+            return {
+                type: 'smart',
+                text: '👤 People identification: 1) Consider the time period or context 2) Think about the field or area (politics, science, arts) 3) Consider what they\'re famous for 4) Think about their relationships or associations 5) Remember key figures from your studies',
+                source: 'Smart People System'
+            };
+        }
+        
         return {
             type: 'smart',
-            text: 'Think about what you already know about this topic. What concepts or keywords come to mind?',
-            source: 'Smart hint system'
+            text: '💭 General problem-solving approach: 1) Break down the question into key parts 2) Identify what type of information is being asked for 3) Connect to topics and concepts you\'ve studied 4) Use logical reasoning and prior knowledge 5) Eliminate obviously wrong possibilities',
+            source: 'Smart Analysis System'
         };
     }
 
@@ -4274,7 +4907,8 @@ Hint:`
                 difficultyScore: 1.0, // 1.0 = normal, >1.0 = harder, <1.0 = easier
                 repetitionLevel: 0, // Spaced repetition level
                 nextReviewDate: null,
-                totalStudyTime: 0
+                totalStudyTime: 0,
+                recentHistory: [] // Track last 10 attempts with timestamps
             };
         }
         return this.learningData[cardId];
@@ -4282,34 +4916,59 @@ Hint:`
 
     updateCardPerformance(deckId, cardIndex, isCorrect, responseTime) {
         const cardData = this.getCardLearningData(deckId, cardIndex);
+        const now = Date.now();
         
         // Update basic stats
         cardData.attempts++;
-        cardData.lastStudied = Date.now();
+        cardData.lastStudied = now;
         cardData.totalStudyTime += responseTime;
         cardData.averageResponseTime = cardData.totalStudyTime / cardData.attempts;
+        
+        // Track recent history (keep last 10 attempts)
+        cardData.recentHistory = cardData.recentHistory || [];
+        cardData.recentHistory.push({
+            isCorrect: isCorrect,
+            timestamp: now,
+            responseTime: responseTime
+        });
+        
+        // Keep only the last 10 attempts
+        if (cardData.recentHistory.length > 10) {
+            cardData.recentHistory = cardData.recentHistory.slice(-10);
+        }
         
         if (isCorrect) {
             cardData.correctAttempts++;
             
-            // Improve difficulty score for correct answers
-            cardData.difficultyScore *= 0.95; // Slightly easier
+            // Improve difficulty score for correct answers (more aggressive for struggling cards)
+            const accuracy = cardData.correctAttempts / cardData.attempts;
+            if (accuracy < 0.5) {
+                cardData.difficultyScore *= 0.9; // More improvement for struggling cards
+            } else {
+                cardData.difficultyScore *= 0.95; // Standard improvement
+            }
             cardData.repetitionLevel++;
             
             // Calculate next review date (spaced repetition)
             const intervals = [1, 3, 7, 14, 30, 90]; // Days
             const intervalDays = intervals[Math.min(cardData.repetitionLevel - 1, intervals.length - 1)];
-            cardData.nextReviewDate = Date.now() + (intervalDays * 24 * 60 * 60 * 1000);
+            cardData.nextReviewDate = now + (intervalDays * 24 * 60 * 60 * 1000);
             
         } else {
             cardData.incorrectAttempts++;
             
-            // Increase difficulty score for incorrect answers
-            cardData.difficultyScore *= 1.2; // Harder
+            // Increase difficulty score for incorrect answers (more aggressive for repeated failures)
+            const recentFailures = this.getRecentFailureStreak(deckId, cardIndex);
+            if (recentFailures >= 2) {
+                cardData.difficultyScore *= 1.5; // Much harder for repeated failures
+            } else {
+                cardData.difficultyScore *= 1.2; // Standard increase
+            }
             cardData.repetitionLevel = Math.max(0, cardData.repetitionLevel - 1);
             
-            // Reset to shorter interval for difficult cards
-            cardData.nextReviewDate = Date.now() + (1 * 24 * 60 * 60 * 1000); // Tomorrow
+            // Reset to shorter interval for difficult cards (even shorter for repeated failures)
+            const hoursUntilRetry = recentFailures >= 2 ? 1 : 24; // 1 hour for repeated failures, 24 hours otherwise
+            cardData.nextReviewDate = now + (hoursUntilRetry * 60 * 60 * 1000);
         }
         
         // Keep difficulty score within reasonable bounds
@@ -4322,22 +4981,147 @@ Hint:`
         const cardData = this.getCardLearningData(deckId, cardIndex);
         const now = Date.now();
         
-        // Base weight is the difficulty score
+        // Base weight starts with difficulty score
         let weight = cardData.difficultyScore;
+        
+        // Calculate accuracy rate for this card
+        const accuracy = cardData.attempts > 0 ? cardData.correctAttempts / cardData.attempts : 0;
+        
+        // Heavily penalize cards with low accuracy (struggling cards appear much more)
+        if (accuracy < 0.3) {
+            weight *= 5.0; // Cards with <30% accuracy appear 5x more
+        } else if (accuracy < 0.5) {
+            weight *= 3.5; // Cards with <50% accuracy appear 3.5x more
+        } else if (accuracy < 0.7) {
+            weight *= 2.0; // Cards with <70% accuracy appear 2x more
+        } else if (accuracy > 0.9) {
+            weight *= 0.3; // Cards with >90% accuracy appear much less
+        }
         
         // If card is due for review (past next review date), increase weight significantly
         if (cardData.nextReviewDate && now >= cardData.nextReviewDate) {
-            weight *= 3.0; // Much higher chance of appearing
+            weight *= 4.0; // Much higher chance of appearing for spaced repetition
         }
         
-        // If card was answered incorrectly recently, increase weight
+        // Recent incorrect answers should appear very frequently
         const timeSinceLastStudy = cardData.lastStudied ? (now - cardData.lastStudied) / (1000 * 60 * 60) : 999; // Hours
         if (cardData.incorrectAttempts > cardData.correctAttempts && timeSinceLastStudy < 24) {
-            weight *= 2.0; // Double weight for recently missed cards
+            weight *= 3.0; // Triple weight for recently missed cards
         }
         
-        // Never let weight be zero
-        return Math.max(0.1, weight);
+        // Cards that have never been studied should have moderate priority
+        if (cardData.attempts === 0) {
+            weight = 1.5; // Moderate priority for new cards
+        }
+        
+        // Cards with slow response times need more practice
+        if (cardData.averageResponseTime > 10000) { // More than 10 seconds
+            weight *= 1.5;
+        }
+        
+        // Recent consecutive failures should appear very frequently
+        if (this.getRecentFailureStreak(deckId, cardIndex) >= 2) {
+            weight *= 4.0; // Quadruple weight for cards failed multiple times recently
+        }
+        
+        // Never let weight be zero, but cap it to prevent one card dominating
+        return Math.max(0.1, Math.min(weight, 10.0));
+    }
+
+    // Track recent failure streaks for a card
+    getRecentFailureStreak(deckId, cardIndex) {
+        const cardId = `${deckId}-${cardIndex}`;
+        const recentHistory = this.learningData[cardId]?.recentHistory || [];
+        
+        let streak = 0;
+        // Count consecutive failures from the most recent attempts
+        for (let i = recentHistory.length - 1; i >= 0; i--) {
+            if (recentHistory[i].isCorrect) {
+                break;
+            }
+            streak++;
+        }
+        return streak;
+    }
+
+    // Show information about adaptive learning system
+    showAdaptiveLearningInfo() {
+        const lastShown = localStorage.getItem('adaptiveLearningInfoShown');
+        const now = Date.now();
+        const oneDay = 24 * 60 * 60 * 1000;
+        
+        // Show info if never shown before, or occasionally (every 7 days)
+        if (!lastShown || (now - parseInt(lastShown)) > (7 * oneDay)) {
+            // Count how many cards the user has performance data for
+            const totalCards = Object.keys(this.learningData).filter(key => 
+                key.startsWith(this.currentDeck.id) && this.learningData[key].attempts > 0
+            ).length;
+            
+            if (totalCards >= 3) { // Only show if user has attempted several cards
+                setTimeout(() => {
+                    this.showNotification(
+                        '🧠 Smart Learning: Cards you struggle with will appear more frequently to help you master them faster! Look for the colored indicators on each card. 🎯',
+                        'info',
+                        8000
+                    );
+                }, 2000);
+                
+                localStorage.setItem('adaptiveLearningInfoShown', now.toString());
+            }
+        }
+    }
+
+    // Show adaptive learning progress after study session
+    showAdaptiveLearningProgress() {
+        if (!this.currentDeck) return;
+        
+        // Analyze performance for this deck
+        const deckCards = this.currentDeck.cards.length;
+        let strugglingCards = 0;
+        let masteredCards = 0;
+        let improvingCards = 0;
+        
+        for (let i = 0; i < deckCards; i++) {
+            const cardData = this.getCardLearningData(this.currentDeck.id, i);
+            if (cardData.attempts > 0) {
+                const accuracy = cardData.correctAttempts / cardData.attempts;
+                const recentFailures = this.getRecentFailureStreak(this.currentDeck.id, i);
+                
+                if (accuracy < 0.3 || recentFailures >= 3) {
+                    strugglingCards++;
+                } else if (accuracy > 0.9 && cardData.attempts >= 3) {
+                    masteredCards++;
+                } else if (accuracy >= 0.7) {
+                    improvingCards++;
+                }
+            }
+        }
+        
+        // Show progress message if there's meaningful data
+        if (strugglingCards + masteredCards + improvingCards >= 3) {
+            setTimeout(() => {
+                let message = '📊 Learning Progress: ';
+                let parts = [];
+                
+                if (masteredCards > 0) {
+                    parts.push(`${masteredCards} card${masteredCards > 1 ? 's' : ''} nearly mastered ✅`);
+                }
+                if (improvingCards > 0) {
+                    parts.push(`${improvingCards} improving 📈`);
+                }
+                if (strugglingCards > 0) {
+                    parts.push(`${strugglingCards} need${strugglingCards === 1 ? 's' : ''} more practice 🔥`);
+                }
+                
+                message += parts.join(', ');
+                
+                if (strugglingCards > 0) {
+                    message += '. Keep studying - struggling cards will appear more often to help you improve!';
+                }
+                
+                this.showNotification(message, 'info', 6000);
+            }, 1500);
+        }
     }
 
     // Weighted shuffle algorithm - cards with higher weights appear more frequently
@@ -4346,10 +5130,11 @@ Hint:`
         
         cards.forEach((card, index) => {
             const weight = this.calculateCardWeight(deckId, index);
-            const copies = Math.ceil(weight * 2); // More copies = higher frequency
+            // Use a more aggressive multiplier for struggling cards
+            const copies = Math.ceil(weight * 3); // Increased from 2 to 3 for more frequent appearance
             
             for (let i = 0; i < copies; i++) {
-                weightedCards.push({ ...card, originalIndex: index });
+                weightedCards.push({ ...card, originalIndex: index, weight: weight });
             }
         });
         
@@ -5657,7 +6442,7 @@ Hint:`
         });
     }
 
-    generateAIDecks() {
+    async generateAIDecks() {
         const analysis = this.analyzeUserPatterns();
         
         if (!analysis) {
@@ -5670,31 +6455,31 @@ Hint:`
         
         // 1. Improvement Deck - Focus on weak areas
         if (analysis.improvementAreas.length > 0) {
-            generatedDecks.push(this.generateImprovementDeck(analysis));
+            generatedDecks.push(await this.generateImprovementDeck(analysis));
         }
         
         // 2. Challenge Deck - Harder content for growth
         if (analysis.challengeLevel !== 'challenging') {
-            generatedDecks.push(this.generateChallengeDeck(analysis));
+            generatedDecks.push(await this.generateChallengeDeck(analysis));
         }
         
         // 3. Review Deck - Reinforce strengths
         if (analysis.strengths.length > 0) {
-            generatedDecks.push(this.generateReviewDeck(analysis));
+            generatedDecks.push(await this.generateReviewDeck(analysis));
         }
         
         // 4. Mixed Subject Deck - Combine preferred subjects
         if (Object.keys(analysis.preferredSubjects).length > 1) {
-            generatedDecks.push(this.generateMixedDeck(analysis));
+            generatedDecks.push(await this.generateMixedDeck(analysis));
         }
         
         // 5. Quick Practice Deck - Short session based on study time preference
-        generatedDecks.push(this.generateQuickPracticeDeck(analysis));
+        generatedDecks.push(await this.generateQuickPracticeDeck(analysis));
         
-        return generatedDecks.slice(0, 4); // Limit to 4 decks
+        return generatedDecks.filter(deck => deck).slice(0, 4); // Filter out any null results and limit to 4 decks
     }
     
-    generateImprovementDeck(analysis) {
+    async generateImprovementDeck(analysis) {
         const improvementSubject = analysis.improvementAreas[0];
         
         return {
@@ -5708,7 +6493,7 @@ Hint:`
                 description: `Based on your recent performance, this deck focuses on ${improvementSubject} to help boost your confidence in this area.`
             },
             confidence: 0.85,
-            cards: this.generateCards('improvement', improvementSubject, analysis),
+            cards: await this.generateCards('improvement', improvementSubject, analysis),
             titleCards: [{
                 title: `${improvementSubject} Practice Session`,
                 content: `This deck is specifically designed to help you improve in ${improvementSubject}. Take your time and focus on understanding each concept.`
@@ -5718,7 +6503,7 @@ Hint:`
         };
     }
     
-    generateChallengeDeck(analysis) {
+    async generateChallengeDeck(analysis) {
         const preferredSubjects = Object.keys(analysis.preferredSubjects);
         const subject = preferredSubjects[Math.floor(Math.random() * preferredSubjects.length)];
         
@@ -5733,7 +6518,7 @@ Hint:`
                 description: `You're doing well! This advanced deck will push your ${subject} knowledge to the next level.`
             },
             confidence: 0.75,
-            cards: this.generateCards('challenge', subject, analysis),
+            cards: await this.generateCards('challenge', subject, analysis),
             titleCards: [{
                 title: `${subject} Challenge`,
                 content: `Ready for a challenge? These advanced questions will test your mastery of ${subject} concepts.`
@@ -5743,7 +6528,7 @@ Hint:`
         };
     }
     
-    generateReviewDeck(analysis) {
+    async generateReviewDeck(analysis) {
         const strengthSubject = analysis.strengths[0];
         
         return {
@@ -5757,7 +6542,7 @@ Hint:`
                 description: `Keep your ${strengthSubject} skills sharp with this review deck of key concepts you've already mastered.`
             },
             confidence: 0.92,
-            cards: this.generateCards('review', strengthSubject, analysis),
+            cards: await this.generateCards('review', strengthSubject, analysis),
             titleCards: [{
                 title: `${strengthSubject} Mastery Review`,
                 content: `Excellent work in ${strengthSubject}! This review will help maintain your high performance level.`
@@ -5767,7 +6552,7 @@ Hint:`
         };
     }
     
-    generateMixedDeck(analysis) {
+    async generateMixedDeck(analysis) {
         const subjects = Object.keys(analysis.preferredSubjects).slice(0, 3);
         const subjectNames = subjects.join(', ');
         
@@ -5782,7 +6567,7 @@ Hint:`
                 description: `Combine your favorite subjects (${subjectNames}) for varied practice that strengthens connections between topics.`
             },
             confidence: 0.80,
-            cards: this.generateCards('mixed', subjects, analysis),
+            cards: await this.generateCards('mixed', subjects, analysis),
             titleCards: [{
                 title: 'Mixed Subject Practice',
                 content: `This deck combines questions from multiple subjects to help you make connections across different areas of knowledge.`
@@ -5792,9 +6577,11 @@ Hint:`
         };
     }
     
-    generateQuickPracticeDeck(analysis) {
+    async generateQuickPracticeDeck(analysis) {
         const preferredSubjects = Object.keys(analysis.preferredSubjects);
         const subject = preferredSubjects[0] || 'General Knowledge';
+        
+        const cards = await this.generateCards('quick', subject, analysis);
         
         return {
             id: `ai-quick-${Date.now()}`,
@@ -5807,7 +6594,7 @@ Hint:`
                 description: `A focused 5-10 minute practice session in ${subject}, perfect for your study schedule.`
             },
             confidence: 0.88,
-            cards: this.generateCards('quick', subject, analysis).slice(0, 8), // Shorter deck
+            cards: cards.slice(0, 8), // Shorter deck
             titleCards: [{
                 title: `Quick ${subject} Practice`,
                 content: `A short but effective practice session. Perfect for when you have just a few minutes to study!`
@@ -5817,11 +6604,22 @@ Hint:`
         };
     }
     
-    generateCards(type, subject, analysis) {
-        // This is a sophisticated card generation system
-        // In a real app, this could connect to educational APIs or use ML models
-        // For now, I'll create contextually appropriate cards based on user patterns
+    async generateCards(type, subject, analysis) {
+        // Enhanced AI-powered card generation system
+        console.log('🤖 Generating AI-powered cards for:', subject, type);
         
+        try {
+            // Try AI generation first
+            const aiCards = await this.generateAICards(type, subject, analysis);
+            if (aiCards && aiCards.length > 0) {
+                console.log('✅ AI cards generated successfully:', aiCards.length);
+                return aiCards;
+            }
+        } catch (error) {
+            console.log('❌ AI generation failed, using template fallback:', error);
+        }
+        
+        // Fallback to enhanced template system
         const cardTemplates = this.getCardTemplates(type, subject, analysis);
         const generatedCards = [];
         
@@ -5834,11 +6632,117 @@ Hint:`
                 question: template.question,
                 answer: template.answer,
                 answerText: template.answer, // For comparison
+                alternativeAnswers: template.alternativeAnswers || [],
+                explanation: template.explanation || '',
+                customHint: template.customHint || '',
                 generated: true
             });
         }
         
         return generatedCards;
+    }
+
+    async generateAICards(type, subject, analysis) {
+        const cardCount = type === 'quick' ? 8 : 12;
+        const difficulty = this.getDifficultyFromAnalysis(analysis);
+        
+        const prompt = this.buildCardGenerationPrompt(subject, type, difficulty, cardCount, analysis);
+        
+        try {
+            const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    inputs: prompt,
+                    parameters: {
+                        max_new_tokens: 1000,
+                        temperature: 0.7,
+                        do_sample: true,
+                        return_full_text: false,
+                        repetition_penalty: 1.1
+                    }
+                })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                const aiContent = result[0]?.generated_text || '';
+                return this.parseAIGeneratedCards(aiContent, cardCount);
+            }
+        } catch (error) {
+            console.error('AI card generation error:', error);
+        }
+        
+        return null; // Trigger fallback
+    }
+
+    buildCardGenerationPrompt(subject, type, difficulty, cardCount, analysis) {
+        const difficultyText = difficulty === 'easy' ? 'beginner-friendly' : 
+                               difficulty === 'hard' ? 'challenging' : 'intermediate';
+        
+        let contextInfo = '';
+        if (analysis) {
+            if (analysis.improvementAreas && analysis.improvementAreas.length > 0) {
+                contextInfo += ` Focus on areas where the student needs improvement: ${analysis.improvementAreas.join(', ')}.`;
+            }
+            if (analysis.strengths && analysis.strengths.length > 0) {
+                contextInfo += ` Build on their strengths in: ${analysis.strengths.join(', ')}.`;
+            }
+        }
+
+        return `Create ${cardCount} educational flashcards for ${subject}. Make them ${difficultyText} level.${contextInfo}
+
+Format each card as:
+CARD N:
+Q: [Question]
+A: [Main Answer]
+ALT: [Alternative answers separated by |]
+EXP: [Detailed explanation]
+HINT: [Helpful hint without giving away the answer]
+
+Example for Mathematics:
+CARD 1:
+Q: What is the derivative of x²?
+A: 2x
+ALT: 2x|2*x|two x
+EXP: Using the power rule: d/dx(x^n) = nx^(n-1), so d/dx(x²) = 2x^(2-1) = 2x
+HINT: Use the power rule - multiply by the exponent and reduce the power by 1
+
+Generate ${cardCount} cards now:`;
+    }
+
+    parseAIGeneratedCards(aiContent, expectedCount) {
+        const cards = [];
+        const cardPattern = /CARD\s+(\d+):\s*Q:\s*(.+?)\s*A:\s*(.+?)\s*ALT:\s*(.+?)\s*EXP:\s*(.+?)\s*HINT:\s*(.+?)(?=CARD|\s*$)/gs;
+        
+        let match;
+        while ((match = cardPattern.exec(aiContent)) !== null && cards.length < expectedCount) {
+            const [, cardNum, question, answer, alternatives, explanation, hint] = match;
+            
+            cards.push({
+                question: question.trim(),
+                answer: answer.trim(),
+                answerText: answer.trim(),
+                alternativeAnswers: alternatives.split('|').map(alt => alt.trim()).filter(alt => alt),
+                explanation: explanation.trim(),
+                customHint: hint.trim(),
+                generated: true,
+                aiGenerated: true
+            });
+        }
+        
+        // If parsing fails or not enough cards, return null to trigger fallback
+        return cards.length >= Math.min(expectedCount / 2, 4) ? cards : null;
+    }
+
+    getDifficultyFromAnalysis(analysis) {
+        if (!analysis) return 'intermediate';
+        
+        if (analysis.challengeLevel === 'challenging') return 'hard';
+        if (analysis.difficultyPreference < 0.8) return 'easy';
+        return 'intermediate';
     }
     
     getCardTemplates(type, subject, analysis) {
@@ -5897,18 +6801,37 @@ Hint:`
         statusElement.style.display = 'block';
         
         // Show generation process
-        setTimeout(() => {
-            const generatedDecks = this.generateAIDecks();
-            
-            if (generatedDecks.length > 0) {
-                statusElement.style.display = 'none';
-                this.renderGeneratedDecks(generatedDecks);
-            } else {
+        setTimeout(async () => {
+            try {
                 statusElement.innerHTML = `
                     <div class="status-icon">🤖</div>
                     <div class="status-content">
-                        <div class="status-title">Learning more about you...</div>
-                        <div class="status-description">Keep studying! We need a bit more data to create perfect decks for you.</div>
+                        <div class="status-title">AI is generating decks...</div>
+                        <div class="status-description">Using your study patterns to create personalized content...</div>
+                    </div>
+                `;
+                
+                const generatedDecks = await this.generateAIDecks();
+                
+                if (generatedDecks.length > 0) {
+                    statusElement.style.display = 'none';
+                    this.renderGeneratedDecks(generatedDecks);
+                } else {
+                    statusElement.innerHTML = `
+                        <div class="status-icon">🤖</div>
+                        <div class="status-content">
+                            <div class="status-title">Learning more about you...</div>
+                            <div class="status-description">Keep studying! We need a bit more data to create perfect decks for you.</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('AI deck generation failed:', error);
+                statusElement.innerHTML = `
+                    <div class="status-icon">⚠️</div>
+                    <div class="status-content">
+                        <div class="status-title">Generation temporarily unavailable</div>
+                        <div class="status-description">Please try again later or create your own decks.</div>
                     </div>
                 `;
             }
@@ -6152,16 +7075,16 @@ Hint:`
         document.getElementById('stats-modal').style.display = 'flex';
     }
     
-    regenerateDecks() {
+    async regenerateDecks() {
         document.getElementById('generation-status').style.display = 'block';
         document.getElementById('generated-decks-grid').innerHTML = '';
         
-        // Regenerate after a delay
-        setTimeout(() => {
-            this.updateGeneratedDecksDisplay();
-        }, 500);
+        this.showNotification('🤖 AI is regenerating decks with your latest study patterns...', 'info');
         
-        this.showNotification('Regenerating AI decks based on latest patterns...', 'info');
+        // Regenerate after a delay
+        setTimeout(async () => {
+            await this.updateGeneratedDecksDisplay();
+        }, 500);
     }
     
     showGenerationInsights() {
@@ -6702,11 +7625,15 @@ Hint:`
             )
         }));
         
+        // Show adaptive learning info to user (only first time or occasionally)
+        this.showAdaptiveLearningInfo();
+        
         this.currentCardIndex = 0;
         this.score = 0;
         this.cardCount = 0;
         this.currentTitleCardIndex = 0;
         this.sessionStartTime = Date.now();
+        this.cardStartTime = Date.now();
         
         // Initialize current session for power-up tracking
         this.currentSession = {
@@ -6868,6 +7795,9 @@ Hint:`
             return;
         }
 
+        // Track when this card was shown for accurate response time calculation
+        this.cardStartTime = Date.now();
+
         const card = this.currentCards[this.currentCardIndex];
         const questionElement = document.getElementById('card-question');
         
@@ -6890,15 +7820,69 @@ Hint:`
         // Apply deck style and color
         const studyCard = document.getElementById('study-card');
         
-        // Remove existing style and animation classes
+        // Remove existing style, animation, and difficulty classes
         studyCard.classList.remove('classic', 'modern', 'vintage', 'neon');
         studyCard.classList.remove('blue', 'green', 'purple', 'red', 'orange', 'teal');
         studyCard.classList.remove('fall-correct', 'slide-incorrect', 'slide-out', 'slide-in', 'bounce-in', 'slide-in-top');
+        studyCard.classList.remove('struggling-card', 'challenging-card', 'mastered-card', 'new-card');
         
         // Apply deck's style and color (with fallbacks for older decks)
         const deckStyle = this.currentDeck.style || 'classic';
         const deckColor = this.currentDeck.color || 'blue';
         studyCard.classList.add(deckStyle, deckColor);
+        
+        // Add visual indicators for card difficulty based on performance
+        const cardIndex = card.originalIndex !== undefined ? card.originalIndex : 
+                         this.currentDeck.cards.findIndex(c => c === card || 
+                         (c.question === card.question && c.answer === card.answer));
+        
+        if (cardIndex !== -1) {
+            const cardData = this.getCardLearningData(this.currentDeck.id, cardIndex);
+            const accuracy = cardData.attempts > 0 ? cardData.correctAttempts / cardData.attempts : null;
+            const recentFailures = this.getRecentFailureStreak(this.currentDeck.id, cardIndex);
+            
+            let difficultyIndicator = '';
+            let difficultyClass = '';
+            
+            if (cardData.attempts === 0) {
+                difficultyClass = 'new-card';
+                difficultyIndicator = '✨ New Card';
+            } else if (accuracy < 0.3 || recentFailures >= 3) {
+                difficultyClass = 'struggling-card';
+                difficultyIndicator = '🔥 Struggling - Focus Time!';
+            } else if (accuracy < 0.7 || recentFailures >= 2) {
+                difficultyClass = 'challenging-card';
+                difficultyIndicator = '⚠️ Challenging Card';
+            } else if (accuracy > 0.9 && cardData.attempts >= 3) {
+                difficultyClass = 'mastered-card';
+                difficultyIndicator = '✅ Nearly Mastered';
+            }
+            
+            studyCard.classList.add(difficultyClass);
+            
+            // Add or update difficulty indicator
+            let indicator = document.getElementById('difficulty-indicator');
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.id = 'difficulty-indicator';
+                indicator.className = 'difficulty-indicator';
+                studyCard.appendChild(indicator);
+            }
+            
+            if (difficultyIndicator) {
+                indicator.textContent = difficultyIndicator;
+                indicator.style.display = 'block';
+                
+                // Add a subtle animation for struggling cards
+                if (difficultyClass === 'struggling-card') {
+                    indicator.classList.add('pulse-animation');
+                } else {
+                    indicator.classList.remove('pulse-animation');
+                }
+            } else {
+                indicator.style.display = 'none';
+            }
+        }
         
         // Reset any inline styles from animations
         studyCard.style.transform = '';
@@ -6936,8 +7920,14 @@ Hint:`
     }
     
     processAnswer(isCorrect, answerResult, currentCard) {
-        // Calculate response time for learning algorithm
-        const responseTime = Date.now() - this.sessionStartTime;
+        // Calculate response time for this specific card
+        const responseTime = Date.now() - (this.cardStartTime || Date.now());
+        
+        // Track session-specific data on the card
+        currentCard.sessionAttempts = (currentCard.sessionAttempts || 0) + 1;
+        currentCard.sessionCorrect = (currentCard.sessionCorrect || 0) + (isCorrect ? 1 : 0);
+        currentCard.lastCorrect = isCorrect;
+        currentCard.lastResponseTime = responseTime;
         
         // Update adaptive learning data
         const cardIndex = currentCard.originalIndex !== undefined ? currentCard.originalIndex : 
@@ -7186,6 +8176,9 @@ Hint:`
         document.getElementById('final-score').textContent = 
             `${this.score} / ${this.totalUniqueCards}`;
 
+        // Show adaptive learning insights
+        this.showAdaptiveLearningProgress();
+
         // 🪙 Gamification: Award completion bonus
         if (this.currentDeck) {
             const completionRate = this.score / this.totalUniqueCards;
@@ -7261,6 +8254,157 @@ Hint:`
         this.currentDeck = null;
         this.currentCards = [];
         this.showView('home');
+    }
+
+    endSession() {
+        if (!this.currentDeck) {
+            console.log('No active session to end');
+            return;
+        }
+
+        // Record session end time and calculate session duration
+        const sessionEndTime = Date.now();
+        const sessionDuration = sessionEndTime - (this.sessionStartTime || sessionEndTime);
+
+        // Update deck statistics with final session data
+        const deckStats = this.getOrCreateDeckStats(this.currentDeck.id);
+        
+        // Record session completion (even if incomplete)
+        deckStats.sessionsCompleted = (deckStats.sessionsCompleted || 0) + 1;
+        deckStats.totalStudyTime = (deckStats.totalStudyTime || 0) + sessionDuration;
+        deckStats.lastStudied = sessionEndTime;
+
+        // Save current progress and learning data
+        if (this.currentCards && this.currentCards.length > 0) {
+            // Update performance data for cards that were attempted in this session
+            this.currentCards.forEach((card, index) => {
+                if (card.sessionAttempts > 0) {
+                    // Use the original index in the deck for proper tracking
+                    const cardIndex = card.originalIndex !== undefined ? card.originalIndex : index;
+                    this.updateCardPerformance(this.currentDeck.id, cardIndex, card.lastCorrect || false, card.lastResponseTime || 0);
+                }
+            });
+        }
+
+        // Save all data to localStorage
+        this.saveDeckStats();
+        this.saveData();
+
+        // Validate statistics accuracy (for debugging and verification)
+        this.validateStatisticsAccuracy(this.currentDeck.id);
+
+        // Show session summary
+        this.showSessionSummary(sessionDuration);
+
+        // Clean up session data
+        this.currentDeck = null;
+        this.currentCards = [];
+        this.sessionStartTime = null;
+    }
+
+    showSessionSummary(sessionDuration) {
+        const minutes = Math.floor(sessionDuration / 60000);
+        const seconds = Math.floor((sessionDuration % 60000) / 1000);
+        const timeString = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+
+        // Calculate session statistics
+        let cardsStudied = 0;
+        let correctAnswers = 0;
+        let totalAnswers = 0;
+
+        if (this.currentCards) {
+            this.currentCards.forEach(card => {
+                if (card.sessionAttempts > 0) {
+                    cardsStudied++;
+                    totalAnswers += card.sessionAttempts;
+                    correctAnswers += card.sessionCorrect || 0;
+                }
+            });
+        }
+
+        const accuracy = totalAnswers > 0 ? Math.round((correctAnswers / totalAnswers) * 100) : 0;
+
+        // Show notification with session summary
+        this.showNotification(
+            `Session ended! Study time: ${timeString}, Cards: ${cardsStudied}, Accuracy: ${accuracy}%`,
+            'success'
+        );
+
+        // Return to home view
+        setTimeout(() => {
+            this.showView('home');
+        }, 3000);
+    }
+
+    // Statistics verification and debugging methods
+    validateStatisticsAccuracy(deckId) {
+        console.log('🔍 Validating statistics accuracy for deck:', deckId);
+        
+        const deck = this.decks.find(d => d.id === deckId) || this.currentDeck;
+        if (!deck) {
+            console.log('❌ Deck not found for validation');
+            return false;
+        }
+
+        const deckStats = this.getOrCreateDeckStats(deckId);
+        let totalLearningDataAttempts = 0;
+        let totalLearningDataCorrect = 0;
+        let cardsWithData = 0;
+
+        console.log('📊 Deck Statistics:', deckStats);
+
+        // Validate each card's learning data
+        deck.cards.forEach((card, index) => {
+            const cardData = this.getCardLearningData(deckId, index);
+            if (cardData.attempts > 0) {
+                cardsWithData++;
+                totalLearningDataAttempts += cardData.attempts;
+                totalLearningDataCorrect += cardData.correctAttempts;
+                
+                const accuracy = (cardData.correctAttempts / cardData.attempts * 100).toFixed(1);
+                console.log(`📝 Card ${index + 1}: ${cardData.attempts} attempts, ${cardData.correctAttempts} correct (${accuracy}%)`);
+                
+                // Check for data integrity issues
+                if (cardData.correctAttempts > cardData.attempts) {
+                    console.warn(`⚠️ Card ${index + 1}: More correct attempts than total attempts!`);
+                }
+                
+                if (cardData.difficultyScore < 0.1 || cardData.difficultyScore > 5.0) {
+                    console.warn(`⚠️ Card ${index + 1}: Difficulty score out of bounds: ${cardData.difficultyScore}`);
+                }
+            }
+        });
+
+        // Calculate adaptive learning effectiveness
+        const strugglingCards = deck.cards.filter((card, index) => {
+            const cardData = this.getCardLearningData(deckId, index);
+            const accuracy = cardData.attempts > 0 ? cardData.correctAttempts / cardData.attempts : 1;
+            return accuracy < 0.5 && cardData.attempts >= 2;
+        }).length;
+
+        console.log(`📈 Learning Analytics:`);
+        console.log(`   • Cards with learning data: ${cardsWithData}/${deck.cards.length}`);
+        console.log(`   • Total attempts recorded: ${totalLearningDataAttempts}`);
+        console.log(`   • Total correct attempts: ${totalLearningDataCorrect}`);
+        console.log(`   • Struggling cards (<50% accuracy): ${strugglingCards}`);
+        console.log(`   • Sessions completed: ${deckStats.sessionsCompleted || 0}`);
+        console.log(`   • Total study time: ${Math.round((deckStats.totalStudyTime || 0) / 60000)}min`);
+
+        return true;
+    }
+
+    // Debug method to show current learning weights
+    showLearningWeights(deckId) {
+        const deck = this.decks.find(d => d.id === deckId) || this.currentDeck;
+        if (!deck) return;
+
+        console.log('🎯 Current Learning Weights for', deck.name);
+        deck.cards.forEach((card, index) => {
+            const weight = this.calculateCardWeight(deckId, index);
+            const cardData = this.getCardLearningData(deckId, index);
+            const accuracy = cardData.attempts > 0 ? (cardData.correctAttempts / cardData.attempts * 100).toFixed(1) : 'N/A';
+            console.log(`Card ${index + 1}: Weight=${weight.toFixed(2)}, Accuracy=${accuracy}%, Attempts=${cardData.attempts}`);
+        });
     }
 
     // Utility functions
@@ -8183,8 +9327,8 @@ A: This concept is significant because it helps bridge basic understanding with 
         // Set the explanation if available
         const cardExplanation = document.getElementById('card-explanation');
         if (cardExplanation) {
-            if (currentCard.explanation && currentCard.explanationText) {
-                cardExplanation.innerHTML = currentCard.explanation;
+            if (currentCard.explanation && currentCard.explanation.trim()) {
+                cardExplanation.innerHTML = `<div class="explanation-header">💡 Explanation:</div>${currentCard.explanation}`;
                 cardExplanation.style.display = 'block';
             } else {
                 cardExplanation.innerHTML = '';
