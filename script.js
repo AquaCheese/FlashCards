@@ -4229,7 +4229,7 @@ Hint:`
         notification.className = 'welcome-notification';
         notification.innerHTML = `
             <div class="welcome-content">
-                <h3>🎉 Welcome to FlashCards AI!</h3>
+                <h3>🎉 Welcome to FlashCards!!!!</h3>
                 <p>Your personalized learning journey begins now. I'm already creating your first custom deck!</p>
                 <button onclick="this.parentElement.parentElement.remove()" class="btn btn-ai">Get Started!</button>
             </div>
