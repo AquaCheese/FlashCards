@@ -11,6 +11,10 @@
     <link rel="stylesheet" href="styles.css?v=20250927c">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Web-Optimized AI Engine Scripts -->
+    <script src="web_ai_engine.js"></script>
+    <script src="web_ai_manager.js"></script>
     <script src="gcse_ai_engine.js"></script>
 </head>
 <body>
@@ -40,6 +44,11 @@
                         <button class="nav-btn" data-view="shop">🛍️ Shop</button>
                         <button class="nav-btn" data-view="stats">Stats</button>
                     </nav>
+                    
+                    <div class="ai-status" id="ai-status-indicator" title="Smart Hints Status">
+                        <span class="ai-dot"></span>
+                        <span class="ai-text">Smart</span>
+                    </div>
                 </div>
             </div>
         </header>
@@ -51,8 +60,8 @@
                 <div class="view active" id="home-view">
                     <div class="welcome-section">
                         <div class="gcse-badge">Created with <span class="cheese-easter-egg" onclick="devBonus()">🧀</span> by Charlie Gump</div>
-                        <h2 class="welcome-title">FLASHCARDS!!!!!</h2>
-                        <p class="welcome-text">Master your GCSEs with study decks. Cards that grow with you.</p>
+                        <h2 class="welcome-title">FLASHCARDS!!!!!!</h2>
+                        <p class="welcome-text">Study smarter, not harder!</p>
                         <div class="gcse-subjects-showcase">
                             <div class="subject-pill core">📐 Mathematics</div>
                             <div class="subject-pill core">🧪 Sciences</div>
@@ -63,8 +72,8 @@
                             <div class="subject-pill optional">💻 Computer Science</div>
                             <div class="subject-pill optional">🌐 Languages</div>
                         </div>
-                        <p class="version-info" style="color: rgba(255,255,255,0.7); font-size: 0.8rem; margin-top: 1rem;">v2025.09.27 • Advanced AI Learning Engine</p>
-                        <!-- Version: 2025-09-27 - GCSE-focused with Advanced AI -->
+                        <p class="version-info" style="color: rgba(255,255,255,0.7); font-size: 0.8rem; margin-top: 1rem;">v2025.09.29</p>
+                        <!-- Version: 2025-09-29 - GCSE-focused with REAL AI Implementation -->
                     </div>
                     
                     <div class="decks-section">
@@ -90,51 +99,30 @@
                         </div>
                     </div>
 
-                    <!-- AI Generated Decks Section -->
+                    <!-- Smart Generated Decks Section -->
                     <div class="generated-decks-section" id="generated-decks-section">
                         <div class="section-header">
                             <div>
-                                <h3>Generated Decks</h3>
-                                <p class="section-subtitle">Smart decks that adapt to your learning style and track your progress</p>
+                                <h3>🎯 Smart Study Decks</h3>
+                                <p class="section-subtitle">Get instant study decks tailored to any subject! Perfect for quick revision and discovering new topics 🚀</p>
                             </div>
                             <div class="header-buttons">
                                 <button class="btn btn-secondary" id="regenerate-btn">
                                     🔄 Generate More
                                 </button>
-                                <button class="btn btn-info" id="how-it-works-btn" title="How we generate your decks">
+                                <button class="btn btn-info" id="how-it-works-btn" title="How we create your decks">
                                     ❓ How it works
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Lock Overlay -->
-                        <div class="ai-lock-overlay" id="ai-lock-overlay">
-                            <div class="lock-content">
-                                <div class="lock-icon">🔒</div>
-                                <div class="lock-info">
-                                    <h4>Deck Generator Locked</h4>
-                                    <p>Complete <strong id="sessions-needed">3</strong> study sessions to unlock personalized auto-generated decks!</p>
-                                    <div class="progress-indicator">
-                                        <div class="progress-bar">
-                                            <div class="progress-fill" id="unlock-progress" style="width: 0%"></div>
-                                        </div>
-                                        <span class="progress-text" id="progress-text">0 / 3 sessions completed</span>
-                                    </div>
-                                    <div class="unlock-benefits">
-                                        <div class="benefit-item">✨ Personalized difficulty levels</div>
-                                        <div class="benefit-item">🎯 Focus on your weak areas</div>
-                                        <div class="benefit-item">🚀 Challenge decks when you're ready</div>
-                                        <div class="benefit-item">🧠 Adaptive learning patterns</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- Lock removed - instant access! -->
 
                         <div class="generation-status" id="generation-status" style="display: none;">
-                            <div class="status-icon">🧠</div>
+                            <div class="status-icon">✨</div>
                             <div class="status-content">
-                                <div class="status-title">Analyzing your learning patterns...</div>
-                                <div class="status-description">I'm studying how you learn to create perfect decks for you!</div>
+                                <div class="status-title">Creating your study deck...</div>
+                                <div class="status-description">Crafting the perfect questions just for you! 🎯</div>
                             </div>
                         </div>
                         <div class="generated-decks-grid" id="generated-decks-grid">
@@ -723,191 +711,7 @@
                 </div>
             </div>
 
-            <!-- Account Settings Modal Overlay -->
-            <div class="modal-overlay" id="account-settings-overlay" style="display: none;">
-                <div class="account-settings-modal" id="account-settings">
-                    <div class="modal-header">
-                        <h2>Account Settings</h2>
-                        <button class="modal-close" onclick="closeAccountSettings()">✕</button>
-                    </div>
-                    
-                    <div class="settings-header">
-                        <div class="user-info">
-                            <div class="user-avatar" id="settings-user-avatar">
-                                <img id="settings-profile-pic" src="" alt="Profile Picture" style="display: none;">
-                                <span class="avatar-icon" id="settings-avatar-initial">👤</span>
-                            </div>
-                            <div class="user-details">
-                                <h2 id="user-display-name">Username</h2>
-                                <p class="user-stats">
-                                    <span id="user-join-date">Joined Today</span> • 
-                                    <span id="user-level-display">Level 1</span> • 
-                                    <span id="user-total-coins">100 coins</span>
-                                </p>
-                            </div>
-                        </div>
-                        <button class="btn btn-secondary" onclick="handleSignOut()">Sign Out</button>
-                    </div>
-                    
-                    <div class="settings-content">
-                        <div class="settings-tabs">
-                            <button class="settings-tab active" data-tab="profile">👤 Profile</button>
-                            <button class="settings-tab" data-tab="preferences">⚙️ Preferences</button>
-                            <button class="settings-tab" data-tab="privacy">🔒 Privacy</button>
-                            <button class="settings-tab" data-tab="data">📊 Data</button>
-                        </div>
-                        
-                        <!-- Profile Tab -->
-                        <div class="settings-tab-content active" id="profile-tab">
-                            <h3>Profile Customization</h3>
-                            
-                            <!-- Profile Stats Display -->
-                            <div class="profile-stats-display">
-                                <div class="profile-avatar-section">
-                                    <div class="profile-avatar-large" id="profile-avatar-large">
-                                        <img id="profile-pic-preview" src="" alt="Profile Picture" style="display: none;">
-                                        <span id="profile-initial-large">A</span>
-                                    </div>
-                                    <div class="avatar-upload">
-                                        <input type="file" id="profile-pic-upload" accept="image/*" style="display: none;">
-                                        <button class="btn secondary" onclick="document.getElementById('profile-pic-upload').click()">
-                                            📷 Change Photo
-                                        </button>
-                                        <button class="btn secondary" onclick="removeProfilePicture()">
-                                            🗑️ Remove Photo
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                <div class="profile-form">
-                                    <div class="form-group">
-                                        <label for="display-name">Display Name</label>
-                                        <input type="text" id="display-name" placeholder="Your display name" maxlength="30">
-                                        <small>This is how others will see your name</small>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label for="profile-title">Title</label>
-                                        <select id="profile-title">
-                                            <option value="">No title</option>
-                                            <option value="🎓 Student">🎓 Student</option>
-                                            <option value="📚 Scholar">📚 Scholar</option>
-                                            <option value="🧠 Genius">🧠 Genius</option>
-                                            <option value="⭐ Star Pupil">⭐ Star Pupil</option>
-                                            <option value="🏆 Champion">🏆 Champion</option>
-                                            <option value="🔥 Flash Master">🔥 Flash Master</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label for="profile-bio">Bio</label>
-                                        <textarea id="profile-bio" placeholder="Tell others about yourself..." maxlength="150" rows="3"></textarea>
-                                        <small><span id="bio-count">0</span>/150 characters</small>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label>Profile Color</label>
-                                        <div class="color-options">
-                                            <div class="color-option" data-color="blue" style="background: #3b82f6;"></div>
-                                            <div class="color-option" data-color="green" style="background: #10b981;"></div>
-                                            <div class="color-option" data-color="purple" style="background: #8b5cf6;"></div>
-                                            <div class="color-option" data-color="pink" style="background: #ec4899;"></div>
-                                            <div class="color-option" data-color="orange" style="background: #f59e0b;"></div>
-                                            <div class="color-option" data-color="red" style="background: #ef4444;"></div>
-                                        </div>
-                                    </div>
-                                    
-                                    <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Preferences Tab -->
-                        <div class="settings-tab-content" id="preferences-tab">
-                            <h3>Study Preferences</h3>
-                            
-                            <div class="form-group">
-                                <label class="checkbox-container">
-                                    <input type="checkbox" id="auto-play">
-                                    <span class="checkmark"></span>
-                                    Auto-play next card
-                                </label>
-                                
-                                <label class="checkbox-container">
-                                    <input type="checkbox" id="show-progress">
-                                    <span class="checkmark"></span>
-                                    Show progress during study
-                                </label>
-                                
-                                <label class="checkbox-container">
-                                    <input type="checkbox" id="sound-effects">
-                                    <span class="checkmark"></span>
-                                    Sound effects
-                                </label>
-                                
-                                <label class="checkbox-container">
-                                    <input type="checkbox" id="notify-reminders">
-                                    <span class="checkmark"></span>
-                                    Daily study reminders
-                                </label>
-                                
-                                <label class="checkbox-container">
-                                    <input type="checkbox" id="notify-achievements">
-                                    <span class="checkmark"></span>
-                                    Achievement notifications
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <!-- Privacy Tab -->
-                        <div class="settings-tab-content" id="privacy-tab">
-                            <h3>Privacy Settings</h3>
-                            
-                            <div class="form-group">
-                                <label>Change Password</label>
-                                <input type="password" id="current-password" placeholder="Current password">
-                                <input type="password" id="new-password" placeholder="New password">
-                                <input type="password" id="confirm-new-password" placeholder="Confirm new password">
-                                <button class="btn btn-secondary" onclick="changePassword()">Update Password</button>
-                            </div>
-                            
-                            <div class="danger-zone">
-                                <h4>Danger Zone</h4>
-                                <p>These actions cannot be undone.</p>
-                                <button class="btn btn-danger" onclick="deleteAccount()">Delete Account</button>
-                            </div>
-                        </div>
-                        
-                        <!-- Data Tab -->
-                        <div class="settings-tab-content" id="data-tab">
-                            <h3>Data Management</h3>
-                            
-                            <div class="data-overview">
-                                <div class="data-stats">
-                                    <div class="stat-item">
-                                        <span class="stat-label">Total Decks:</span>
-                                        <span class="stat-value" id="total-decks-count">0</span>
-                                    </div>
-                                    <div class="stat-item">
-                                        <span class="stat-label">Total Cards:</span>
-                                        <span class="stat-value" id="total-cards-count">0</span>
-                                    </div>
-                                    <div class="stat-item">
-                                        <span class="stat-label">Study Sessions:</span>
-                                        <span class="stat-value" id="total-sessions-count">0</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="data-actions">
-                                    <button class="btn btn-secondary" onclick="exportData()">📥 Export Data</button>
-                                    <button class="btn btn-secondary" onclick="importData()">📤 Import Data</button>
-                                    <button class="btn btn-secondary" onclick="syncData()">🔄 Sync Data</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- Account features removed for clean web app experience -->
 
 
         </main>
@@ -920,42 +724,58 @@
     <div class="modal-overlay" id="generation-insights-modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>🤖 How AI Deck Generation Works</h3>
+                <h3>✨ How Smart Decks Work</h3>
                 <button class="modal-close" onclick="closeGenerationInsights()">✕</button>
             </div>
             <div class="modal-body">
                 <div class="ai-explanation">
                     <div class="ai-step">
-                        <div class="step-icon">📊</div>
+                        <div class="step-icon">🎯</div>
                         <div class="step-content">
-                            <h4>Pattern Analysis</h4>
-                            <p>We analyze your study sessions, accuracy rates, response times, and preferred subjects to understand your learning style.</p>
+                            <h4>Subject Detection</h4>
+                            <p>We look at what you want to study and pick the perfect topics and difficulty level for your learning goals! 📚</p>
                         </div>
                     </div>
                     <div class="ai-step">
-                        <div class="step-icon">🧠</div>
+                        <div class="step-icon">�</div>
                         <div class="step-content">
-                            <h4>Smart Content Creation</h4>
-                            <p>Based on your patterns, we generate questions that match your difficulty level and focus on areas where you need practice.</p>
+                            <h4>Smart Question Creation</h4>
+                            <p><strong>Clever algorithms</strong> create engaging questions that help you learn effectively and remember better! 🚀</p>
                         </div>
                     </div>
                     <div class="ai-step">
                         <div class="step-icon">🎯</div>
                         <div class="step-content">
-                            <h4>Personalized Recommendations</h4>
-                            <p>Each generated deck is tailored to your learning goals, preferred subjects, and optimal challenge level.</p>
+                            <h4>Helpful Hints</h4>
+                            <p>Get smart hints when you're stuck! Our system analyzes your questions to give you just the right nudge in the right direction.</p>
                         </div>
                     </div>
                     <div class="ai-step">
-                        <div class="step-icon">🔄</div>
+                        <div class="step-icon">�</div>
                         <div class="step-content">
-                            <h4>Continuous Learning</h4>
-                            <p>The more you study, the smarter our recommendations become. We constantly adapt to your evolving needs.</p>
+                            <h4>Instant Results</h4>
+                            <p>No waiting around! Get your personalized study deck in seconds and start boosting your knowledge right away!</p>
+                        </div>
+                    </div>
+                    <div class="ai-step">
+                        <div class="step-icon">�</div>
+                        <div class="step-content">
+                            <h4>Progress Tracking</h4>
+                            <p>Watch your progress grow! The app remembers what you've learned and helps you focus on what needs more practice.</p>
                         </div>
                     </div>
                 </div>
+                <div class="ai-models-info">
+                    <h4>🛠️ AI Technology Stack:</h4>
+                    <ul>
+                        <li><strong>Primary:</strong> Microsoft DialoGPT-medium (Content Generation)</li>
+                        <li><strong>Fallback:</strong> Facebook BlenderBot-400M (Alternative Generation)</li>
+                        <li><strong>Analysis:</strong> Custom Learning Analytics Engine</li>
+                        <li><strong>Hints:</strong> Multiple AI models with intelligent fallbacks</li>
+                    </ul>
+                </div>
                 <div class="privacy-note">
-                    <strong>🔒 Privacy First:</strong> All analysis happens locally on your device. Your data never leaves your computer.
+                    <strong>🔒 Privacy & Performance:</strong> AI analysis happens locally when possible. API calls to Hugging Face are anonymized and contain no personal information.
                 </div>
             </div>
         </div>
