@@ -127,6 +127,70 @@ window.restartStudy = function() {
     }
 };
 
+// Add missing wrapper functions for direct app method calls
+window.generateAIDeck = function() {
+    console.log('generateAIDeck called, app:', !!app);
+    if (app && app.generateAIDeck) {
+        app.generateAIDeck();
+    } else {
+        console.log('App not ready or generateAIDeck method missing');
+    }
+};
+
+window.continueToNext = function() {
+    console.log('continueToNext called, app:', !!app);
+    if (app && app.continueToNext) {
+        app.continueToNext();
+    } else {
+        console.log('App not ready or continueToNext method missing');
+    }
+};
+
+window.showAnswer = function() {
+    console.log('showAnswer called, app:', !!app);
+    if (app && app.showAnswer) {
+        app.showAnswer();
+    } else {
+        console.log('App not ready or showAnswer method missing');
+    }
+};
+
+window.useHint = function() {
+    console.log('useHint called, app:', !!app);
+    if (app && app.useHint) {
+        app.useHint();
+    } else {
+        console.log('App not ready or useHint method missing');
+    }
+};
+
+window.useSkipCard = function() {
+    console.log('useSkipCard called, app:', !!app);
+    if (app && app.useSkipCard) {
+        app.useSkipCard();
+    } else {
+        console.log('App not ready or useSkipCard method missing');
+    }
+};
+
+window.activateDoubleCoins = function() {
+    console.log('activateDoubleCoins called, app:', !!app);
+    if (app && app.activateDoubleCoins) {
+        app.activateDoubleCoins();
+    } else {
+        console.log('App not ready or activateDoubleCoins method missing');
+    }
+};
+
+window.activateStreakShield = function() {
+    console.log('activateStreakShield called, app:', !!app);
+    if (app && app.activateStreakShield) {
+        app.activateStreakShield();
+    } else {
+        console.log('App not ready or activateStreakShield method missing');
+    }
+};
+
 // Functions are now defined directly on window object above
 
 window.exitStudy = function() {
@@ -11938,6 +12002,27 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         app = new FlashCardsApp();
         console.log('✅ FlashCards Web App initialized!');
+        
+        // Emergency button fix - attach event listeners directly if app didn't work
+        setTimeout(() => {
+            console.log('🔧 Emergency button fix check...');
+            const buttons = {
+                'create-deck-btn': () => app && app.showView ? app.showView('create') : console.log('showView not available'),
+                'import-deck-btn': () => app && app.importDeck ? app.importDeck() : console.log('importDeck not available'),
+                'regenerate-btn': () => app && app.regenerateDecks ? app.regenerateDecks() : console.log('regenerateDecks not available'),
+                'how-it-works-btn': () => app && app.showGenerationInsights ? app.showGenerationInsights() : console.log('showGenerationInsights not available')
+            };
+            
+            Object.entries(buttons).forEach(([id, handler]) => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    console.log(`🔧 Attaching emergency handler to ${id}`);
+                    btn.addEventListener('click', handler);
+                } else {
+                    console.log(`❌ Button ${id} not found`);
+                }
+            });
+        }, 100);
         
         // Check AI availability after short delay
         setTimeout(async () => {

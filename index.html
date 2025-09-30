@@ -270,7 +270,7 @@
                             <p class="section-description">Generate personalized flashcards based on your study statistics and performance patterns.</p>
                             <div class="ai-generation-options">
                                 <div class="ai-option">
-                                    <button type="button" class="btn btn-ai" onclick="app.generateAIDeck()">
+                                    <button type="button" class="btn btn-ai" onclick="generateAIDeck()">
                                         <span>✨</span> Generate Smart Deck
                                     </button>
                                     <p class="ai-option-desc">Creates cards targeting your weak areas and learning patterns</p>
@@ -404,7 +404,7 @@
                                                 </div>
                                             </div>
                                             <div class="card-footer">
-                                                <button class="btn btn-primary continue-btn" onclick="app.continueToNext()">
+                                                <button class="btn btn-primary continue-btn" onclick="continueToNext()">
                                                     Continue &rarr;
                                                 </button>
                                             </div>
@@ -418,23 +418,23 @@
                             <div class="answer-input-group">
                                 <input type="text" id="answer-input" placeholder="Enter your answer..." autocomplete="off">
                                 <button class="btn btn-primary" onclick="checkAnswer()">Check</button>
-                                <button class="btn btn-secondary dont-know-btn" onclick="app.showAnswer()">
+                                <button class="btn btn-secondary dont-know-btn" onclick="showAnswer()">
                                     I Don't Know
                                 </button>
                             </div>
                             
                             <!-- Power-ups Bar -->
                             <div class="powerups-bar">
-                                <button class="powerup-btn hint-button" onclick="app.useHint()" title="Get a helpful hint (100 coins)">
+                                <button class="powerup-btn hint-button" onclick="useHint()" title="Get a helpful hint (100 coins)">
                                     💡 Hint <span class="hint-count">0</span>
                                 </button>
-                                <button class="powerup-btn skip-button" onclick="app.useSkipCard()" title="Skip this card without penalty">
+                                <button class="powerup-btn skip-button" onclick="useSkipCard()" title="Skip this card without penalty">
                                     ⏭️ Skip <span class="skip-count">0</span>
                                 </button>
-                                <button class="powerup-btn double-button" onclick="app.activateDoubleCoins()" title="Double coin earnings for this session">
+                                <button class="powerup-btn double-button" onclick="activateDoubleCoins()" title="Double coin earnings for this session">
                                     💰 2x Coins <span class="double-count">0</span>
                                 </button>
-                                <button class="powerup-btn shield-button" onclick="app.activateStreakShield()" title="Protect streak from next wrong answer">
+                                <button class="powerup-btn shield-button" onclick="activateStreakShield()" title="Protect streak from next wrong answer">
                                     🛡️ Shield <span class="shield-count">0</span>
                                 </button>
                             </div>
