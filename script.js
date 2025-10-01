@@ -1213,7 +1213,7 @@ class FlashCardsApp {
         animation.className = `coin-animation ${type}`;
         animation.innerHTML = `
             <div class="coin-popup">
-                <div class="coin-icon">${type === 'earn' ? '🪙' : '💸'}</div>
+                <div class="coin-icon">${type === 'earn' ? '💰' : '💸'}</div>
                 <div class="coin-amount">${type === 'earn' ? '+' : '-'}${amount}</div>
                 <div class="coin-reason">${reason}</div>
             </div>
@@ -1324,7 +1324,7 @@ class FlashCardsApp {
                 <div class="achievement-emoji">${milestone.emoji}</div>
                 <div class="achievement-title">${milestone.title}</div>
                 <div class="achievement-message">${milestone.message}</div>
-                <div class="achievement-coins">🪙 ${milestone.coins.toLocaleString()} Coins Reached!</div>
+                <div class="achievement-coins">💰 ${milestone.coins.toLocaleString()} Coins Reached!</div>
             </div>
         `;
         
@@ -7039,7 +7039,7 @@ Hint:`
             }
             
             // Add coin information to feedback
-            feedbackMessage += ` <span class="coin-reward">+${coinReward} 🪙</span>`;
+            feedbackMessage += ` <span class="coin-reward">+${coinReward} 💰</span>`;
             
             this.showFeedback(feedbackMessage, 'correct');
             this.earnCoins(coinReward, 'Correct answer!');
@@ -7082,7 +7082,7 @@ Hint:`
             
             // Add coin penalty information to feedback (but be encouraging)
             if (coinPenalty > 0) {
-                feedbackMessage += ` <span class="coin-penalty">-${coinPenalty} 🪙</span>`;
+                feedbackMessage += ` <span class="coin-penalty">-${coinPenalty} 💰</span>`;
             }
             
             this.showFeedback(feedbackMessage, 'incorrect', currentCard.answer);
@@ -8265,7 +8265,7 @@ A: This concept is significant because it helps bridge basic understanding with 
             const responseTime = Date.now() - this.sessionStartTime;
             const coinReward = this.calculateCoinReward(difficulty, streakCount, responseTime);
             
-            resultText += ` (+${coinReward} 🪙)`;
+            resultText += ` (+${coinReward} 💰)`;
             answerResult.innerHTML = resultText;
             answerResult.className = 'answer-result correct';
             
@@ -8286,7 +8286,7 @@ A: This concept is significant because it helps bridge basic understanding with 
             const coinPenalty = this.calculateCoinPenalty(difficulty);
             
             if (coinPenalty > 0) {
-                resultText += ` (-${coinPenalty} 🪙)`;
+                resultText += ` (-${coinPenalty} 💰)`;
                 this.loseCoins(coinPenalty, 'Incorrect answer');
             }
             
