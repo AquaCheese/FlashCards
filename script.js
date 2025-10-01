@@ -9350,6 +9350,550 @@ function awardXP(amount, reason = 'Great job!') {
     console.log(`🌟 Gained ${amount} XP! Total: ${userXP} (Level ${userLevel}) - ${reason}`);
 }
 
+// ========================= LEVELING & UNLOCKS SYSTEM =========================
+
+// Define unlockable content by level
+const LEVEL_UNLOCKS = {
+    1: {
+        themes: ['classic'],
+        cardStyles: ['standard'],
+        colors: ['blue', 'green'],
+        powerUps: [],
+        titles: ['Beginner']
+    },
+    2: {
+        colors: ['red'],
+        titles: ['Student']
+    },
+    3: {
+        colors: ['purple'],
+        powerUps: ['hints']
+    },
+    5: {
+        themes: ['dark'],
+        cardStyles: ['modern'],
+        titles: ['Scholar']
+    },
+    7: {
+        colors: ['orange', 'pink'],
+        powerUps: ['skipCards']
+    },
+    10: {
+        themes: ['neon'],
+        cardStyles: ['animated'],
+        titles: ['Dedicated Learner'],
+        features: ['statistics']
+    },
+    15: {
+        colors: ['gold', 'silver'],
+        powerUps: ['doubleCoins'],
+        titles: ['Knowledge Seeker']
+    },
+    20: {
+        themes: ['galaxy', 'forest'],
+        cardStyles: ['gradient'],
+        titles: ['Wisdom Gatherer']
+    },
+    25: {
+        powerUps: ['streakShields'],
+        titles: ['Master Student'],
+        features: ['advanced_stats']
+    },
+    30: {
+        themes: ['ocean', 'sunset'],
+        cardStyles: ['holographic'],
+        titles: ['Learning Expert']
+    },
+    40: {
+        colors: ['rainbow', 'cosmic'],
+        titles: ['Study Legend']
+    },
+    50: {
+        themes: ['legendary'],
+        cardStyles: ['legendary'],
+        titles: ['Ultimate Scholar'],
+        features: ['all']
+    }
+};
+
+// Available themes, colors, and styles
+const CUSTOMIZATION_OPTIONS = {
+    themes: {
+        classic: { name: 'Classic', desc: 'The original clean look', colors: ['#667eea', '#764ba2'] },
+        dark: { name: 'Dark Mode', desc: 'Easy on the eyes', colors: ['#2c3e50', '#34495e'] },
+        neon: { name: 'Neon Lights', desc: 'Bright and energetic', colors: ['#ff006e', '#8338ec'] },
+        galaxy: { name: 'Galaxy', desc: 'Cosmic and mysterious', colors: ['#000428', '#004e92'] },
+        forest: { name: 'Forest', desc: 'Natural and calming', colors: ['#134e5e', '#71b280'] },
+        ocean: { name: 'Ocean Depths', desc: 'Deep blue serenity', colors: ['#2e3192', '#1bffff'] },
+        sunset: { name: 'Sunset Glow', desc: 'Warm and inviting', colors: ['#ff7e5f', '#feb47b'] },
+        legendary: { name: 'Legendary', desc: 'For true masters only', colors: ['#ffd700', '#ff6b35'] }
+    },
+    cardStyles: {
+        standard: { name: 'Standard', desc: 'Clean and simple' },
+        modern: { name: 'Modern', desc: 'Sleek with subtle shadows' },
+        animated: { name: 'Animated', desc: 'Cards with smooth animations' },
+        gradient: { name: 'Gradient', desc: 'Beautiful gradient backgrounds' },
+        holographic: { name: 'Holographic', desc: 'Shimmering holographic effect' },
+        legendary: { name: 'Legendary', desc: 'The ultimate card style' }
+    },
+    colors: {
+        blue: { name: 'Ocean Blue', hex: '#3182ce' },
+        green: { name: 'Forest Green', hex: '#38a169' },
+        red: { name: 'Crimson Red', hex: '#e53e3e' },
+        purple: { name: 'Royal Purple', hex: '#805ad5' },
+        orange: { name: 'Sunset Orange', hex: '#dd6b20' },
+        pink: { name: 'Cherry Blossom', hex: '#d53f8c' },
+        gold: { name: 'Golden Glory', hex: '#d69e2e' },
+        silver: { name: 'Silver Shine', hex: '#718096' },
+        rainbow: { name: 'Rainbow Magic', hex: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3)' },
+        cosmic: { name: 'Cosmic Energy', hex: 'linear-gradient(45deg, #667eea, #764ba2, #ff006e)' }
+    },
+    titles: {
+        'Beginner': { desc: 'Just starting the journey' },
+        'Student': { desc: 'Eager to learn' },
+        'Scholar': { desc: 'Dedicated to knowledge' },
+        'Dedicated Learner': { desc: 'Never stops studying' },
+        'Knowledge Seeker': { desc: 'Always hungry for more' },
+        'Wisdom Gatherer': { desc: 'Collecting insights' },
+        'Master Student': { desc: 'Mastered the art of learning' },
+        'Learning Expert': { desc: 'Expert in the field of learning' },
+        'Study Legend': { desc: 'A legendary student' },
+        'Ultimate Scholar': { desc: 'The pinnacle of academic achievement' }
+    }
+};
+
+// Get unlocked content for user's current level
+function getUnlockedContent() {
+    const unlocked = {
+        themes: [],
+        cardStyles: [],
+        colors: [],
+        powerUps: [],
+        titles: [],
+        features: []
+    };
+    
+    // Go through each level up to user's current level
+    for (let level = 1; level <= userLevel; level++) {
+        const levelUnlocks = LEVEL_UNLOCKS[level];
+        if (levelUnlocks) {
+            Object.keys(levelUnlocks).forEach(category => {
+                if (unlocked[category]) {
+                    unlocked[category].push(...levelUnlocks[category]);
+                }
+            });
+        }
+    }
+    
+    return unlocked;
+}
+
+// Check if user has unlocked specific content
+function hasUnlocked(category, item) {
+    const unlocked = getUnlockedContent();
+    return unlocked[category] && unlocked[category].includes(item);
+}
+
+// Get next unlock preview
+function getNextUnlocks() {
+    const nextLevels = [userLevel + 1, userLevel + 2, userLevel + 3, userLevel + 5, userLevel + 10]
+        .filter(level => level <= Math.max(...Object.keys(LEVEL_UNLOCKS).map(Number)));
+    
+    const previews = [];
+    nextLevels.forEach(level => {
+        const unlocks = LEVEL_UNLOCKS[level];
+        if (unlocks) {
+            previews.push({ level, unlocks });
+        }
+    });
+    
+    return previews;
+}
+
+// Handle level up with unlock notifications
+function handleLevelUp(oldLevel, newLevel) {
+    console.log(`🎉 Level up! ${oldLevel} → ${newLevel}`);
+    
+    // Check for new unlocks
+    const unlocks = LEVEL_UNLOCKS[newLevel];
+    if (unlocks) {
+        showLevelUpModal(oldLevel, newLevel, unlocks);
+    } else {
+        showBasicLevelUpNotification(oldLevel, newLevel);
+    }
+    
+    // Award level up XP bonus
+    const levelBonus = newLevel * 10;
+    setTimeout(() => {
+        awardXP(levelBonus, `Level ${newLevel} bonus!`);
+    }, 2000);
+}
+
+// Update level display in header
+function updateLevelDisplay() {
+    const levelElement = document.getElementById('user-level');
+    const xpElement = document.getElementById('user-xp');
+    const progressElement = document.getElementById('xp-progress');
+    
+    if (levelElement) {
+        levelElement.textContent = userLevel;
+    }
+    
+    if (xpElement) {
+        const nextLevelXP = getXPForNextLevel(userLevel);
+        const currentLevelXP = userLevel > 1 ? LEVEL_THRESHOLDS[userLevel - 1] : 0;
+        const progressXP = userXP - currentLevelXP;
+        const neededXP = nextLevelXP - currentLevelXP;
+        
+        xpElement.textContent = `${progressXP}/${neededXP} XP`;
+        
+        if (progressElement) {
+            const percentage = (progressXP / neededXP) * 100;
+            progressElement.style.width = `${Math.min(percentage, 100)}%`;
+        }
+    }
+}
+
+// Show XP gain animation
+function showXPGain(amount, reason) {
+    const xpGain = document.createElement('div');
+    xpGain.className = 'xp-gain-animation';
+    xpGain.innerHTML = `
+        <div class="xp-popup">
+            <div class="xp-amount">+${amount} XP</div>
+            <div class="xp-reason">${reason}</div>
+        </div>
+    `;
+    
+    document.body.appendChild(xpGain);
+    
+    // Remove after animation
+    setTimeout(() => {
+        if (xpGain.parentNode) {
+            xpGain.parentNode.removeChild(xpGain);
+        }
+    }, 3000);
+}
+
+// Show level up modal with unlocks
+function showLevelUpModal(oldLevel, newLevel, unlocks) {
+    const modal = document.createElement('div');
+    modal.className = 'level-up-modal';
+    
+    let unlocksHTML = '';
+    Object.entries(unlocks).forEach(([category, items]) => {
+        if (items && items.length > 0) {
+            const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
+            unlocksHTML += `
+                <div class="unlock-category">
+                    <h4>${categoryName} Unlocked:</h4>
+                    <div class="unlock-items">
+                        ${items.map(item => `
+                            <div class="unlock-item">
+                                ${getUnlockItemDisplay(category, item)}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+    });
+    
+    modal.innerHTML = `
+        <div class="level-up-content">
+            <div class="level-up-header">
+                <h2>🎉 Level Up!</h2>
+                <div class="level-change">
+                    <span class="old-level">${oldLevel}</span>
+                    <span class="arrow">→</span>
+                    <span class="new-level">${newLevel}</span>
+                </div>
+            </div>
+            <div class="level-up-unlocks">
+                ${unlocksHTML}
+            </div>
+            <div class="level-up-actions">
+                <button class="btn btn-primary" onclick="closeLevelUpModal()">Awesome!</button>
+                <button class="btn btn-secondary" onclick="openCustomization()">Customize Now</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Auto-remove after 10 seconds
+    setTimeout(() => {
+        if (modal.parentNode) {
+            modal.parentNode.removeChild(modal);
+        }
+    }, 10000);
+}
+
+// Show basic level up notification
+function showBasicLevelUpNotification(oldLevel, newLevel) {
+    const notification = document.createElement('div');
+    notification.className = 'level-up-notification';
+    notification.innerHTML = `
+        <div class="level-up-simple">
+            <h3>🎉 Level Up!</h3>
+            <div class="level-change">Level ${oldLevel} → ${newLevel}</div>
+            <p>Keep studying to unlock more features!</p>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 5000);
+}
+
+// Helper function to display unlock items
+function getUnlockItemDisplay(category, item) {
+    switch (category) {
+        case 'themes':
+            const theme = CUSTOMIZATION_OPTIONS.themes[item];
+            return `<span class="theme-unlock">${theme ? theme.name : item}</span>`;
+        case 'cardStyles':
+            const style = CUSTOMIZATION_OPTIONS.cardStyles[item];
+            return `<span class="style-unlock">${style ? style.name : item}</span>`;
+        case 'colors':
+            const color = CUSTOMIZATION_OPTIONS.colors[item];
+            return `<span class="color-unlock" style="color: ${color ? color.hex : '#333'}">${color ? color.name : item}</span>`;
+        case 'powerUps':
+            return `<span class="powerup-unlock">${item.charAt(0).toUpperCase() + item.slice(1)}</span>`;
+        case 'titles':
+            return `<span class="title-unlock">"${item}"</span>`;
+        case 'features':
+            return `<span class="feature-unlock">${item.replace('_', ' ').toUpperCase()}</span>`;
+        default:
+            return `<span>${item}</span>`;
+    }
+}
+
+// Global functions for modal interactions
+window.closeLevelUpModal = function() {
+    const modal = document.querySelector('.level-up-modal');
+    if (modal && modal.parentNode) {
+        modal.parentNode.removeChild(modal);
+    }
+};
+
+window.openCustomization = function() {
+    window.closeLevelUpModal();
+    showCustomizationPanel();
+};
+
+// Show customization panel
+function showCustomizationPanel() {
+    const unlocked = getUnlockedContent();
+    const nextUnlocks = getNextUnlocks();
+    
+    const modal = document.createElement('div');
+    modal.className = 'customization-modal';
+    
+    modal.innerHTML = `
+        <div class="customization-content">
+            <div class="customization-header">
+                <h2>🎨 Customization</h2>
+                <button class="close-btn" onclick="closeCustomizationPanel()">×</button>
+            </div>
+            
+            <div class="customization-sections">
+                <div class="customization-section">
+                    <h3>🎭 Themes</h3>
+                    <div class="customization-options">
+                        ${Object.entries(CUSTOMIZATION_OPTIONS.themes).map(([key, theme]) => {
+                            const isUnlocked = unlocked.themes.includes(key);
+                            return `
+                                <div class="customization-option ${isUnlocked ? 'unlocked' : 'locked'}" 
+                                     data-type="theme" data-value="${key}">
+                                    <div class="option-preview" style="background: linear-gradient(45deg, ${theme.colors[0]}, ${theme.colors[1]})"></div>
+                                    <div class="option-info">
+                                        <div class="option-name">${theme.name}</div>
+                                        <div class="option-desc">${theme.desc}</div>
+                                        ${!isUnlocked ? '<div class="option-locked">🔒 Locked</div>' : ''}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+                
+                <div class="customization-section">
+                    <h3>🎴 Card Styles</h3>
+                    <div class="customization-options">
+                        ${Object.entries(CUSTOMIZATION_OPTIONS.cardStyles).map(([key, style]) => {
+                            const isUnlocked = unlocked.cardStyles.includes(key);
+                            return `
+                                <div class="customization-option ${isUnlocked ? 'unlocked' : 'locked'}" 
+                                     data-type="cardStyle" data-value="${key}">
+                                    <div class="option-preview card-style-preview ${key}"></div>
+                                    <div class="option-info">
+                                        <div class="option-name">${style.name}</div>
+                                        <div class="option-desc">${style.desc}</div>
+                                        ${!isUnlocked ? '<div class="option-locked">🔒 Locked</div>' : ''}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+                
+                <div class="customization-section">
+                    <h3>🌈 Colors</h3>
+                    <div class="customization-options colors-grid">
+                        ${Object.entries(CUSTOMIZATION_OPTIONS.colors).map(([key, color]) => {
+                            const isUnlocked = unlocked.colors.includes(key);
+                            return `
+                                <div class="customization-option color-option ${isUnlocked ? 'unlocked' : 'locked'}" 
+                                     data-type="color" data-value="${key}">
+                                    <div class="color-preview" style="background: ${color.hex}"></div>
+                                    <div class="color-name">${color.name}</div>
+                                    ${!isUnlocked ? '<div class="option-locked">🔒</div>' : ''}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+                
+                <div class="customization-section">
+                    <h3>🏆 Titles</h3>
+                    <div class="customization-options">
+                        ${Object.entries(CUSTOMIZATION_OPTIONS.titles).map(([key, title]) => {
+                            const isUnlocked = unlocked.titles.includes(key);
+                            return `
+                                <div class="customization-option title-option ${isUnlocked ? 'unlocked' : 'locked'}" 
+                                     data-type="title" data-value="${key}">
+                                    <div class="option-info">
+                                        <div class="option-name">"${key}"</div>
+                                        <div class="option-desc">${title.desc}</div>
+                                        ${!isUnlocked ? '<div class="option-locked">🔒 Locked</div>' : ''}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="next-unlocks">
+                <h3>🔮 Coming Soon</h3>
+                <div class="unlock-previews">
+                    ${nextUnlocks.slice(0, 3).map(preview => `
+                        <div class="unlock-preview">
+                            <div class="unlock-level">Level ${preview.level}</div>
+                            <div class="unlock-items">
+                                ${Object.entries(preview.unlocks).map(([category, items]) => 
+                                    items.length > 0 ? `<span class="unlock-item">${items.join(', ')}</span>` : ''
+                                ).filter(Boolean).join(' • ')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Add event listeners for customization options
+    setupCustomizationListeners();
+}
+
+// Setup customization option listeners
+function setupCustomizationListeners() {
+    document.querySelectorAll('.customization-option.unlocked').forEach(option => {
+        option.addEventListener('click', () => {
+            const type = option.dataset.type;
+            const value = option.dataset.value;
+            applyCustomization(type, value);
+            
+            // Update selection visuals
+            document.querySelectorAll(`[data-type="${type}"]`).forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+        });
+    });
+}
+
+// Apply customization
+function applyCustomization(type, value) {
+    switch (type) {
+        case 'theme':
+            applyTheme(value);
+            break;
+        case 'cardStyle':
+            applyCardStyle(value);
+            break;
+        case 'color':
+            applyColor(value);
+            break;
+        case 'title':
+            applyTitle(value);
+            break;
+    }
+    
+    // Save customization
+    saveCustomization(type, value);
+}
+
+// Save customization to localStorage
+function saveCustomization(type, value) {
+    const customizations = JSON.parse(localStorage.getItem('user-customizations') || '{}');
+    customizations[type] = value;
+    localStorage.setItem('user-customizations', JSON.stringify(customizations));
+}
+
+// Load and apply saved customizations
+function loadCustomizations() {
+    const customizations = JSON.parse(localStorage.getItem('user-customizations') || '{}');
+    
+    Object.entries(customizations).forEach(([type, value]) => {
+        applyCustomization(type, value);
+    });
+}
+
+// Apply theme
+function applyTheme(theme) {
+    const themeData = CUSTOMIZATION_OPTIONS.themes[theme];
+    if (themeData) {
+        document.documentElement.style.setProperty('--primary-gradient', `linear-gradient(45deg, ${themeData.colors[0]}, ${themeData.colors[1]})`);
+        document.body.className = `theme-${theme}`;
+    }
+}
+
+// Apply card style
+function applyCardStyle(style) {
+    document.body.classList.remove('card-standard', 'card-modern', 'card-animated', 'card-gradient', 'card-holographic', 'card-legendary');
+    document.body.classList.add(`card-${style}`);
+}
+
+// Apply color
+function applyColor(color) {
+    const colorData = CUSTOMIZATION_OPTIONS.colors[color];
+    if (colorData) {
+        document.documentElement.style.setProperty('--accent-color', colorData.hex);
+    }
+}
+
+// Apply title
+function applyTitle(title) {
+    const titleElement = document.getElementById('user-title');
+    if (titleElement) {
+        titleElement.textContent = title;
+    }
+}
+
+// Close customization panel
+window.closeCustomizationPanel = function() {
+    const modal = document.querySelector('.customization-modal');
+    if (modal && modal.parentNode) {
+        modal.parentNode.removeChild(modal);
+    }
+};
+
 // Handle level up
 function handleLevelUp(oldLevel, newLevel) {
     // Play level up animation

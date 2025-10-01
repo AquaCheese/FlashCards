@@ -8,7 +8,7 @@
     <link rel="icon" type="image/png" href="FlashCards Logo.png">
     <link rel="apple-touch-icon" href="FlashCards Logo.png">
     <!-- Cache bust: Updated at 2025-09-27 -->
-    <link rel="stylesheet" href="styles.css?v=20251001new">
+    <link rel="stylesheet" href="styles.css?v=20251001leveling">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="gcse_ai_engine.js"></script>
@@ -20,6 +20,31 @@
             <div class="container">
                 <h1 class="logo">📚 FlashCards</h1>
                 <div class="header-right">
+                    <!-- Level & XP Display -->
+                    <div class="level-display" title="Your current level and XP progress">
+                        <div class="level-info">
+                            <div class="level-badge">
+                                <span class="level-icon">⭐</span>
+                                <span class="level-number" id="user-level">1</span>
+                            </div>
+                            <div class="xp-info">
+                                <div class="xp-text" id="user-xp">0/100 XP</div>
+                                <div class="xp-bar">
+                                    <div class="xp-progress" id="xp-progress"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="level-tooltip">
+                            <div class="tooltip-title">Level System</div>
+                            <div class="tooltip-content">
+                                🌟 Level up to unlock new themes, colors & features!<br>
+                                📚 Study cards to gain XP<br>
+                                🎯 Perfect scores give bonus XP<br>
+                                <button class="btn btn-small" onclick="openCustomization()">🎨 Customize</button>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="coin-display" title="Your earned coins! Gain coins by answering correctly, lose them for wrong answers.">
                         <span class="coin-icon">💰</span>
                         <span class="coin-balance">100</span>
@@ -38,7 +63,8 @@
                         <button class="nav-btn" data-view="create">Create Deck</button>
                         <button class="nav-btn" data-view="study">Study</button>
                         <button class="nav-btn" data-view="shop">🛍️ Shop</button>
-                        <button class="nav-btn" data-view="stats">Stats</button>
+                        <button class="nav-btn" data-view="profile">👤 Profile</button>
+                        <button class="nav-btn" data-view="stats">📊 Stats</button>
                     </nav>
                 </div>
             </div>
@@ -577,6 +603,86 @@
                             <h3>🧠 Learning Insights</h3>
                             <div id="learning-insights-list">
                                 <!-- Insights will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile View -->
+                <div class="view" id="profile-view">
+                    <div class="profile-header">
+                        <h2>👤 Your Profile</h2>
+                        <div class="profile-summary">
+                            <div class="profile-avatar">
+                                <div class="avatar-circle">
+                                    <span class="avatar-level" id="profile-level">1</span>
+                                </div>
+                            </div>
+                            <div class="profile-info">
+                                <h3 class="profile-name">
+                                    <span id="user-title">Beginner</span> Student
+                                </h3>
+                                <div class="profile-level-info">
+                                    <div class="level-badge-large">
+                                        <span>Level <span id="profile-level-number">1</span></span>
+                                    </div>
+                                    <div class="xp-info-large">
+                                        <div class="xp-text-large" id="profile-xp">0/100 XP</div>
+                                        <div class="xp-bar-large">
+                                            <div class="xp-progress-large" id="profile-xp-progress"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-content">
+                        <!-- Quick Actions -->
+                        <div class="profile-section">
+                            <h3>🎨 Quick Actions</h3>
+                            <div class="quick-actions">
+                                <button class="btn btn-primary" onclick="openCustomization()">
+                                    🎨 Customize Appearance
+                                </button>
+                                <button class="btn btn-secondary" onclick="showAchievements()">
+                                    🏆 View Achievements
+                                </button>
+                                <button class="btn btn-accent" onclick="showLevelProgress()">
+                                    📈 Level Progress
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Current Unlocks -->
+                        <div class="profile-section">
+                            <h3>🔓 Unlocked Content</h3>
+                            <div class="unlocked-content" id="unlocked-content">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Next Unlocks Preview -->
+                        <div class="profile-section">
+                            <h3>🔮 Coming Soon</h3>
+                            <div class="next-unlocks" id="next-unlocks-preview">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Achievements Grid -->
+                        <div class="profile-section">
+                            <h3>🏆 Achievements</h3>
+                            <div class="achievements-grid" id="achievements-grid">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Level Progress Chart -->
+                        <div class="profile-section">
+                            <h3>📈 Level Progress</h3>
+                            <div class="level-progress-chart">
+                                <canvas id="level-progress-canvas" width="400" height="200"></canvas>
                             </div>
                         </div>
                     </div>
