@@ -1304,7 +1304,8 @@ class FlashCardsApp {
             { coins: 500, title: 'Halfway Hero', message: 'You\'re on fire! 500 coins earned! 🔥', emoji: '🌟' },
             { coins: 1000, title: 'Coin Master', message: '1000 coins! You\'re becoming a study legend! ⚡', emoji: '👑' },
             { coins: 2500, title: 'Study Tycoon', message: 'Amazing! 2500 coins! You\'re unstoppable! 🚀', emoji: '💎' },
-            { coins: 5000, title: 'Coin Emperor', message: 'INCREDIBLE! 5000 coins! Ultimate dedication! 🏰', emoji: '🎖️' }
+            { coins: 5000, title: 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', message: 'INCREDIBLE! 5000 coins! Ultimate dedication! 🏰', emoji: '🎖️' },
+            { coins: 100000000000, title: 'Developer', message: 'Either you\'re cheating or you\'re... me?', emoji: '👨‍💻' }
         ];
 
         for (const milestone of milestones) {
