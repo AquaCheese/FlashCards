@@ -8,7 +8,7 @@
     <link rel="icon" type="image/png" href="FlashCards Logo.png">
     <link rel="apple-touch-icon" href="FlashCards Logo.png">
     <!-- Cache bust: Updated at 2025-09-27 -->
-    <link rel="stylesheet" href="styles.css?v=20250927c">
+    <link rel="stylesheet" href="styles.css?v=20251001new">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="gcse_ai_engine.js"></script>
@@ -52,19 +52,9 @@
                     <div class="welcome-section">
                         <div class="gcse-badge">Created with <span class="cheese-easter-egg" onclick="devBonus()">🧀</span> by Charlie Gump</div>
                         <h2 class="welcome-title">FLASHCARDS!!!!!</h2>
-                        <p class="welcome-text">Master your GCSEs with study decks. Cards that grow with you.</p>
-                        <div class="gcse-subjects-showcase">
-                            <div class="subject-pill core">📐 Mathematics</div>
-                            <div class="subject-pill core">🧪 Sciences</div>
-                            <div class="subject-pill core">📝 English</div>
-                            <div class="subject-pill optional">🌍 Geography</div>
-                            <div class="subject-pill optional">🏛️ History</div>
-                            <div class="subject-pill optional">🎨 Creative Arts</div>
-                            <div class="subject-pill optional">💻 Computer Science</div>
-                            <div class="subject-pill optional">🌐 Languages</div>
-                        </div>
-                        <p class="version-info" style="color: rgba(255,255,255,0.7); font-size: 0.8rem; margin-top: 1rem;">v2025.09.27 • Advanced AI Learning Engine</p>
-                        <!-- Version: 2025-09-27 - GCSE-focused with Advanced AI -->
+                        <p class="welcome-text">Master any subject!</p>
+                        <p class="version-info" style="color: rgba(255,255,255,0.7); font-size: 0.8rem; margin-top: 1rem;">v2025.09.01</p>
+                        <!-- Version: 2025-09-27-->
                     </div>
                     
                     <div class="decks-section">
@@ -282,7 +272,7 @@
                             <p class="section-description">Generate personalized flashcards based on your study statistics and performance patterns.</p>
                             <div class="ai-generation-options">
                                 <div class="ai-option">
-                                    <button type="button" class="btn btn-ai" onclick="app.generateAIDeck()">
+                                    <button type="button" class="btn btn-ai" onclick="generateAIDeck()">
                                         <span>✨</span> Generate Smart Deck
                                     </button>
                                     <p class="ai-option-desc">Creates cards targeting your weak areas and learning patterns</p>
@@ -413,7 +403,7 @@
                                                 </div>
                                             </div>
                                             <div class="card-footer">
-                                                <button class="btn btn-primary continue-btn" onclick="app.continueToNext()">
+                                                <button class="btn btn-primary continue-btn" onclick="continueToNext()">
                                                     Continue &rarr;
                                                 </button>
                                             </div>
@@ -427,23 +417,23 @@
                             <div class="answer-input-group">
                                 <input type="text" id="answer-input" placeholder="Enter your answer..." autocomplete="off">
                                 <button class="btn btn-primary" onclick="checkAnswer()">Check</button>
-                                <button class="btn btn-secondary dont-know-btn" onclick="app.showAnswer()">
+                                <button class="btn btn-secondary dont-know-btn" onclick="showAnswer()">
                                     I Don't Know
                                 </button>
                             </div>
                             
                             <!-- Power-ups Bar -->
                             <div class="powerups-bar">
-                                <button class="powerup-btn hint-button" onclick="app.useHint()" title="Get a helpful hint (100 coins)">
+                                <button class="powerup-btn hint-button" onclick="useHint()" title="Get a helpful hint (100 coins)">
                                     💡 Hint <span class="hint-count">0</span>
                                 </button>
-                                <button class="powerup-btn skip-button" onclick="app.useSkipCard()" title="Skip this card without penalty">
+                                <button class="powerup-btn skip-button" onclick="useSkipCard()" title="Skip this card without penalty">
                                     ⏭️ Skip <span class="skip-count">0</span>
                                 </button>
-                                <button class="powerup-btn double-button" onclick="app.activateDoubleCoins()" title="Double coin earnings for this session">
+                                <button class="powerup-btn double-button" onclick="activateDoubleCoins()" title="Double coin earnings for this session">
                                     💰 2x Coins <span class="double-count">0</span>
                                 </button>
-                                <button class="powerup-btn shield-button" onclick="app.activateStreakShield()" title="Protect streak from next wrong answer">
+                                <button class="powerup-btn shield-button" onclick="activateStreakShield()" title="Protect streak from next wrong answer">
                                     🛡️ Shield <span class="shield-count">0</span>
                                 </button>
                             </div>
@@ -613,7 +603,7 @@
                                 </div>
                                 <div class="shop-item-footer">
                                     <div class="shop-price">100 🪙</div>
-                                    <button class="btn btn-primary shop-buy-btn" onclick="app.purchasePowerUp('hints', 100)">Buy Hint</button>
+                                    <button class="btn btn-primary shop-buy-btn" onclick="purchasePowerUp('hints', 100)">Buy Hint</button>
                                 </div>
                             </div>
                         </div>
@@ -631,7 +621,7 @@
                                 </div>
                                 <div class="shop-item-footer">
                                     <div class="shop-price">75 🪙</div>
-                                    <button class="btn btn-primary shop-buy-btn" onclick="app.purchasePowerUp('skipCards', 75)">Buy Skip</button>
+                                    <button class="btn btn-primary shop-buy-btn" onclick="purchasePowerUp('skipCards', 75)">Buy Skip</button>
                                 </div>
                             </div>
                         </div>
@@ -649,7 +639,7 @@
                                 </div>
                                 <div class="shop-item-footer">
                                     <div class="shop-price">200 🪙</div>
-                                    <button class="btn btn-primary shop-buy-btn" onclick="app.purchasePowerUp('doubleCoins', 200)">Buy Booster</button>
+                                    <button class="btn btn-primary shop-buy-btn" onclick="purchasePowerUp('doubleCoins', 200)">Buy Booster</button>
                                 </div>
                             </div>
                         </div>
@@ -667,7 +657,7 @@
                                 </div>
                                 <div class="shop-item-footer">
                                     <div class="shop-price">150 🪙</div>
-                                    <button class="btn btn-primary shop-buy-btn" onclick="app.purchasePowerUp('streakShields', 150)">Buy Shield</button>
+                                    <button class="btn btn-primary shop-buy-btn" onclick="purchasePowerUp('streakShields', 150)">Buy Shield</button>
                                 </div>
                             </div>
                         </div>
@@ -1233,6 +1223,6 @@
         </div>
     </div>
 
-    <script src="script.js?v=20250927e"></script>
+    <script src="script.js?v=20251001new"></script>
 </body>
 </html>

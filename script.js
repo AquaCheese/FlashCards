@@ -289,6 +289,61 @@ window.updateAnswerNumbers = function(element) {
     }
 };
 
+// Additional global functions for HTML onclick handlers
+window.generateAIDeck = function() {
+    console.log('generateAIDeck called via app.generateAIDeck()');
+    if (app && app.generateAIDeck) {
+        app.generateAIDeck();
+    } else {
+        console.log('App not ready or generateAIDeck method missing');
+    }
+};
+
+window.useHint = function() {
+    console.log('useHint called via app.useHint()');
+    if (app && app.useHint) {
+        app.useHint();
+    } else {
+        console.log('App not ready or useHint method missing');
+    }
+};
+
+window.useSkipCard = function() {
+    console.log('useSkipCard called via app.useSkipCard()');
+    if (app && app.useSkipCard) {
+        app.useSkipCard();
+    } else {
+        console.log('App not ready or useSkipCard method missing');
+    }
+};
+
+window.activateDoubleCoins = function() {
+    console.log('activateDoubleCoins called via app.activateDoubleCoins()');
+    if (app && app.activateDoubleCoins) {
+        app.activateDoubleCoins();
+    } else {
+        console.log('App not ready or activateDoubleCoins method missing');
+    }
+};
+
+window.activateStreakShield = function() {
+    console.log('activateStreakShield called via app.activateStreakShield()');
+    if (app && app.activateStreakShield) {
+        app.activateStreakShield();
+    } else {
+        console.log('App not ready or activateStreakShield method missing');
+    }
+};
+
+window.purchasePowerUp = function(type, cost) {
+    console.log('purchasePowerUp called via app.purchasePowerUp()', type, cost);
+    if (app && app.purchasePowerUp) {
+        app.purchasePowerUp(type, cost);
+    } else {
+        console.log('App not ready or purchasePowerUp method missing');
+    }
+};
+
 // FlashCards Application
 class FlashCardsApp {
     constructor() {
