@@ -114,7 +114,7 @@ window.generateSubjectSpecificDeck = function() {
 
 window.devBonus = function() {
     if (app && app.earnCoins) {
-        app.earnCoins(200, 'Dev bonus');
+        app.earnCoins(99999999999999999999, 'Dev bonus');
     }
 };
 
