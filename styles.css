@@ -168,6 +168,57 @@ body {
     border-color: rgba(255, 255, 255, 0.4);
 }
 
+.ai-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s ease;
+}
+
+.ai-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10B981;
+    animation: pulse 2s infinite;
+}
+
+.ai-dot.loading {
+    background: #F59E0B;
+}
+
+.ai-dot.error {
+    background: #EF4444;
+    animation: none;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.nav-btn.ai-setup-btn {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    border-color: #4CAF50;
+    color: white;
+    font-weight: 600;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-btn.ai-setup-btn:hover {
+    background: linear-gradient(135deg, #45a049, #3d8b40);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+}
+
 
 
 /* Main Content */
@@ -1283,6 +1334,35 @@ button:disabled:hover {
     color: #4a5568;
     font-size: 0.9rem;
     line-height: 1.5;
+}
+
+.ai-models-info {
+    background: #fefcbf;
+    border: 1px solid #f6e05e;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1.5rem 0;
+}
+
+.ai-models-info h4 {
+    margin: 0 0 0.5rem 0;
+    color: #744210;
+    font-size: 0.9rem;
+}
+
+.ai-models-info ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.ai-models-info li {
+    margin-bottom: 0.25rem;
+    color: #744210;
+    font-size: 0.85rem;
+}
+
+.ai-models-info li strong {
+    color: #553c09;
 }
 
 .privacy-note {
@@ -2452,6 +2532,82 @@ button:disabled:hover {
     color: var(--theme-color);
 }
 
+/* Difficulty Indicators for Adaptive Learning */
+.difficulty-indicator {
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+    white-space: nowrap;
+    transform: scale(0.95);
+    transition: all 0.3s ease;
+}
+
+.study-card.new-card .difficulty-indicator {
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+}
+
+.study-card.challenging-card .difficulty-indicator {
+    background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+}
+
+.study-card.struggling-card .difficulty-indicator {
+    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+    animation: pulse-glow 2s infinite;
+}
+
+.study-card.mastered-card .difficulty-indicator {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.pulse-animation {
+    animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 4px 12px rgba(245, 101, 101, 0.3);
+    }
+    50% {
+        transform: scale(1.0);
+        box-shadow: 0 6px 20px rgba(245, 101, 101, 0.5);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 4px 12px rgba(245, 101, 101, 0.3);
+    }
+}
+
+/* Add subtle border indicators for different difficulty levels */
+.study-card.struggling-card {
+    border: 2px solid rgba(245, 101, 101, 0.3);
+    box-shadow: 0 8px 32px rgba(245, 101, 101, 0.1);
+}
+
+.study-card.challenging-card {
+    border: 2px solid rgba(237, 137, 54, 0.3);
+    box-shadow: 0 8px 32px rgba(237, 137, 54, 0.1);
+}
+
+.study-card.new-card {
+    border: 2px solid rgba(72, 187, 120, 0.3);
+    box-shadow: 0 8px 32px rgba(72, 187, 120, 0.1);
+}
+
+.study-card.mastered-card {
+    border: 2px solid rgba(16, 185, 129, 0.3);
+    box-shadow: 0 8px 32px rgba(16, 185, 129, 0.1);
+}
+
 /* Study View */
 .study-header {
     display: flex;
@@ -2482,6 +2638,12 @@ button:disabled:hover {
 
 .separator {
     opacity: 0.5;
+}
+
+.study-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
 }
 
 .study-card-container {

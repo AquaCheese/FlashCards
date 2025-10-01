@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlashCards AI Setup - Unlimited Free AI</title>
+    <link rel="icon" type="image/png" href="FlashCards Logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            color: #666;
+        }
+        
+        .setup-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .setup-option {
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .setup-option:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.15);
+        }
+        
+        .setup-option.recommended {
+            border-color: #4CAF50;
+            background: linear-gradient(135deg, #f8fff8, #e8f8e8);
+        }
+        
+        .setup-option.recommended::before {
+            content: "RECOMMENDED";
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4CAF50;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .setup-option h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .setup-option .description {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        
+        .pros-cons {
+            text-align: left;
+            margin: 20px 0;
+        }
+        
+        .pros, .cons {
+            margin: 10px 0;
+        }
+        
+        .pros li {
+            color: #4CAF50;
+            margin: 5px 0;
+        }
+        
+        .cons li {
+            color: #FF9800;
+            margin: 5px 0;
+        }
+        
+        .setup-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px;
+        }
+        
+        .setup-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .setup-btn.secondary {
+            background: #6c757d;
+        }
+        
+        .instructions {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #333;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-available { background: #4CAF50; }
+        .status-unavailable { background: #f44336; }
+        .status-checking { background: #FF9800; animation: pulse 2s infinite; }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid #e0e0e0;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-btn">← Back to FlashCards</a>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Unlimited Free AI Setup</h1>
+            <p>Set up unlimited AI for your FlashCards app - no rate limits, completely free!</p>
+        </div>
+
+        <div id="ai-status" class="instructions">
+            <h3>🔍 Checking AI Availability...</h3>
+            <p id="status-text">Scanning for available AI sources...</p>
+        </div>
+
+        <div class="setup-options">
+            <!-- Ollama Option -->
+            <div class="setup-option recommended" id="ollama-option">
+                <h3>🦙 Ollama (Recommended)</h3>
+                <p class="description">Run powerful AI models locally on your computer</p>
+                
+                <div class="pros-cons">
+                    <ul class="pros">
+                        <li>✅ Completely free and unlimited</li>
+                        <li>✅ Works offline (no internet needed)</li>
+                        <li>✅ Privacy-focused (data stays on your device)</li>
+                        <li>✅ High quality responses</li>
+                        <li>✅ Multiple models available</li>
+                        <li>✅ No API keys required</li>
+                    </ul>
+                    <ul class="cons">
+                        <li>⚠️ Requires 4-8GB disk space per model</li>
+                        <li>⚠️ Needs 8GB+ RAM for best performance</li>
+                        <li>⚠️ Initial download time</li>
+                    </ul>
+                </div>
+                
+                <div class="instructions" id="ollama-instructions" style="display: none;">
+                    <h4>📥 Quick Setup:</h4>
+                    <ol>
+                        <li>Download Ollama from <a href="https://ollama.ai/download" target="_blank">ollama.ai/download</a></li>
+                        <li>Install and open a terminal/command prompt</li>
+                        <li>Run: <div class="code-block">ollama pull mistral:7b</div></li>
+                        <li>Start the service: <div class="code-block">ollama serve</div></li>
+                        <li>Refresh FlashCards - AI will be detected automatically!</li>
+                    </ol>
+                </div>
+                
+                <button class="setup-btn" onclick="toggleInstructions('ollama')">
+                    <span class="status-indicator status-checking" id="ollama-status"></span>
+                    Set Up Ollama
+                </button>
+                <a href="https://ollama.ai/download" class="setup-btn secondary" target="_blank">Download</a>
+            </div>
+
+            <!-- WebLLM Option -->
+            <div class="setup-option" id="webllm-option">
+                <h3>🧠 WebLLM (Browser AI)</h3>
+                <p class="description">Run AI models directly in your browser</p>
+                
+                <div class="pros-cons">
+                    <ul class="pros">
+                        <li>✅ No installation needed</li>
+                        <li>✅ Works entirely in browser</li>
+                        <li>✅ Privacy-focused</li>
+                        <li>✅ Free and unlimited</li>
+                    </ul>
+                    <ul class="cons">
+                        <li>⚠️ Requires modern browser with WebGPU</li>
+                        <li>⚠️ Large initial download (~4GB)</li>
+                        <li>⚠️ May be slower than local models</li>
+                        <li>⚠️ Experimental technology</li>
+                    </ul>
+                </div>
+                
+                <button class="setup-btn" onclick="setupWebLLM()" id="webllm-btn">
+                    <span class="status-indicator status-checking" id="webllm-status"></span>
+                    Try WebLLM
+                </button>
+            </div>
+
+            <!-- API Services Option -->
+            <div class="setup-option" id="api-option">
+                <h3>🔑 Cloud AI APIs</h3>
+                <p class="description">Use cloud AI services with generous free tiers</p>
+                
+                <div class="pros-cons">
+                    <ul class="pros">
+                        <li>✅ High quality responses</li>
+                        <li>✅ Fast generation</li>
+                        <li>✅ No local resources needed</li>
+                        <li>✅ Multiple providers</li>
+                    </ul>
+                    <ul class="cons">
+                        <li>⚠️ Limited free usage per month</li>
+                        <li>⚠️ Requires API keys</li>
+                        <li>⚠️ Needs internet connection</li>
+                        <li>⚠️ Data sent to external servers</li>
+                    </ul>
+                </div>
+                
+                <div class="instructions" id="api-instructions" style="display: none;">
+                    <h4>🔧 Available Services:</h4>
+                    <ul>
+                        <li><strong>Cohere:</strong> 100 requests/month free - <a href="https://dashboard.cohere.ai/api-keys" target="_blank">Get API Key</a></li>
+                        <li><strong>Together AI:</strong> $25 free credits - <a href="https://api.together.xyz/" target="_blank">Get API Key</a></li>
+                        <li><strong>Hugging Face:</strong> Limited free usage - <a href="https://huggingface.co/settings/tokens" target="_blank">Get Token</a></li>
+                    </ul>
+                </div>
+                
+                <button class="setup-btn" onclick="toggleInstructions('api')">
+                    Configure APIs
+                </button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>💡 Recommendation:</strong> Start with Ollama for the best unlimited experience, or try WebLLM if you prefer no installation.</p>
+            <p>Once set up, your FlashCards will have unlimited AI hints and deck generation!</p>
+        </div>
+    </div>
+
+    <script>
+        // AI availability checking
+        async function checkAIAvailability() {
+            const status = {
+                ollama: false,
+                webllm: false,
+                apis: false
+            };
+
+            // Check Ollama
+            try {
+                const response = await fetch('http://localhost:11434/api/tags', { 
+                    method: 'GET',
+                    signal: AbortSignal.timeout(3000)
+                });
+                if (response.ok) {
+                    status.ollama = true;
+                    updateStatus('ollama', true);
+                }
+            } catch (error) {
+                updateStatus('ollama', false);
+            }
+
+            // Check WebLLM support
+            try {
+                if (navigator.gpu) {
+                    const adapter = await navigator.gpu.requestAdapter();
+                    if (adapter) {
+                        status.webllm = true;
+                        updateStatus('webllm', true);
+                    } else {
+                        updateStatus('webllm', false);
+                    }
+                } else {
+                    updateStatus('webllm', false);
+                }
+            } catch (error) {
+                updateStatus('webllm', false);
+            }
+
+            // Check for stored API keys
+            const cohere = localStorage.getItem('cohere_api_key');
+            const together = localStorage.getItem('together_api_key');
+            const hf = localStorage.getItem('huggingface_api_key');
+            
+            if (cohere || together || hf) {
+                status.apis = true;
+                updateStatus('api', true);
+            }
+
+            updateOverallStatus(status);
+        }
+
+        function updateStatus(service, available) {
+            const indicator = document.getElementById(`${service}-status`);
+            if (indicator) {
+                indicator.className = `status-indicator ${available ? 'status-available' : 'status-unavailable'}`;
+            }
+
+            const option = document.getElementById(`${service}-option`);
+            if (available && option) {
+                option.style.borderColor = '#4CAF50';
+                option.style.background = 'linear-gradient(135deg, #f8fff8, #e8f8e8)';
+            }
+        }
+
+        function updateOverallStatus(status) {
+            const statusDiv = document.getElementById('ai-status');
+            const statusText = document.getElementById('status-text');
+            
+            const availableCount = Object.values(status).filter(Boolean).length;
+            
+            if (availableCount > 0) {
+                statusDiv.style.background = 'linear-gradient(135deg, #e8f8e8, #f8fff8)';
+                statusDiv.style.borderColor = '#4CAF50';
+                statusText.innerHTML = `
+                    <strong>✅ ${availableCount} AI source${availableCount > 1 ? 's' : ''} available!</strong><br>
+                    ${status.ollama ? '• Ollama is running locally<br>' : ''}
+                    ${status.webllm ? '• WebLLM is supported in this browser<br>' : ''}
+                    ${status.apis ? '• API keys are configured<br>' : ''}
+                    Your FlashCards app will have unlimited AI capabilities!
+                `;
+            } else {
+                statusDiv.style.background = 'linear-gradient(135deg, #fff3e0, #ffeaa7)';
+                statusDiv.style.borderColor = '#FF9800';
+                statusText.innerHTML = `
+                    <strong>⚠️ No AI sources detected</strong><br>
+                    Set up at least one option below to enable unlimited AI features.
+                `;
+            }
+        }
+
+        function toggleInstructions(type) {
+            const instructions = document.getElementById(`${type}-instructions`);
+            if (instructions) {
+                instructions.style.display = instructions.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        async function setupWebLLM() {
+            const btn = document.getElementById('webllm-btn');
+            const originalText = btn.textContent;
+            
+            btn.textContent = 'Checking compatibility...';
+            btn.disabled = true;
+
+            try {
+                if (!navigator.gpu) {
+                    throw new Error('WebGPU not supported');
+                }
+
+                const adapter = await navigator.gpu.requestAdapter();
+                if (!adapter) {
+                    throw new Error('WebGPU adapter not available');
+                }
+
+                btn.textContent = 'WebLLM compatible! ✅';
+                alert('WebLLM is compatible with your browser! Go back to FlashCards and it will automatically set up when needed.');
+                
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+
+            } catch (error) {
+                btn.textContent = 'Not compatible ❌';
+                alert(`WebLLM is not compatible with this browser: ${error.message}\\n\\nPlease try Ollama instead for the best experience.`);
+            }
+
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 3000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAIAvailability();
+        });
+    </script>
+</body>
+</html>
