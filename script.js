@@ -10251,15 +10251,18 @@ function checkAchievements(action, data = {}) {
             
         case 'streak':
             const streak = data.streak || 0;
+            // Check all streak achievements (not else if, so all can be unlocked)
+            if (streak >= 5 && !userProfile.achievements.streak5.unlocked) {
+                unlockAchievement('streak5');
+                newAchievements.push('streak5');
+            }
+            if (streak >= 10 && !userProfile.achievements.streak10.unlocked) {
+                unlockAchievement('streak10');
+                newAchievements.push('streak10');
+            }
             if (streak >= 25 && !userProfile.achievements.streak25.unlocked) {
                 unlockAchievement('streak25');
                 newAchievements.push('streak25');
-            } else if (streak >= 10 && !userProfile.achievements.streak10.unlocked) {
-                unlockAchievement('streak10');
-                newAchievements.push('streak10');
-            } else if (streak >= 5 && !userProfile.achievements.streak5.unlocked) {
-                unlockAchievement('streak5');
-                newAchievements.push('streak5');
             }
             break;
             
@@ -10284,15 +10287,18 @@ function checkAchievements(action, data = {}) {
             
         case 'coinsEarned':
             const totalCoins = data.totalCoins || 0;
+            // Check all coin achievements (not else if, so all can be unlocked)
+            if (totalCoins >= 1000 && !userProfile.achievements.coinCollector.unlocked) {
+                unlockAchievement('coinCollector');
+                newAchievements.push('coinCollector');
+            }
+            if (totalCoins >= 5000 && !userProfile.achievements.wealthy.unlocked) {
+                unlockAchievement('wealthy');
+                newAchievements.push('wealthy');
+            }
             if (totalCoins >= 10000 && !userProfile.achievements.millionaire.unlocked) {
                 unlockAchievement('millionaire');
                 newAchievements.push('millionaire');
-            } else if (totalCoins >= 5000 && !userProfile.achievements.wealthy.unlocked) {
-                unlockAchievement('wealthy');
-                newAchievements.push('wealthy');
-            } else if (totalCoins >= 1000 && !userProfile.achievements.coinCollector.unlocked) {
-                unlockAchievement('coinCollector');
-                newAchievements.push('coinCollector');
             }
             break;
             
@@ -10312,15 +10318,18 @@ function checkAchievements(action, data = {}) {
 function checkLevelAchievements(level) {
     let newAchievements = [];
     
+    // Check all level achievements (not else if, so all can be unlocked)
+    if (level >= 10 && !userProfile.achievements.scholar.unlocked) {
+        unlockAchievement('scholar');
+        newAchievements.push('scholar');
+    }
+    if (level >= 25 && !userProfile.achievements.master.unlocked) {
+        unlockAchievement('master');
+        newAchievements.push('master');
+    }
     if (level >= 50 && !userProfile.achievements.legend.unlocked) {
         unlockAchievement('legend');
         newAchievements.push('legend');
-    } else if (level >= 25 && !userProfile.achievements.master.unlocked) {
-        unlockAchievement('master');
-        newAchievements.push('master');
-    } else if (level >= 10 && !userProfile.achievements.scholar.unlocked) {
-        unlockAchievement('scholar');
-        newAchievements.push('scholar');
     }
     
     return newAchievements;
