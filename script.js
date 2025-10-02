@@ -6544,6 +6544,12 @@ Hint:`
                         <button type="button" class="format-btn" data-command="strikeThrough" title="Strikethrough">
                             <s>S</s>
                         </button>
+                        <button type="button" class="format-btn" data-command="subscript" title="Subscript">
+                            X<sub>2</sub>
+                        </button>
+                        <button type="button" class="format-btn" data-command="superscript" title="Superscript">
+                            X<sup>2</sup>
+                        </button>
                     </div>
                     <div class="toolbar-group">
                         <div class="color-picker-group">
@@ -6561,6 +6567,9 @@ Hint:`
                         <button type="button" class="format-btn clear-format" title="Clear Formatting">
                             🗑️ Clear
                         </button>
+                        <div class="formatting-help" title="Use subscript for chemical formulas (H₂O) and superscript for exponents (x²)">
+                            ❓
+                        </div>
                     </div>
                 </div>
 
@@ -6631,6 +6640,12 @@ Hint:`
                         <button type="button" class="format-btn" data-command="strikeThrough" title="Strikethrough">
                             <s>S</s>
                         </button>
+                        <button type="button" class="format-btn" data-command="subscript" title="Subscript">
+                            X<sub>2</sub>
+                        </button>
+                        <button type="button" class="format-btn" data-command="superscript" title="Superscript">
+                            X<sup>2</sup>
+                        </button>
                     </div>
                     <div class="toolbar-group">
                         <div class="color-picker-group">
@@ -6648,6 +6663,9 @@ Hint:`
                         <button type="button" class="format-btn clear-format" title="Clear Formatting">
                             🗑️ Clear
                         </button>
+                        <div class="formatting-help" title="Use subscript for chemical formulas (H₂O) and superscript for exponents (x²)">
+                            ❓
+                        </div>
                     </div>
                 </div>
 
@@ -8336,11 +8354,6 @@ A: This concept is significant because it helps bridge basic understanding with 
         
         if (isCorrect) {
             let resultText = '✅ Correct! Well done!';
-            if (answerResultData.reason === 'key_terms') {
-                resultText = '✅ Correct! You got the key points!';
-            } else if (answerResultData.reason === 'high_similarity') {
-                resultText = '✅ Correct! Close enough - great understanding!';
-            }
             
             // Add coin reward
             const difficulty = this.currentDeck.difficulty || 'Intermediate';

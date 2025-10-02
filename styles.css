@@ -1719,6 +1719,53 @@ button:disabled:hover {
     white-space: nowrap;
 }
 
+/* Subscript and Superscript button styling */
+.format-btn[data-command="subscript"],
+.format-btn[data-command="superscript"] {
+    font-family: 'Times New Roman', serif;
+    font-weight: bold;
+    font-size: 0.9rem;
+    min-width: 38px;
+}
+
+.format-btn[data-command="subscript"]:hover,
+.format-btn[data-command="superscript"]:hover {
+    background: #e0e7ff;
+    border-color: #8b5cf6;
+}
+
+.format-btn[data-command="subscript"]:active,
+.format-btn[data-command="subscript"].active,
+.format-btn[data-command="superscript"]:active,
+.format-btn[data-command="superscript"].active {
+    background: #8b5cf6;
+    color: white;
+    border-color: #8b5cf6;
+}
+
+/* Formatting help icon */
+.formatting-help {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 50%;
+    cursor: help;
+    font-size: 0.8rem;
+    color: #6b7280;
+    transition: all 0.2s ease;
+    margin-left: 0.5rem;
+}
+
+.formatting-help:hover {
+    background: #e5e7eb;
+    color: #374151;
+    border-color: #9ca3af;
+}
+
 .text-color-picker,
 .highlight-color-picker {
     width: 32px;
