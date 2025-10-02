@@ -1359,13 +1359,17 @@ class FlashCardsApp {
 
     // Initialize level system
     initializeLevelSystem() {
-        // Load XP and level data
-        if (typeof loadUserXP === 'function') {
-            loadUserXP();
-        }
-        // Update the display
-        if (typeof updateLevelDisplay === 'function') {
-            updateLevelDisplay();
+        // Call the global XP system initialization
+        if (typeof window.initializeXPSystem === 'function') {
+            window.initializeXPSystem();
+        } else {
+            // Fallback: try direct calls
+            if (typeof loadUserXP === 'function') {
+                loadUserXP();
+            }
+            if (typeof updateLevelDisplay === 'function') {
+                updateLevelDisplay();
+            }
         }
         console.log('💫 Level system initialized');
     }
@@ -9334,6 +9338,23 @@ function initializeXPSystem() {
     setupProfileEventListeners();
     updateLevelDisplay();
     updateAchievements();
+    
+    // Make sure functions are globally accessible
+    window.initializeXPSystem = initializeXPSystem;
+    window.loadUserXP = loadUserXP;
+    window.updateLevelDisplay = updateLevelDisplay;
+    window.userXP = userXP;
+    window.userLevel = userLevel;
+    window.LEVEL_THRESHOLDS = LEVEL_THRESHOLDS;
+    window.getXPForNextLevel = getXPForNextLevel;
+    
+    console.log('Level system globals set:', { userLevel, userXP });
+    
+    // For testing: if user has no XP, give them some starting XP to see the system work
+    if (userXP === 0) {
+        // Give 50 XP as a welcome bonus
+        awardXP(50, 'Welcome to FlashCards!');
+    }
 }
 
 // Load user XP and level from storage
