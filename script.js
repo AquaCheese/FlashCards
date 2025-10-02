@@ -428,6 +428,35 @@ window.addEventListener('storage', function(e) {
 // Make the function globally available
 window.immediatelyUpdateLevelDisplay = immediatelyUpdateLevelDisplay;
 
+// Fix for button clickability issues
+document.addEventListener('DOMContentLoaded', function() {
+    // Ensure all modals are properly hidden on page load
+    const modals = document.querySelectorAll('.modal-overlay');
+    modals.forEach(modal => {
+        if (!modal.style.display || modal.style.display === 'none') {
+            modal.style.display = 'none';
+            modal.style.pointerEvents = 'none';
+        }
+    });
+    
+    // Fix any buttons that might not be clickable
+    const buttons = document.querySelectorAll('button, .btn, [onclick]');
+    buttons.forEach(button => {
+        button.style.pointerEvents = 'auto';
+        button.style.cursor = 'pointer';
+        
+        // Ensure click events work
+        if (button.onclick || button.getAttribute('onclick')) {
+            button.addEventListener('click', function(e) {
+                // Don't interfere with existing handlers
+                e.stopPropagation();
+            }, false);
+        }
+    });
+    
+    console.log('✅ Button clickability fixes applied');
+});
+
 // FlashCards Application
 class FlashCardsApp {
     constructor() {
@@ -9557,8 +9586,6 @@ function saveUserLevel() {
         setTimeout(() => {
             immediatelyUpdateLevelDisplay();
         }, 50);
-    }
-}       }, 50);
     }
 }
 

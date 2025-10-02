@@ -5,6 +5,20 @@
     box-sizing: border-box;
 }
 
+/* Fix for clickability issues */
+button, .btn, [onclick], input[type="button"], input[type="submit"] {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative;
+    z-index: 10;
+}
+
+/* Ensure modals are properly hidden */
+.modal-overlay:not(.show):not([style*="display: flex"]) {
+    display: none !important;
+    pointer-events: none !important;
+}
+
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #219d13 100%);
@@ -554,6 +568,9 @@ body {
     align-items: center;
     gap: 0.5rem;
     text-decoration: none;
+    pointer-events: auto; /* Ensure buttons are clickable */
+    position: relative; /* Ensure proper stacking */
+    z-index: 10; /* Above most elements */
 }
 
 .btn:hover {
@@ -604,11 +621,15 @@ body {
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.7);
-    display: flex;
+    display: none; /* Hidden by default */
     align-items: center;
     justify-content: center;
     z-index: 1000;
     backdrop-filter: blur(5px);
+}
+
+.modal-overlay.show {
+    display: flex; /* Only show when .show class is added */
 }
 
 .modal-content {
