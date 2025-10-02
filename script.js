@@ -9579,10 +9579,6 @@ function saveUserXP() {
     localStorage.setItem('userXP', userXP.toString());
     // Auto-update level display when XP changes
     if (typeof immediatelyUpdateLevelDisplay === 'function') {
-function saveUserLevel() {
-    localStorage.setItem('userLevel', userLevel.toString());
-    // Auto-update level display when level changes
-    if (typeof immediatelyUpdateLevelDisplay === 'function') {
         setTimeout(() => {
             immediatelyUpdateLevelDisplay();
         }, 50);
@@ -9591,6 +9587,12 @@ function saveUserLevel() {
 
 function saveUserLevel() {
     localStorage.setItem('userLevel', userLevel.toString());
+    // Auto-update level display when level changes
+    if (typeof immediatelyUpdateLevelDisplay === 'function') {
+        setTimeout(() => {
+            immediatelyUpdateLevelDisplay();
+        }, 50);
+    }
 }
 
 function saveUserProfile() {
