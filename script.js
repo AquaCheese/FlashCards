@@ -413,6 +413,12 @@ class FlashCardsApp {
         this.initializeLevelSystem();
         console.log('Level system initialized');
         
+        // Ensure level display is updated after everything is loaded
+        setTimeout(() => {
+            this.forceUpdateLevelDisplay();
+            console.log('Forced level display update completed');
+        }, 500);
+        
         this.showView('home');
         
         // Start background AI monitoring
@@ -1371,7 +1377,48 @@ class FlashCardsApp {
                 updateLevelDisplay();
             }
         }
+        
+        // Force update the display after a short delay to ensure DOM is ready
+        setTimeout(() => {
+            this.forceUpdateLevelDisplay();
+        }, 100);
+        
         console.log('💫 Level system initialized');
+    }
+
+    // Force update the level display with current values
+    forceUpdateLevelDisplay() {
+        const levelElement = document.getElementById('user-level');
+        const xpElement = document.getElementById('user-xp');
+        const progressElement = document.getElementById('xp-progress');
+        
+        // Get current values from global variables or defaults
+        const currentLevel = window.userLevel || 1;
+        const currentXP = window.userXP || 0;
+        
+        // Update level number
+        if (levelElement) {
+            levelElement.textContent = currentLevel;
+        }
+        
+        // Update XP display and progress bar
+        if (xpElement && progressElement) {
+            // Calculate progress for current level
+            const LEVEL_THRESHOLDS = window.LEVEL_THRESHOLDS || [0, 100, 250, 450, 700, 1000];
+            const nextLevelXP = LEVEL_THRESHOLDS[currentLevel] || (currentLevel * 100);
+            const currentLevelXP = currentLevel > 1 ? (LEVEL_THRESHOLDS[currentLevel - 1] || ((currentLevel - 1) * 100)) : 0;
+            const progressXP = currentXP - currentLevelXP;
+            const neededXP = nextLevelXP - currentLevelXP;
+            
+            // Update text display
+            xpElement.textContent = `${Math.max(0, progressXP)}/${neededXP}`;
+            
+            // Update progress bar
+            const percentage = Math.max(0, Math.min(100, (progressXP / neededXP) * 100));
+            progressElement.style.width = `${percentage}%`;
+            
+            console.log('Level display updated:', { currentLevel, currentXP, progressXP, neededXP, percentage });
+        }
     }
 
     // Show level info modal
@@ -9353,8 +9400,33 @@ function initializeXPSystem() {
     // For testing: if user has no XP, give them some starting XP to see the system work
     if (userXP === 0) {
         // Give 50 XP as a welcome bonus
-        awardXP(50, 'Welcome to FlashCards!');
+        userXP = 50;
+        userLevel = calculateLevelFromXP(userXP);
+        saveUserXP();
+        saveUserLevel();
+        console.log('Applied welcome bonus: 50 XP');
     }
+    
+    // Force update the display after initialization
+    setTimeout(() => {
+        updateLevelDisplay();
+    }, 200);
+    
+    // Add debug function for testing
+    window.testLevelSystem = function() {
+        console.log('Testing level system...');
+        awardXP(25, 'Test XP');
+        updateLevelDisplay();
+    };
+    
+    window.resetLevelSystem = function() {
+        userXP = 0;
+        userLevel = 1;
+        saveUserXP();
+        saveUserLevel();
+        updateLevelDisplay();
+        console.log('Level system reset');
+    };
 }
 
 // Load user XP and level from storage
@@ -9586,55 +9658,17 @@ function getUnlockedContent() {
     return unlocked;
 }
 
-// Check if user has unlocked specific content
-function hasUnlocked(category, item) {
-    const unlocked = getUnlockedContent();
-    return unlocked[category] && unlocked[category].includes(item);
-}
-
-// Get next unlock preview
-function getNextUnlocks() {
-    const nextLevels = [userLevel + 1, userLevel + 2, userLevel + 3, userLevel + 5, userLevel + 10]
-        .filter(level => level <= Math.max(...Object.keys(LEVEL_UNLOCKS).map(Number)));
-    
-    const previews = [];
-    nextLevels.forEach(level => {
-        const unlocks = LEVEL_UNLOCKS[level];
-        if (unlocks) {
-            previews.push({ level, unlocks });
-        }
-    });
-    
-    return previews;
-}
-
-// Handle level up with unlock notifications
-function handleLevelUp(oldLevel, newLevel) {
-    console.log(`🎉 Level up! ${oldLevel} → ${newLevel}`);
-    
-    // Check for new unlocks
-    const unlocks = LEVEL_UNLOCKS[newLevel];
-    if (unlocks) {
-        showLevelUpModal(oldLevel, newLevel, unlocks);
-    } else {
-        showBasicLevelUpNotification(oldLevel, newLevel);
-    }
-    
-    // Award level up XP bonus
-    const levelBonus = newLevel * 10;
-    setTimeout(() => {
-        awardXP(levelBonus, `Level ${newLevel} bonus!`);
-    }, 2000);
-}
-
 // Update level display in header
 function updateLevelDisplay() {
     const levelElement = document.getElementById('user-level');
     const xpElement = document.getElementById('user-xp');
     const progressElement = document.getElementById('xp-progress');
     
+    console.log('updateLevelDisplay called with:', { userLevel, userXP });
+    
     if (levelElement) {
         levelElement.textContent = userLevel;
+        console.log('Updated level element to:', userLevel);
     }
     
     if (xpElement) {
@@ -9644,11 +9678,44 @@ function updateLevelDisplay() {
         const neededXP = nextLevelXP - currentLevelXP;
         
         // Update compact display text (remove "XP" to save space)
-        xpElement.textContent = `${progressXP}/${neededXP}`;
+        xpElement.textContent = `${Math.max(0, progressXP)}/${neededXP}`;
+        console.log('Updated XP text to:', `${Math.max(0, progressXP)}/${neededXP}`);
         
         if (progressElement) {
-            const percentage = (progressXP / neededXP) * 100;
-            progressElement.style.width = `${Math.min(percentage, 100)}%`;
+            const percentage = Math.max(0, Math.min(100, (progressXP / neededXP) * 100));
+            progressElement.style.width = `${percentage}%`;
+            console.log('Updated progress bar to:', `${percentage}%`);
+        }
+    }
+}
+
+// Update level display in header
+function updateLevelDisplay() {
+    const levelElement = document.getElementById('user-level');
+    const xpElement = document.getElementById('user-xp');
+    const progressElement = document.getElementById('xp-progress');
+    
+    console.log('updateLevelDisplay called with:', { userLevel, userXP });
+    
+    if (levelElement) {
+        levelElement.textContent = userLevel;
+        console.log('Updated level element to:', userLevel);
+    }
+    
+    if (xpElement) {
+        const nextLevelXP = getXPForNextLevel(userLevel);
+        const currentLevelXP = userLevel > 1 ? LEVEL_THRESHOLDS[userLevel - 1] : 0;
+        const progressXP = userXP - currentLevelXP;
+        const neededXP = nextLevelXP - currentLevelXP;
+        
+        // Update compact display text (remove "XP" to save space)
+        xpElement.textContent = `${Math.max(0, progressXP)}/${neededXP}`;
+        console.log('Updated XP text to:', `${Math.max(0, progressXP)}/${neededXP}`);
+        
+        if (progressElement) {
+            const percentage = Math.max(0, Math.min(100, (progressXP / neededXP) * 100));
+            progressElement.style.width = `${percentage}%`;
+            console.log('Updated progress bar to:', `${percentage}%`);
         }
     }
 }
