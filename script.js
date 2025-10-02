@@ -346,14 +346,16 @@ window.purchasePowerUp = function(type, cost) {
 
 // Simple level display updater that runs immediately
 function immediatelyUpdateLevelDisplay() {
-    // Get or set default values
-    let currentXP = parseInt(localStorage.getItem('userXP')) || 50; // Give 50 XP to new users
-    let currentLevel = parseInt(localStorage.getItem('userLevel')) || 1;
+    // Use global variables if available, otherwise get from localStorage
+    let currentXP = window.userXP || parseInt(localStorage.getItem('userXP')) || 50;
+    let currentLevel = window.userLevel || parseInt(localStorage.getItem('userLevel')) || 1;
     
     // Save defaults if they didn't exist
     if (!localStorage.getItem('userXP')) {
         localStorage.setItem('userXP', '50');
         localStorage.setItem('userLevel', '1');
+        window.userXP = 50;
+        window.userLevel = 1;
     }
     
     // Basic level calculation
@@ -413,6 +415,18 @@ document.addEventListener('DOMContentLoaded', function() {
 setTimeout(() => {
     immediatelyUpdateLevelDisplay();
 }, 1000);
+
+// Listen for storage changes and update display
+window.addEventListener('storage', function(e) {
+    if (e.key === 'userXP' || e.key === 'userLevel') {
+        setTimeout(() => {
+            immediatelyUpdateLevelDisplay();
+        }, 100);
+    }
+});
+
+// Make the function globally available
+window.immediatelyUpdateLevelDisplay = immediatelyUpdateLevelDisplay;
 
 // FlashCards Application
 class FlashCardsApp {
@@ -9534,6 +9548,18 @@ function loadUserProfile() {
 // Save user XP and level
 function saveUserXP() {
     localStorage.setItem('userXP', userXP.toString());
+    // Auto-update level display when XP changes
+    if (typeof immediatelyUpdateLevelDisplay === 'function') {
+function saveUserLevel() {
+    localStorage.setItem('userLevel', userLevel.toString());
+    // Auto-update level display when level changes
+    if (typeof immediatelyUpdateLevelDisplay === 'function') {
+        setTimeout(() => {
+            immediatelyUpdateLevelDisplay();
+        }, 50);
+    }
+}       }, 50);
+    }
 }
 
 function saveUserLevel() {
@@ -9585,7 +9611,10 @@ function awardXP(amount, reason = 'Great job!') {
     updateLevelDisplay();
     updateAchievements();
     
-
+    // Also call our working immediate update function
+    if (typeof immediatelyUpdateLevelDisplay === 'function') {
+        immediatelyUpdateLevelDisplay();
+    }
     
     console.log(`🌟 Gained ${amount} XP! Total: ${userXP} (Level ${userLevel}) - ${reason}`);
 }
