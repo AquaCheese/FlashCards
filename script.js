@@ -344,6 +344,76 @@ window.purchasePowerUp = function(type, cost) {
     }
 };
 
+// Simple level display updater that runs immediately
+function immediatelyUpdateLevelDisplay() {
+    // Get or set default values
+    let currentXP = parseInt(localStorage.getItem('userXP')) || 50; // Give 50 XP to new users
+    let currentLevel = parseInt(localStorage.getItem('userLevel')) || 1;
+    
+    // Save defaults if they didn't exist
+    if (!localStorage.getItem('userXP')) {
+        localStorage.setItem('userXP', '50');
+        localStorage.setItem('userLevel', '1');
+    }
+    
+    // Basic level calculation
+    const levelThresholds = [0, 100, 250, 450, 700, 1000];
+    for (let i = levelThresholds.length - 1; i >= 0; i--) {
+        if (currentXP >= levelThresholds[i]) {
+            currentLevel = i + 1;
+            break;
+        }
+    }
+    
+    // Update level number immediately
+    const levelElement = document.getElementById('user-level');
+    if (levelElement) {
+        levelElement.textContent = currentLevel;
+        console.log('Updated level element to:', currentLevel);
+    } else {
+        console.log('Could not find user-level element');
+    }
+    
+    // Calculate and update XP display
+    const nextLevelXP = levelThresholds[currentLevel] || 1000;
+    const currentLevelXP = levelThresholds[currentLevel - 1] || 0;
+    const progressXP = currentXP - currentLevelXP;
+    const neededXP = nextLevelXP - currentLevelXP;
+    
+    // Update XP text
+    const xpElement = document.getElementById('user-xp');
+    if (xpElement) {
+        xpElement.textContent = `${Math.max(0, progressXP)}/${neededXP}`;
+        console.log('Updated XP element to:', `${Math.max(0, progressXP)}/${neededXP}`);
+    } else {
+        console.log('Could not find user-xp element');
+    }
+    
+    // Update progress bar
+    const progressElement = document.getElementById('xp-progress');
+    if (progressElement) {
+        const percentage = Math.max(0, Math.min(100, (progressXP / neededXP) * 100));
+        progressElement.style.width = `${percentage}%`;
+        console.log('Updated progress bar to:', `${percentage}%`);
+    } else {
+        console.log('Could not find xp-progress element');
+    }
+    
+    console.log('Immediate level display update:', { currentLevel, currentXP, progressXP, neededXP });
+}
+
+// Run immediately when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        immediatelyUpdateLevelDisplay();
+    }, 100);
+});
+
+// Also run after a delay to catch any timing issues
+setTimeout(() => {
+    immediatelyUpdateLevelDisplay();
+}, 1000);
+
 // FlashCards Application
 class FlashCardsApp {
     constructor() {
