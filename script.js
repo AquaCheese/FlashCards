@@ -408,6 +408,11 @@ class FlashCardsApp {
         
         this.updateAILockStatus();
         console.log('updateAILockStatus() completed');
+        
+        // Initialize level system
+        this.initializeLevelSystem();
+        console.log('Level system initialized');
+        
         this.showView('home');
         
         // Start background AI monitoring
@@ -939,8 +944,12 @@ class FlashCardsApp {
             setTimeout(() => {
                 this.initializeStatsPage();
             }, 100);
-
         }
+        
+        // Add smooth transition class
+        document.querySelectorAll('.view').forEach(view => {
+            view.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        });
     }
 
     // Deck Management
@@ -1300,7 +1309,7 @@ class FlashCardsApp {
     checkCoinMilestones(previousCoins, currentCoins) {
         const milestones = [
             { coins: 100, title: 'The First Taste of Victory', message: 'You earned your first 100 coins! 🎉', emoji: '💯' },
-            { coins: 250, title: 'Coin Collector', message: 'One Quarter! (That\'s a math reference), emoji: '🏆' },
+            { coins: 250, title: 'Coin Collector', message: 'A Quarter of The Way to 1000! (That\'s a math reference)', emoji: '🏆' },
             { coins: 500, title: 'Halfway Theeerrrrree', message: 'Livin\' on a prayerrr!', emoji: '🌟' },
             { coins: 1000, title: 'Expanding The Collection', message: 'Awesome!', emoji: '👑' },
             { coins: 2500, title: 'WOOO!!!!', message: 'WOOOOOOOOOOOOOOO!!', emoji: '💎' },
@@ -1346,6 +1355,78 @@ class FlashCardsApp {
         }, 5000);
         
         console.log(`🏆 Achievement unlocked: ${milestone.title} - ${milestone.message}`);
+    }
+
+    // Initialize level system
+    initializeLevelSystem() {
+        // Load XP and level data
+        if (typeof loadUserXP === 'function') {
+            loadUserXP();
+        }
+        // Update the display
+        if (typeof updateLevelDisplay === 'function') {
+            updateLevelDisplay();
+        }
+        console.log('💫 Level system initialized');
+    }
+
+    // Show level info modal
+    showLevelInfo() {
+        // Access global level variables
+        const currentLevel = window.userLevel || 1;
+        const currentXP = window.userXP || 0;
+        const nextLevelXP = window.getXPForNextLevel ? window.getXPForNextLevel(currentLevel) : 100;
+        const currentLevelXP = currentLevel > 1 && window.LEVEL_THRESHOLDS ? window.LEVEL_THRESHOLDS[currentLevel - 1] : 0;
+        const progressXP = currentXP - currentLevelXP;
+        const neededXP = nextLevelXP - currentLevelXP;
+        const progressPercent = Math.round((progressXP / neededXP) * 100);
+
+        const modal = document.createElement('div');
+        modal.className = 'level-info-modal';
+        modal.innerHTML = `
+            <div class="level-info-content">
+                <div class="level-info-header">
+                    <h3>⭐ Level ${currentLevel}</h3>
+                    <button class="close-btn" onclick="this.parentElement.parentElement.parentElement.remove()">×</button>
+                </div>
+                <div class="level-info-body">
+                    <div class="level-progress-display">
+                        <div class="level-progress-bar">
+                            <div class="level-progress-fill" style="width: ${progressPercent}%"></div>
+                        </div>
+                        <div class="level-progress-text">${progressXP} / ${neededXP} XP (${progressPercent}%)</div>
+                    </div>
+                    <div class="level-info-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">Total XP</div>
+                            <div class="stat-value">${currentXP.toLocaleString()}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Next Level</div>
+                            <div class="stat-value">${neededXP - progressXP} XP to go</div>
+                        </div>
+                    </div>
+                    <div class="level-benefits">
+                        <h4>How to gain XP:</h4>
+                        <ul>
+                            <li>📚 Study cards: +10 XP per correct answer</li>
+                            <li>🎯 Perfect completion: +100 XP</li>
+                            <li>📝 Create decks: +25 XP</li>
+                            <li>🔥 Study streaks: +5 XP per streak level</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Auto-remove after 10 seconds
+        setTimeout(() => {
+            if (modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
+        }, 10000);
     }
 
     // 💡 AI Hint System
@@ -8729,15 +8810,7 @@ async function handleSignIn(e) {
         updateAccountButton();
         showAccountSettings();
         
-        // Load profile settings into form
-        if (typeof loadProfileSettingsIntoForm === 'function') {
-            loadProfileSettingsIntoForm();
-        }
-        
-        // Update profile display
-        if (typeof updateProfileDisplay === 'function') {
-            updateProfileDisplay();
-        }
+        // Profile display removed for cleaner interface
         
         showNotification(`Welcome back, ${user.displayName || user.username}!`, 'success');
         
@@ -8855,10 +8928,7 @@ async function handleRegister(e) {
             loadProfileSettingsIntoForm();
         }
         
-        // Update profile display
-        if (typeof updateProfileDisplay === 'function') {
-            updateProfileDisplay();
-        }
+        // Profile display removed for cleaner interface
         
         showNotification(`Welcome to FlashCards, ${username}!`, 'success');
         
@@ -8941,15 +9011,7 @@ function showAccountSettings() {
     if (userTotalCoins) userTotalCoins.textContent = `${app?.coins || 0} coins`;
     if (settingsAvatarInitial) settingsAvatarInitial.textContent = displayName.charAt(0).toUpperCase();
     
-    // Load profile settings into forms
-    if (typeof loadProfileSettingsIntoForm === 'function') {
-        loadProfileSettingsIntoForm();
-    }
-    
-    // Update profile display
-    if (typeof updateProfileDisplay === 'function') {
-        updateProfileDisplay();
-    }
+    // Profile display removed for cleaner interface
     
     // Load preferences
     if (typeof loadUserPreferences === 'function') {
@@ -9547,7 +9609,8 @@ function updateLevelDisplay() {
         const progressXP = userXP - currentLevelXP;
         const neededXP = nextLevelXP - currentLevelXP;
         
-        xpElement.textContent = `${progressXP}/${neededXP} XP`;
+        // Update compact display text (remove "XP" to save space)
+        xpElement.textContent = `${progressXP}/${neededXP}`;
         
         if (progressElement) {
             const percentage = (progressXP / neededXP) * 100;
@@ -9616,7 +9679,7 @@ function showLevelUpModal(oldLevel, newLevel, unlocks) {
             </div>
             <div class="level-up-actions">
                 <button class="btn btn-primary" onclick="closeLevelUpModal()">Awesome!</button>
-                <button class="btn btn-secondary" onclick="openCustomization()">Customize Now</button>
+                <button class="btn btn-secondary" onclick="showView('shop')">Visit Shop</button>
             </div>
         </div>
     `;
@@ -9680,6 +9743,12 @@ window.closeLevelUpModal = function() {
     const modal = document.querySelector('.level-up-modal');
     if (modal && modal.parentNode) {
         modal.parentNode.removeChild(modal);
+    }
+};
+
+window.showLevelInfo = function() {
+    if (app && app.showLevelInfo) {
+        app.showLevelInfo();
     }
 };
 

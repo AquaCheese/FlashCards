@@ -154,13 +154,16 @@ body {
     padding: 0.5rem 1rem;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-weight: 500;
+    position: relative;
+    overflow: hidden;
 }
 
 .nav-btn:hover {
     background: rgba(255, 255, 255, 0.2);
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
 }
 
 .nav-btn.active {
@@ -4922,6 +4925,262 @@ select:focus {
     border-radius: 12px;
     padding: 1.5rem;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Compact Level Display for Header */
+.level-display-compact {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 0.3rem 0.7rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.level-display-compact:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.level-badge-small {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.level-badge-small .level-icon {
+    font-size: 1rem;
+    color: #ffd700;
+}
+
+.level-badge-small .level-number {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: white;
+    min-width: 1.5rem;
+    text-align: center;
+}
+
+.xp-bar-compact {
+    width: 60px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+}
+
+.xp-bar-compact .xp-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #34d399);
+    border-radius: 2px;
+    transition: width 0.5s ease;
+    position: relative;
+}
+
+.xp-bar-compact .xp-progress::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
+    animation: shimmer-compact 2s infinite;
+}
+
+@keyframes shimmer-compact {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.xp-text-compact {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+    min-width: 2.5rem;
+    text-align: center;
+}
+
+/* Level Info Modal */
+.level-info-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.3s ease;
+}
+
+.level-info-content {
+    background: white;
+    border-radius: 16px;
+    max-width: 400px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    animation: modalSlideUp 0.3s ease;
+}
+
+.level-info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.level-info-header h3 {
+    margin: 0;
+    color: #1f2937;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.level-info-body {
+    padding: 1.5rem;
+}
+
+.level-progress-display {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.level-progress-bar {
+    height: 12px;
+    background: #e5e7eb;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.level-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #34d399);
+    border-radius: 6px;
+    transition: width 0.8s ease;
+    position: relative;
+}
+
+.level-progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+    animation: shimmer 2s infinite;
+}
+
+.level-progress-text {
+    font-weight: 600;
+    color: #374151;
+    font-size: 1.1rem;
+}
+
+.level-info-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 12px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 0.25rem;
+}
+
+.stat-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.level-benefits h4 {
+    margin: 0 0 1rem 0;
+    color: #1f2937;
+    font-size: 1.1rem;
+}
+
+.level-benefits ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.level-benefits li {
+    padding: 0.5rem 0;
+    color: #4b5563;
+    font-size: 0.9rem;
+}
+
+@keyframes modalSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive adjustments for compact level display */
+@media (max-width: 768px) {
+    .level-display-compact {
+        padding: 0.25rem 0.5rem;
+        gap: 0.3rem;
+    }
+    
+    .xp-bar-compact {
+        width: 40px;
+    }
+    
+    .xp-text-compact {
+        font-size: 0.7rem;
+        min-width: 2rem;
+    }
+    
+    .level-badge-small .level-number {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .level-display-compact {
+        padding: 0.2rem 0.4rem;
+    }
+    
+    .xp-bar-compact {
+        width: 30px;
+        height: 3px;
+    }
+    
+    .xp-text-compact {
+        font-size: 0.65rem;
+        min-width: 1.8rem;
+    }
 }
 
 .level-badge {
