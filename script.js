@@ -114,7 +114,7 @@ window.generateSubjectSpecificDeck = function() {
 
 window.devBonus = function() {
     if (app && app.earnCoins) {
-        app.earnCoins(99999999, 'Dev bonus');
+        app.earnCoins(1000000, 'Dev bonus');
     }
 };
 
@@ -1299,13 +1299,14 @@ class FlashCardsApp {
 
     checkCoinMilestones(previousCoins, currentCoins) {
         const milestones = [
-            { coins: 100, title: 'First Century!', message: 'You earned your first 100 coins! 🎉', emoji: '💯' },
-            { coins: 250, title: 'Coin Collector', message: 'Quarter way to 1000! Keep studying! 📚', emoji: '🏆' },
-            { coins: 500, title: 'Halfway Hero', message: 'You\'re on fire! 500 coins earned! 🔥', emoji: '🌟' },
-            { coins: 1000, title: 'Coin Master', message: '1000 coins! You\'re becoming a study legend! ⚡', emoji: '👑' },
-            { coins: 2500, title: 'Study Tycoon', message: 'Amazing! 2500 coins! You\'re unstoppable! 🚀', emoji: '💎' },
-            { coins: 5000, title: 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', message: 'INCREDIBLE! 5000 coins! Ultimate dedication! 🏰', emoji: '🎖️' },
-            { coins: 9999999, title: 'Developer', message: 'Either you\'re cheating or you\'re... me?', emoji: '👨‍💻' }
+            { coins: 100, title: 'The First Taste of Victory', message: 'You earned your first 100 coins! 🎉', emoji: '💯' },
+            { coins: 250, title: 'Coin Collector', message: 'One Quarter! (That\'s a math reference), emoji: '🏆' },
+            { coins: 500, title: 'Halfway Theeerrrrree', message: 'Livin\' on a prayerrr!', emoji: '🌟' },
+            { coins: 1000, title: 'Expanding The Collection', message: 'Awesome!', emoji: '👑' },
+            { coins: 2500, title: 'WOOO!!!!', message: 'WOOOOOOOOOOOOOOO!!', emoji: '💎' },
+            { coins: 5000, title: '????', message: 'Do You Have a Life? (Blink Twice if You Need Help)', emoji: '🎖️' },
+            { coins: 10000, title: 'woah.', message: 'Just... Woah.', emoji: '🤯' },
+            { coins: 1000000, title: 'Developer', message: 'Either you\'re cheating or you\'re... me?', emoji: '👨‍💻' }
         ];
 
         for (const milestone of milestones) {
