@@ -470,7 +470,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    console.log('✅ Button clickability fixes applied');
+    console.log('Button clickability fixes applied');
 });
 
 // FlashCards Application
@@ -499,8 +499,23 @@ class FlashCardsApp {
         
         // Initialize comprehensive AI Manager for deck generation
         console.log('Initializing AI Manager for deck generation...');
-        this.aiManager = new AIManager();
-        this.initializeAIManager();
+        try {
+            if (typeof AIManager !== 'undefined') {
+                this.aiManager = new AIManager();
+                this.aiManagerReady = false; // Will be set to true when ready
+                
+                // Initialize AI Manager asynchronously (don't block constructor)
+                this.initializeAIManager();
+            } else {
+                console.warn('AIManager class not available - AI features will be disabled');
+                this.aiManager = null;
+                this.aiManagerReady = false;
+            }
+        } catch (error) {
+            console.error('Error creating AI Manager:', error);
+            this.aiManager = null;
+            this.aiManagerReady = false;
+        }
         
         // Gamification System - Coin Management
         this.coins = this.loadCoins();
@@ -562,19 +577,34 @@ class FlashCardsApp {
     }
 
     async initializeAIManager() {
+        if (!this.aiManager) {
+            console.log('No AI Manager available - skipping initialization');
+            this.aiManagerReady = false;
+            return;
+        }
+        
         try {
+            console.log('Starting AI Manager initialization...');
             const initialized = await this.aiManager.initialize();
             if (initialized) {
-                console.log('✅ AI Manager initialized for deck generation');
+                console.log('AI Manager initialized for deck generation');
                 this.aiManagerReady = true;
             } else {
-                console.log('⚠️ AI Manager not fully initialized, using fallbacks');
+                console.log('AI Manager not fully initialized');
                 this.aiManagerReady = false;
             }
         } catch (error) {
-            console.error('❌ AI Manager initialization failed:', error);
+            console.error('AI Manager initialization failed:', error);
             this.aiManagerReady = false;
         }
+        
+        // Update UI to show AI status
+        this.updateAIStatus();
+    }
+    
+    updateAIStatus() {
+        // You can add UI indicators here if needed
+        console.log('AI Manager Ready:', this.aiManagerReady);
     }
 
     setupEventListeners() {
@@ -1662,7 +1692,7 @@ class FlashCardsApp {
             }
         } catch (error) {
             console.error('Hint generation failed:', error);
-            this.showNotification('🤖 AI unavailable, good luck!', 'error');
+            this.showNotification('AI unavailable, good luck!', 'error');
             // Refund the hint
             this.powerUps.hints++;
             this.savePowerUps();
@@ -1749,8 +1779,8 @@ class FlashCardsApp {
             this.hideHintLoadingState();
             
             // Show error message instead of fallback
-            this.showNotification('🤖 AI unavailable, good luck!', 'error');
-            console.error('❌ All AI systems failed - cannot generate hint without AI');
+            this.showNotification('AI unavailable, good luck!', 'error');
+            console.error('All AI systems failed - cannot generate hint without AI');
             return null;
         }
     }
@@ -6042,8 +6072,8 @@ Hint:`
         
         // Check if AI is available
         if (!this.aiManagerReady || !this.aiManager) {
-            this.showNotification('🤖 AI unavailable, good luck!', 'error');
-            console.error('❌ AI unavailable - cannot generate smart decks without AI');
+            this.showNotification('AI unavailable, good luck!', 'error');
+            console.error('AI unavailable - cannot generate smart decks without AI');
             return [];
         }
         
@@ -6076,8 +6106,8 @@ Hint:`
             
             return generatedDecks.slice(0, 4); // Limit to 4 decks
         } catch (error) {
-            console.error('❌ AI deck generation failed:', error);
-            this.showNotification('🤖 AI unavailable, good luck!', 'error');
+            console.error('AI deck generation failed:', error);
+            this.showNotification('AI unavailable, good luck!', 'error');
             return [];
         }
     }
@@ -8106,8 +8136,8 @@ Hint:`
             
             // If AI completely failed, show error and abort
             if (cards.length === 0) {
-                this.showNotification('🤖 AI unavailable, good luck!', 'error');
-                console.error('❌ All AI systems failed - cannot generate deck without AI');
+                this.showNotification('AI unavailable, good luck!', 'error');
+                console.error('All AI systems failed - cannot generate deck without AI');
                 return null;
             }
             
@@ -8147,7 +8177,7 @@ Hint:`
                 }
             };
             
-            console.log('✅ Generated comprehensive AI deck with', cards.length, 'cards:', aiDeck);
+            console.log('Generated comprehensive AI deck with', cards.length, 'cards:', aiDeck);
             
             // Save the generated deck to the generated decks list
             this.saveGeneratedDeck(aiDeck);
@@ -8157,7 +8187,7 @@ Hint:`
             this.saveDecks();
             
             // Show success notification
-            this.showNotification(`🤖 AI Generated "${aiDeck.name}" with ${cards.length} cards!`, 'success');
+            this.showNotification(`AI Generated "${aiDeck.name}" with ${cards.length} cards!`, 'success');
             
             // Update deck display
             this.renderDecks();
