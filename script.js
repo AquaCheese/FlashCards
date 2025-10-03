@@ -106,7 +106,15 @@ window.generateSubjectSpecificDeck = function() {
             return;
         }
         
-        app.generateAIDeck({ subject: subject, cardCount: 8 });
+        // Generate comprehensive 20-card deck with full features
+        app.generateAIDeck({ 
+            subject: subject, 
+            cardCount: 20,  // Always generate 20 cards
+            difficulty: 'intermediate',
+            includeExplanations: true,
+            includeMultipleAnswers: true,
+            includeTitleCards: true
+        });
     } else {
         console.log('App not ready or generateAIDeck method missing');
     }
@@ -293,7 +301,15 @@ window.updateAnswerNumbers = function(element) {
 window.generateAIDeck = function() {
     console.log('generateAIDeck called via app.generateAIDeck()');
     if (app && app.generateAIDeck) {
-        app.generateAIDeck();
+        // Generate comprehensive 20-card deck with default settings
+        app.generateAIDeck({
+            cardCount: 20,
+            subject: 'Mathematics',
+            difficulty: 'intermediate',
+            includeExplanations: true,
+            includeMultipleAnswers: true,
+            includeTitleCards: true
+        });
     } else {
         console.log('App not ready or generateAIDeck method missing');
     }
@@ -481,6 +497,11 @@ class FlashCardsApp {
         console.log('GCSE AI Engine loaded');
         this.sessionStartTime = Date.now();
         
+        // Initialize comprehensive AI Manager for deck generation
+        console.log('Initializing AI Manager for deck generation...');
+        this.aiManager = new AIManager();
+        this.initializeAIManager();
+        
         // Gamification System - Coin Management
         this.coins = this.loadCoins();
         this.initializeCoinSystem();
@@ -538,6 +559,22 @@ class FlashCardsApp {
         this.startBackgroundAIMonitoring();
         
         console.log('init() completed');
+    }
+
+    async initializeAIManager() {
+        try {
+            const initialized = await this.aiManager.initialize();
+            if (initialized) {
+                console.log('✅ AI Manager initialized for deck generation');
+                this.aiManagerReady = true;
+            } else {
+                console.log('⚠️ AI Manager not fully initialized, using fallbacks');
+                this.aiManagerReady = false;
+            }
+        } catch (error) {
+            console.error('❌ AI Manager initialization failed:', error);
+            this.aiManagerReady = false;
+        }
     }
 
     setupEventListeners() {
@@ -1613,11 +1650,19 @@ class FlashCardsApp {
 
         try {
             const hint = await this.generateHint(currentCard);
-            this.showHint(hint);
-            return true;
+            if (hint) {
+                this.showHint(hint);
+                return true;
+            } else {
+                // AI failed - refund and show error
+                this.powerUps.hints++;
+                this.savePowerUps();
+                this.updatePowerUpDisplay();
+                return false;
+            }
         } catch (error) {
             console.error('Hint generation failed:', error);
-            this.showNotification('Failed to generate hint. Coins refunded.', 'error');
+            this.showNotification('🤖 AI unavailable, good luck!', 'error');
             // Refund the hint
             this.powerUps.hints++;
             this.savePowerUps();
@@ -1640,17 +1685,17 @@ class FlashCardsApp {
             };
         }
 
-        // Try AI hint generation
-        try {
-            const aiHint = await this.generateAIHint(card.question, card.answer);
+        // Try AI hint generation - no fallback
+        const aiHint = await this.generateAIHint(card.question, card.answer);
+        if (aiHint) {
             return {
                 type: 'ai',
                 text: aiHint,
                 source: 'AI-generated hint'
             };
-        } catch (error) {
-            // Fallback to smart hint
-            return this.generateSmartHint(card.question, card.answer);
+        } else {
+            // Return null if AI failed - no fallback
+            return null;
         }
     }
 
@@ -1661,23 +1706,52 @@ class FlashCardsApp {
             // Show loading state to user
             this.showHintLoadingState();
             
-            // Try AI hint generation
-            const hint = await this.getHuggingFaceHint(question, answer);
+            let hint = null;
+            
+            // Try AI Manager first (uses WebLLM, Ollama, etc.)
+            if (this.aiManagerReady && this.aiManager) {
+                try {
+                    console.log('🤖 Using AI Manager for hint generation...');
+                    const hintResult = await this.aiManager.generateHint(question, answer);
+                    
+                    if (hintResult && hintResult.text) {
+                        hint = hintResult.text;
+                        console.log('✅ AI Manager generated hint successfully:', hint);
+                    }
+                } catch (error) {
+                    console.log('AI Manager hint failed, trying Hugging Face:', error.message);
+                }
+            }
+            
+            // Fallback to Hugging Face if AI Manager failed
+            if (!hint) {
+                try {
+                    console.log('🔄 Trying Hugging Face fallback for hint...');
+                    hint = await this.getHuggingFaceHint(question, answer);
+                } catch (error) {
+                    console.log('Hugging Face hint failed:', error.message);
+                }
+            }
             
             // Hide loading state
             this.hideHintLoadingState();
             
-            console.log('✅ AI hint successful:', hint);
-            return hint;
+            if (hint) {
+                console.log('✅ AI hint successful:', hint);
+                return hint;
+            } else {
+                throw new Error('All AI hint methods failed');
+            }
         } catch (error) {
-            console.log('❌ AI hint generation failed, using smart fallback...', error);
+            console.log('❌ All AI hint generation failed:', error);
             
-            // Hide loading state and provide fallback
+            // Hide loading state and show error
             this.hideHintLoadingState();
             
-            const fallbackHint = this.generateMinimalSmartHint(question, answer);
-            console.log('🧠 Using smart fallback hint:', fallbackHint);
-            return fallbackHint;
+            // Show error message instead of fallback
+            this.showNotification('🤖 AI unavailable, good luck!', 'error');
+            console.error('❌ All AI systems failed - cannot generate hint without AI');
+            return null;
         }
     }
     
@@ -5959,41 +6033,208 @@ Hint:`
         });
     }
 
-    generateAIDecks() {
+    async generateAIDecks() {
         const analysis = this.analyzeUserPatterns();
         
         if (!analysis) {
             return []; // Not enough data
         }
         
+        // Check if AI is available
+        if (!this.aiManagerReady || !this.aiManager) {
+            this.showNotification('🤖 AI unavailable, good luck!', 'error');
+            console.error('❌ AI unavailable - cannot generate smart decks without AI');
+            return [];
+        }
+        
         const generatedDecks = [];
         
-        // Generate different types of decks based on user patterns
-        
-        // 1. Improvement Deck - Focus on weak areas
-        if (analysis.improvementAreas.length > 0) {
-            generatedDecks.push(this.generateImprovementDeck(analysis));
+        try {
+            // Generate different types of decks based on user patterns using AI
+            
+            // 1. Improvement Deck - Focus on weak areas
+            if (analysis.improvementAreas.length > 0) {
+                const improvementDeck = await this.generateAIImprovementDeck(analysis);
+                if (improvementDeck) generatedDecks.push(improvementDeck);
+            }
+            
+            // 2. Challenge Deck - Harder content for growth
+            if (analysis.challengeLevel !== 'challenging') {
+                const challengeDeck = await this.generateAIChallengeDeck(analysis);
+                if (challengeDeck) generatedDecks.push(challengeDeck);
+            }
+            
+            // 3. Review Deck - Reinforce strengths
+            if (analysis.strengths.length > 0) {
+                const reviewDeck = await this.generateAIReviewDeck(analysis);
+                if (reviewDeck) generatedDecks.push(reviewDeck);
+            }
+            
+            // 4. Quick Practice Deck - Short session based on study time preference
+            const quickDeck = await this.generateAIQuickPracticeDeck(analysis);
+            if (quickDeck) generatedDecks.push(quickDeck);
+            
+            return generatedDecks.slice(0, 4); // Limit to 4 decks
+        } catch (error) {
+            console.error('❌ AI deck generation failed:', error);
+            this.showNotification('🤖 AI unavailable, good luck!', 'error');
+            return [];
         }
+    }
+    
+    async generateAIImprovementDeck(analysis) {
+        const improvementSubject = analysis.improvementAreas[0];
         
-        // 2. Challenge Deck - Harder content for growth
-        if (analysis.challengeLevel !== 'challenging') {
-            generatedDecks.push(this.generateChallengeDeck(analysis));
+        try {
+            const deckResult = await this.aiManager.generateDeck(
+                improvementSubject,
+                'beginner', // Easier for improvement
+                10, // Smaller deck for focused practice
+                { weakness: improvementSubject, type: 'improvement' }
+            );
+            
+            if (deckResult && (deckResult.cards || typeof deckResult === 'string')) {
+                return {
+                    id: `ai-improvement-${Date.now()}`,
+                    name: `${improvementSubject} - Focus Practice`,
+                    subject: improvementSubject,
+                    type: 'ai-generated',
+                    generatedAt: Date.now(),
+                    reason: {
+                        title: 'AI Improvement Focus',
+                        description: `AI-generated deck focusing on ${improvementSubject} to help boost your confidence in this area.`
+                    },
+                    confidence: 0.85,
+                    cards: deckResult.cards || this.parseAICardResponse(deckResult, 10),
+                    titleCards: [{
+                        title: `${improvementSubject} Practice Session`,
+                        content: `This AI-generated deck is specifically designed to help you improve in ${improvementSubject}. Take your time and focus on understanding each concept.`
+                    }],
+                    style: 'classic',
+                    color: 'red' // Red for improvement areas
+                };
+            }
+        } catch (error) {
+            console.error('❌ AI improvement deck generation failed:', error);
         }
+        return null;
+    }
+    
+    async generateAIChallengeDeck(analysis) {
+        const preferredSubjects = Object.keys(analysis.preferredSubjects);
+        const subject = preferredSubjects[Math.floor(Math.random() * preferredSubjects.length)];
         
-        // 3. Review Deck - Reinforce strengths
-        if (analysis.strengths.length > 0) {
-            generatedDecks.push(this.generateReviewDeck(analysis));
+        try {
+            const deckResult = await this.aiManager.generateDeck(
+                subject,
+                'expert', // Harder for challenge
+                15,
+                { strength: subject, type: 'challenge' }
+            );
+            
+            if (deckResult && (deckResult.cards || typeof deckResult === 'string')) {
+                return {
+                    id: `ai-challenge-${Date.now()}`,
+                    name: `${subject} - AI Challenge Mode`,
+                    subject: subject,
+                    type: 'ai-generated',
+                    generatedAt: Date.now(),
+                    reason: {
+                        title: 'AI Level Up Challenge',
+                        description: `AI-generated advanced deck to push your ${subject} knowledge to the next level.`
+                    },
+                    confidence: 0.75,
+                    cards: deckResult.cards || this.parseAICardResponse(deckResult, 15),
+                    titleCards: [{
+                        title: `${subject} AI Challenge`,
+                        content: `Ready for an AI challenge? These advanced questions will test your mastery of ${subject} concepts.`
+                    }],
+                    style: 'classic',
+                    color: 'orange' // Orange for challenges
+                };
+            }
+        } catch (error) {
+            console.error('❌ AI challenge deck generation failed:', error);
         }
+        return null;
+    }
+    
+    async generateAIReviewDeck(analysis) {
+        const strengths = analysis.strengths;
+        const subject = strengths[Math.floor(Math.random() * strengths.length)];
         
-        // 4. Mixed Subject Deck - Combine preferred subjects
-        if (Object.keys(analysis.preferredSubjects).length > 1) {
-            generatedDecks.push(this.generateMixedDeck(analysis));
+        try {
+            const deckResult = await this.aiManager.generateDeck(
+                subject,
+                'intermediate',
+                12,
+                { strength: subject, type: 'review' }
+            );
+            
+            if (deckResult && (deckResult.cards || typeof deckResult === 'string')) {
+                return {
+                    id: `ai-review-${Date.now()}`,
+                    name: `${subject} - AI Review Session`,
+                    subject: subject,
+                    type: 'ai-generated',
+                    generatedAt: Date.now(),
+                    reason: {
+                        title: 'AI Strength Reinforcement',
+                        description: `AI-generated deck to reinforce your strong ${subject} skills.`
+                    },
+                    confidence: 0.80,
+                    cards: deckResult.cards || this.parseAICardResponse(deckResult, 12),
+                    titleCards: [{
+                        title: `${subject} AI Review`,
+                        content: `Keep your ${subject} skills sharp with this AI-generated review session.`
+                    }],
+                    style: 'classic',
+                    color: 'green' // Green for strengths
+                };
+            }
+        } catch (error) {
+            console.error('❌ AI review deck generation failed:', error);
         }
+        return null;
+    }
+    
+    async generateAIQuickPracticeDeck(analysis) {
+        const preferredSubjects = Object.keys(analysis.preferredSubjects);
+        const subject = preferredSubjects[0] || 'General Knowledge';
         
-        // 5. Quick Practice Deck - Short session based on study time preference
-        generatedDecks.push(this.generateQuickPracticeDeck(analysis));
-        
-        return generatedDecks.slice(0, 4); // Limit to 4 decks
+        try {
+            const deckResult = await this.aiManager.generateDeck(
+                subject,
+                'intermediate',
+                8, // Shorter deck
+                { type: 'quick_practice' }
+            );
+            
+            if (deckResult && (deckResult.cards || typeof deckResult === 'string')) {
+                return {
+                    id: `ai-quick-${Date.now()}`,
+                    name: `${subject} - AI Quick Session`,
+                    subject: subject,
+                    type: 'ai-generated',
+                    generatedAt: Date.now(),
+                    reason: {
+                        title: 'AI Quick Practice',
+                        description: `AI-generated focused 5-10 minute practice session in ${subject}.`
+                    },
+                    confidence: 0.88,
+                    cards: deckResult.cards || this.parseAICardResponse(deckResult, 8),
+                    titleCards: [{
+                        title: `Quick ${subject} AI Practice`,
+                        content: `A short but effective AI-generated practice session. Perfect for when you have just a few minutes to study!`
+                    }],
+                    style: 'classic',
+                    color: 'teal' // Teal for quick sessions
+                };
+            }
+        } catch (error) {
+            console.error('❌ AI quick practice deck generation failed:', error);
+        }
+        return null;
     }
     
     generateImprovementDeck(analysis) {
@@ -6199,8 +6440,8 @@ Hint:`
         statusElement.style.display = 'block';
         
         // Show generation process
-        setTimeout(() => {
-            const generatedDecks = this.generateAIDecks();
+        setTimeout(async () => {
+            const generatedDecks = await this.generateAIDecks();
             
             if (generatedDecks.length > 0) {
                 statusElement.style.display = 'none';
@@ -7796,58 +8037,131 @@ Hint:`
     // =================== AI DECK GENERATION BASED ON USER STATISTICS ===================
     
     async generateAIDeck(options = {}) {
-        console.log('🤖 Starting AI deck generation based on user statistics...');
+        console.log('🤖 Starting AI deck generation with 20 cards and full deck creator features...');
         
         try {
-            // Load user learning profile
+            // Set default options for comprehensive deck generation
+            const deckOptions = {
+                cardCount: options.cardCount || 20, // Always generate 20 cards
+                subject: options.subject || 'Mathematics', // Default subject
+                difficulty: options.difficulty || 'intermediate',
+                includeExplanations: true,
+                includeMultipleAnswers: true,
+                includeTitleCards: true,
+                ...options
+            };
+            
+            console.log('📚 Generating deck with options:', deckOptions);
+            
+            // Load user learning profile or use defaults
             const profile = JSON.parse(localStorage.getItem('ai-learning-profile') || '{}');
             
-            if (!profile.preferences || profile.preferences.accuracyTrends.length < 2) {
-                throw new Error('Insufficient user data for AI deck generation. Please complete more study sessions first.');
+            // Create comprehensive AI prompt for full deck generation
+            const fullDeckPrompt = this.buildComprehensiveDeckPrompt(deckOptions, profile);
+            console.log('📊 Generated comprehensive deck prompt');
+            
+            // Generate cards using comprehensive AI system with fallback
+            let cards = [];
+            let aiResponse = null;
+            
+            // Try AI Manager first (uses WebLLM, Ollama, etc.)
+            if (this.aiManagerReady && this.aiManager) {
+                try {
+                    console.log('🤖 Using AI Manager for deck generation...');
+                    
+                    // Load user profile
+                    const profile = JSON.parse(localStorage.getItem('ai-learning-profile') || '{}');
+                    
+                    const deckResult = await this.aiManager.generateDeck(
+                        deckOptions.subject,
+                        deckOptions.difficulty,
+                        deckOptions.cardCount,
+                        profile
+                    );
+                    
+                    if (deckResult && deckResult.cards) {
+                        console.log('✅ AI Manager generated deck successfully');
+                        cards = deckResult.cards;
+                    } else if (deckResult && typeof deckResult === 'string') {
+                        console.log('✅ AI Manager generated content successfully');
+                        cards = this.parseAICardResponse(deckResult, deckOptions.cardCount);
+                    }
+                } catch (error) {
+                    console.log('AI Manager failed, trying Hugging Face fallback:', error.message);
+                }
             }
             
-            // Build personalized prompt based on user statistics
-            const statsPrompt = this.buildUserStatsPrompt(profile, options);
-            console.log('📊 Generated stats-based prompt:', statsPrompt);
-            
-            // Generate cards using Hugging Face AI
-            const aiResponse = await this.getHuggingFaceResponse(statsPrompt);
-            
-            if (!aiResponse) {
-                throw new Error('Failed to get AI response for deck generation');
+            // Fallback to Hugging Face if AI Manager failed
+            if (!aiResponse && cards.length === 0) {
+                try {
+                    console.log('🔄 Trying Hugging Face fallback...');
+                    aiResponse = await this.getHuggingFaceResponse(fullDeckPrompt);
+                    if (aiResponse) {
+                        cards = this.parseAICardResponse(aiResponse, deckOptions.cardCount);
+                    }
+                } catch (error) {
+                    console.log('All AI methods failed:', error.message);
+                }
             }
             
-            // Parse AI response into cards
-            const cards = this.parseAICardResponse(aiResponse);
-            
+            // If AI completely failed, show error and abort
             if (cards.length === 0) {
-                throw new Error('AI did not generate any valid cards');
+                this.showNotification('🤖 AI unavailable, good luck!', 'error');
+                console.error('❌ All AI systems failed - cannot generate deck without AI');
+                return null;
             }
             
-            // Create deck with AI metadata
-            const deckId = 'ai_stats_' + Date.now();
+            // Ensure we have the requested number of cards (only from AI)
+            cards = cards.slice(0, deckOptions.cardCount);
+            
+            // Generate title cards for the deck
+            const titleCards = this.generateDeckTitleCards(deckOptions);
+            
+            // Create comprehensive deck structure (like user would with deck creator)
+            const deckId = 'ai_comprehensive_' + Date.now();
             const aiDeck = {
                 id: deckId,
-                title: this.generateAIDeckTitle(profile, options),
-                subject: this.determineSubjectFromProfile(profile),
-                difficulty: this.determineDifficultyFromProfile(profile),
+                name: this.generateComprehensiveDeckTitle(deckOptions),
+                subject: deckOptions.subject,
+                difficulty: deckOptions.difficulty,
                 cards: cards,
+                titleCards: titleCards, // Include title cards
                 dateCreated: Date.now(),
-                generationType: 'user-stats-based',
-                confidence: this.calculateAIConfidence(profile),
+                lastStudied: null,
+                stats: {
+                    totalStudied: 0,
+                    correctAnswers: 0,
+                    averageTime: 0
+                },
+                style: 'classic', // Default style
+                color: 'blue', // Default color
+                generationType: 'ai-comprehensive',
+                isAIGenerated: true,
                 aiMetadata: {
-                    basedOnSessions: profile.preferences.accuracyTrends.length,
-                    targetWeaknesses: this.identifyTopWeaknesses(profile),
-                    userAccuracyAvg: this.calculateAverageAccuracy(profile),
-                    generationPrompt: statsPrompt,
-                    timestamp: Date.now()
+                    cardCount: cards.length,
+                    subject: deckOptions.subject,
+                    difficulty: deckOptions.difficulty,
+                    generationDate: new Date().toISOString(),
+                    includesExplanations: true,
+                    includesMultipleAnswers: true
                 }
             };
             
-            console.log('✅ Generated AI deck based on user stats:', aiDeck);
+            console.log('✅ Generated comprehensive AI deck with', cards.length, 'cards:', aiDeck);
             
-            // Save the generated deck
+            // Save the generated deck to the generated decks list
             this.saveGeneratedDeck(aiDeck);
+            
+            // Also add to user's personal collection immediately
+            this.decks.push(aiDeck);
+            this.saveDecks();
+            
+            // Show success notification
+            this.showNotification(`🤖 AI Generated "${aiDeck.name}" with ${cards.length} cards!`, 'success');
+            
+            // Update deck display
+            this.renderDecks();
+            this.updateGeneratedDecksDisplay();
             
             // Show success notification
             this.showNotification(
@@ -8488,6 +8802,243 @@ A: This concept is significant because it helps bridge basic understanding with 
         
         return cards.join('\n\n');
     }
+    
+    // =================== COMPREHENSIVE AI DECK GENERATION ===================
+    
+    buildComprehensiveDeckPrompt(options, profile) {
+        const { subject, difficulty, cardCount } = options;
+        
+        return `Generate ${cardCount} educational flashcards for ${subject} at ${difficulty} level.
+
+CRITICAL REQUIREMENTS:
+1. Each card must have a SIMPLE, SHORT answer (1-10 words max)
+2. Include a detailed explanation after each answer
+3. Format: Q: [question] | A: [simple answer] | E: [detailed explanation]
+4. Make questions progressively build on each other
+5. Focus on practical, testable knowledge
+6. Include variety: definitions, calculations, applications, examples
+
+EXAMPLES:
+Q: What is 2x + 3x? | A: 5x | E: When adding terms with the same variable, you add the coefficients (2 + 3 = 5) and keep the variable (x). This is called combining like terms.
+
+Q: What is photosynthesis? | A: Plants making food from sunlight | E: Photosynthesis is the process where plants use sunlight, water, and carbon dioxide to create glucose (sugar) for energy and release oxygen as a byproduct. The equation is 6CO₂ + 6H₂O + light energy → C₆H₁₂O₆ + 6O₂.
+
+Q: What is the capital of France? | A: Paris | E: Paris has been the capital of France since 508 AD and is located in north-central France along the Seine River. It's known for landmarks like the Eiffel Tower, Louvre Museum, and Notre-Dame Cathedral.
+
+Subject: ${subject}
+Difficulty: ${difficulty}
+Generate exactly ${cardCount} cards following this format.`;
+    }
+    
+    generateTemplateBasedCards(options, count) {
+        const { subject, difficulty } = options;
+        const cards = [];
+        
+        // Get subject-specific templates
+        const templates = this.getSubjectTemplates(subject);
+        
+        for (let i = 0; i < count; i++) {
+            const template = templates[i % templates.length];
+            const card = this.generateCardFromTemplate(template, difficulty, i + 1);
+            cards.push(card);
+        }
+        
+        return cards;
+    }
+    
+    getSubjectTemplates(subject) {
+        const subjectLower = subject.toLowerCase();
+        
+        if (subjectLower.includes('math') || subjectLower.includes('algebra')) {
+            return [
+                { type: 'algebra', template: 'Simplify: {a}x + {b}x', answer: '{sum}x', explanation: 'Add coefficients: {a} + {b} = {sum}, keep variable x' },
+                { type: 'equation', template: 'Solve: x + {a} = {b}', answer: 'x = {diff}', explanation: 'Subtract {a} from both sides: x = {b} - {a} = {diff}' },
+                { type: 'fraction', template: 'What is {a}/{b} + {c}/{d}?', answer: '{result}', explanation: 'Find common denominator and add numerators' },
+                { type: 'geometry', template: 'Area of rectangle: length {l}, width {w}', answer: '{area}', explanation: 'Area = length × width = {l} × {w} = {area}' },
+                { type: 'percentage', template: 'What is {percent}% of {number}?', answer: '{result}', explanation: 'Multiply: {number} × {percent}/100 = {result}' }
+            ];
+        } else if (subjectLower.includes('science') || subjectLower.includes('biology')) {
+            return [
+                { type: 'definition', template: 'What is photosynthesis?', answer: 'Plants making food from sunlight', explanation: 'Process where plants convert light energy into chemical energy (glucose)' },
+                { type: 'process', template: 'What is respiration?', answer: 'Breaking down glucose for energy', explanation: 'Cellular process that releases energy from glucose: C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O + energy' },
+                { type: 'structure', template: 'What controls cell activities?', answer: 'Nucleus', explanation: 'The nucleus contains DNA and controls all cell functions and reproduction' },
+                { type: 'classification', template: 'What are mammals?', answer: 'Warm-blooded animals with hair', explanation: 'Vertebrates that regulate body temperature, have hair/fur, and feed milk to offspring' }
+            ];
+        } else if (subjectLower.includes('history')) {
+            return [
+                { type: 'date', template: 'When did World War II end?', answer: '1945', explanation: 'World War II ended on September 2, 1945, with Japan\'s surrender after atomic bombs' },
+                { type: 'person', template: 'Who was the first US President?', answer: 'George Washington', explanation: 'George Washington (1732-1799) led the Continental Army and became first President (1789-1797)' },
+                { type: 'event', template: 'What started the American Revolution?', answer: 'Boston Tea Party', explanation: 'Colonists dumped British tea in Boston Harbor (1773) to protest taxation without representation' }
+            ];
+        } else {
+            return [
+                { type: 'general', template: 'What is the main concept in {subject}?', answer: 'Core principle', explanation: 'This fundamental idea forms the basis of understanding in this subject area' },
+                { type: 'application', template: 'How is {subject} used in real life?', answer: 'Practical applications', explanation: 'This subject has many real-world uses and applications in daily life and careers' }
+            ];
+        }
+    }
+    
+    generateCardFromTemplate(template, difficulty, cardNumber) {
+        const { type, template: questionTemplate, answer: answerTemplate, explanation: explanationTemplate } = template;
+        
+        // Generate random values for placeholders
+        const values = this.generateTemplateValues(type, difficulty);
+        
+        // Replace placeholders in template
+        let question = questionTemplate;
+        let answer = answerTemplate;
+        let explanation = explanationTemplate;
+        
+        Object.keys(values).forEach(key => {
+            const placeholder = `{${key}}`;
+            question = question.replace(new RegExp(placeholder, 'g'), values[key]);
+            answer = answer.replace(new RegExp(placeholder, 'g'), values[key]);
+            explanation = explanation.replace(new RegExp(placeholder, 'g'), values[key]);
+        });
+        
+        return {
+            front: question,
+            back: answer,
+            explanation: explanation,
+            cardNumber: cardNumber,
+            difficulty: difficulty,
+            type: type
+        };
+    }
+    
+    generateTemplateValues(type, difficulty) {
+        const values = {};
+        
+        switch (type) {
+            case 'algebra':
+                values.a = Math.floor(Math.random() * 10) + 1;
+                values.b = Math.floor(Math.random() * 10) + 1;
+                values.sum = values.a + values.b;
+                break;
+            case 'equation':
+                values.a = Math.floor(Math.random() * 20) + 1;
+                values.b = values.a + Math.floor(Math.random() * 20) + 1;
+                values.diff = values.b - values.a;
+                break;
+            case 'geometry':
+                values.l = Math.floor(Math.random() * 10) + 2;
+                values.w = Math.floor(Math.random() * 8) + 2;
+                values.area = values.l * values.w;
+                break;
+            case 'percentage':
+                values.percent = [10, 20, 25, 50, 75][Math.floor(Math.random() * 5)];
+                values.number = Math.floor(Math.random() * 100) + 10;
+                values.result = (values.number * values.percent) / 100;
+                break;
+            default:
+                values.subject = 'this topic';
+                break;
+        }
+        
+        return values;
+    }
+    
+    parseAICardResponse(response, expectedCount = 20) {
+        console.log('🔍 Parsing AI response for cards...');
+        
+        const cards = [];
+        
+        // Try multiple parsing methods
+        
+        // Method 1: Look for Q: ... | A: ... | E: ... format
+        const formatMatches = response.match(/Q:\s*([^|]+)\s*\|\s*A:\s*([^|]+)\s*\|\s*E:\s*([^|Q]+)/gi);
+        if (formatMatches) {
+            formatMatches.forEach(match => {
+                const parts = match.split('|');
+                if (parts.length >= 3) {
+                    const question = parts[0].replace(/^Q:\s*/i, '').trim();
+                    const answer = parts[1].replace(/^A:\s*/i, '').trim();
+                    const explanation = parts[2].replace(/^E:\s*/i, '').trim();
+                    
+                    if (question && answer) {
+                        cards.push({
+                            front: question,
+                            back: answer,
+                            explanation: explanation || 'Additional explanation for this concept.'
+                        });
+                    }
+                }
+            });
+        }
+        
+        // Method 2: Look for Q: ... A: ... format (fallback)
+        if (cards.length < expectedCount / 2) {
+            const simpleMatches = response.match(/Q:\s*([^\n]+)\s*A:\s*([^\n]+)/gi);
+            if (simpleMatches) {
+                simpleMatches.forEach(match => {
+                    const qMatch = match.match(/Q:\s*([^\n]+)/i);
+                    const aMatch = match.match(/A:\s*([^\n]+)/i);
+                    
+                    if (qMatch && aMatch) {
+                        const question = qMatch[1].trim();
+                        const answer = aMatch[1].trim();
+                        
+                        // Don't add duplicates
+                        if (!cards.some(card => card.front === question)) {
+                            cards.push({
+                                front: question,
+                                back: answer,
+                                explanation: `This answer relates to the concept being tested in the question.`
+                            });
+                        }
+                    }
+                });
+            }
+        }
+        
+        console.log(`✅ Parsed ${cards.length} cards from AI response`);
+        return cards.slice(0, expectedCount); // Limit to expected count
+    }
+    
+    generateDeckTitleCards(options) {
+        const { subject, difficulty } = options;
+        
+        return [
+            {
+                title: `📚 ${subject} Study Deck`,
+                content: `Welcome to your AI-generated ${subject} study deck! This deck contains carefully crafted questions to help you master key concepts.`,
+                type: 'intro'
+            },
+            {
+                title: `🎯 Learning Objectives`,
+                content: `By completing this deck, you will:
+• Understand core ${subject} concepts
+• Practice problem-solving skills
+• Build confidence in ${difficulty} level material
+• Prepare for assessments and exams`,
+                type: 'objectives'
+            },
+            {
+                title: `💡 Study Tips`,
+                content: `For best results:
+• Read each question carefully
+• Think through your answer before revealing
+• Pay attention to explanations
+• Review incorrect answers
+• Practice regularly for retention`,
+                type: 'tips'
+            }
+        ];
+    }
+    
+    generateComprehensiveDeckTitle(options) {
+        const { subject, difficulty, cardCount } = options;
+        const difficultyEmoji = {
+            'beginner': '🌱',
+            'intermediate': '📈',
+            'advanced': '🚀',
+            'expert': '🎯'
+        };
+        
+        return `${difficultyEmoji[difficulty] || '📚'} ${subject} - ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} (${cardCount} Cards)`;
+    }
+    
+    // =================== END COMPREHENSIVE AI GENERATION ===================
     
     flipCard() {
         const flipCard = document.getElementById('flip-card');
