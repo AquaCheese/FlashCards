@@ -4115,14 +4115,14 @@ button:disabled:hover {
 }
 
 .hint-content {
-    background: linear-gradient(135deg, #FFD700, #FFA500);
-    color: #8B4513;
+    background: linear-gradient(135deg, #2C3E50, #34495E);
+    color: #F8F9FA;
     padding: 2rem;
     border-radius: 15px;
     max-width: 500px;
     width: 90%;
-    box-shadow: 0 15px 35px rgba(255, 215, 0, 0.3);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 15px 35px rgba(44, 62, 80, 0.3);
+    border: 2px solid rgba(255, 215, 0, 0.3);
 }
 
 .hint-header {
@@ -4130,7 +4130,7 @@ button:disabled:hover {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
-    border-bottom: 2px solid rgba(139, 69, 19, 0.2);
+    border-bottom: 2px solid rgba(255, 215, 0, 0.3);
     padding-bottom: 0.5rem;
 }
 
@@ -4144,14 +4144,14 @@ button:disabled:hover {
     border: none;
     font-size: 1.5rem;
     cursor: pointer;
-    color: #8B4513;
+    color: #F8F9FA;
     padding: 0.5rem;
     border-radius: 50%;
     transition: background 0.3s ease;
 }
 
 .hint-close:hover {
-    background: rgba(139, 69, 19, 0.1);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .hint-text {
@@ -4170,13 +4170,13 @@ button:disabled:hover {
 
 .hint-disclaimer {
     font-size: 0.8rem;
-    color: #8B4513;
-    background: rgba(139, 69, 19, 0.1);
+    color: #F8F9FA;
+    background: rgba(255, 215, 0, 0.15);
     padding: 0.5rem;
     border-radius: 8px;
     margin-bottom: 1.5rem;
     text-align: center;
-    border-left: 3px solid #D2691E;
+    border-left: 3px solid #FFD700;
     font-weight: 500;
 }
 
