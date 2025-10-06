@@ -76,12 +76,24 @@ class WebFirstAIEngine {
             throw new Error('WebLLM not ready');
         }
 
-        const prompt = `Create a helpful study hint for this flashcard:
+        // Get user profile for personalized hints
+        const profile = this.getUserProfile();
+        const overallAccuracy = profile?.preferences?.accuracyTrends?.length > 0 
+            ? profile.preferences.accuracyTrends.reduce((sum, acc) => sum + acc, 0) / profile.preferences.accuracyTrends.length 
+            : 75;
+        const yearGroup = profile?.preferences?.yearGroup || 'General';
+        const subjects = Object.keys(profile?.deckStats || {}).join(', ') || 'Mixed subjects';
+        const timeSpent = Math.round((profile?.totalTimeSpent || 0) / 60);
 
-Question: "${question}"
-Answer: "${answer}"
+        const prompt = `You are a helpful school tutor that likes to give hints to students based on questions, can you please create a helpful hint for this question: ${question} with this answer: ${answer}, that doesn't fully reveal the answer but it helps significantly towards the answer, an example would be a "Fill in the Blank" type hint or give the right equation to solve the question, just make a decent hint only based on the question and answer: ${question} and ${answer}.
 
-Generate a concise hint that helps the student think about the answer without giving it away directly. Focus on context, key concepts, or thinking strategies.
+Student Statistics:
+- Overall Accuracy: ${overallAccuracy.toFixed(1)}%
+- Overall Time Spent: ${timeSpent} minutes
+- Year Group: ${yearGroup}
+- Subjects Studied: ${subjects}
+
+Please tailor the hint complexity to match the student's performance level and year group.
 
 Hint:`;
 
@@ -505,6 +517,14 @@ class EnhancedFallbackEngine {
         const suffixes = ['th', 'st', 'nd', 'rd'];
         const remainder = number % 100;
         return suffixes[(remainder - 20) % 10] || suffixes[remainder] || suffixes[0];
+    }
+
+    getUserProfile() {
+        try {
+            return JSON.parse(localStorage.getItem('flashcard-profile')) || {};
+        } catch {
+            return {};
+        }
     }
 }
 

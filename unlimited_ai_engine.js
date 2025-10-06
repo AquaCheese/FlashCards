@@ -516,28 +516,83 @@ class UnlimitedAIEngine {
     // =================== UTILITY METHODS ===================
 
     buildHintPrompt(question, answer) {
-        return `Create a helpful study hint for this flashcard:
+        // Get user profile for personalized hints
+        const profile = this.getUserProfile();
+        const overallAccuracy = profile?.preferences?.accuracyTrends?.length > 0 
+            ? profile.preferences.accuracyTrends.reduce((sum, acc) => sum + acc, 0) / profile.preferences.accuracyTrends.length 
+            : 75;
+        const yearGroup = profile?.preferences?.yearGroup || 'General';
+        const subjects = Object.keys(profile?.deckStats || {}).join(', ') || 'Mixed subjects';
+        const timeSpent = Math.round((profile?.totalTimeSpent || 0) / 60);
 
-Question: "${question}"
-Answer: "${answer}"
+        return `You are a helpful school tutor that likes to give hints to students based on questions, can you please create a helpful hint for this question: ${question} with this answer: ${answer}, that doesn't fully reveal the answer but it helps significantly towards the answer, an example would be a "Fill in the Blank" type hint or give the right equation to solve the question, just make a decent hint only based on the question and answer: ${question} and ${answer}.
 
-Generate a concise hint that helps the student think about the answer without giving it away directly. Focus on context, key concepts, or thinking strategies.
+Student Statistics:
+- Overall Accuracy: ${overallAccuracy.toFixed(1)}%
+- Overall Time Spent: ${timeSpent} minutes
+- Year Group: ${yearGroup}
+- Subjects Studied: ${subjects}
+
+Please tailor the hint complexity to match the student's performance level and year group.
 
 Hint:`;
     }
 
+    getUserProfile() {
+        try {
+            return JSON.parse(localStorage.getItem('flashcard-profile')) || {};
+        } catch {
+            return {};
+        }
+    }
+
     buildDeckPrompt(subject, difficulty, cardCount, userProfile) {
-        const profileInfo = userProfile ? 
-            `\nStudent Profile: Accuracy ${userProfile.averageAccuracy}%, Strong in: ${userProfile.strengths?.join(', ') || 'None'}, Weak in: ${userProfile.weaknesses?.join(', ') || 'None'}` : '';
+        // Get comprehensive user profile
+        const profile = userProfile || this.getUserProfile();
+        const overallAccuracy = profile?.preferences?.accuracyTrends?.length > 0 
+            ? profile.preferences.accuracyTrends.reduce((sum, acc) => sum + acc, 0) / profile.preferences.accuracyTrends.length 
+            : 75;
+        const yearGroup = profile?.preferences?.yearGroup || 'General';
+        const subjects = Object.keys(profile?.deckStats || {}).join(', ') || 'Mixed subjects';
+        const timeSpent = Math.round((profile?.totalTimeSpent || 0) / 60);
 
-        return `Generate ${cardCount} flashcard questions and answers for ${subject} at ${difficulty} level.${profileInfo}
+        return `You are a helpful school tutor that is helping to create a deck of flash cards using these fields: QUESTION FIELD, ANSWER FIELD, only put simple answers in ANSWER FIELD and other acceptable answers related to the question in MULTIPLE ANSWER FIELD(S), for detailed explanations, use this field: EXPLANATION FIELD, you can format questions and explanations using these options: **bold text**, __underline text__, ~~strikethrough text~~, subscript₂, superscript², <span style="color: #FF0000">colored text</span>, and <span style="background-color: #FFFF00">highlighted text</span>, please can you create ${cardCount} cards using those fields, format options and user statistics: ${overallAccuracy.toFixed(1)}% accuracy, ${timeSpent} minutes study time, ${yearGroup} year group, studying ${subjects}.
 
-Format each card as:
-Q: [question]
-A: [answer]
+Subject: ${subject}
+Difficulty Level: ${difficulty}
+Number of Cards Required: ${cardCount}
+
+FORMAT REQUIREMENTS:
+Q: [Clear, specific question with formatting if helpful]
+A: [Primary simple answer - keep it short and direct]
+ALT: [Alternative acceptable answer 1] (if applicable)
+ALT: [Alternative acceptable answer 2] (if applicable)
+EXP: [Detailed explanation with formatting to enhance learning]
 ---
 
-Make questions challenging but fair, covering different aspects of the topic. Ensure variety in question types.
+FORMATTING EXAMPLES:
+- **Bold for emphasis**: **Important concept**
+- __Underline for key terms__: __mitochondria__
+- ~~Strikethrough for common mistakes~~: ~~incorrect assumption~~
+- Subscript for chemistry: H₂O, CO₂
+- Superscript for math: x², E=mc²
+- <span style="color: #FF0000">Red for warnings or critical info</span>
+- <span style="background-color: #FFFF00">Yellow highlight for key facts</span>
+
+SAMPLE CARDS:
+Q: What is the chemical formula for **water**?
+A: H₂O
+ALT: H2O
+EXP: Water consists of __two hydrogen atoms__ and __one oxygen atom__ bonded together. The subscript numbers show how many of each atom: H₂O means 2 hydrogen + 1 oxygen. This is a **covalent compound** essential for all life.
+---
+
+Q: Solve: 3x + 5 = **14**
+A: x = 3
+ALT: 3
+EXP: To solve this equation: **Step 1**: Subtract 5 from both sides → 3x = 9. **Step 2**: Divide both sides by 3 → x = 3. Always <span style="color: #FF0000">check your answer</span>: 3(3) + 5 = 9 + 5 = 14 ✓
+---
+
+Generate exactly ${cardCount} cards following this format, tailored to ${yearGroup} level students studying ${subject}.
 
 Cards:`;
     }
@@ -550,6 +605,8 @@ Cards:`;
             const lines = section.trim().split('\n');
             let question = '';
             let answer = '';
+            let alternatives = [];
+            let explanation = '';
             
             for (const line of lines) {
                 const trimmed = line.trim();
@@ -557,17 +614,33 @@ Cards:`;
                     question = trimmed.substring(2).trim();
                 } else if (trimmed.startsWith('A:')) {
                     answer = trimmed.substring(2).trim();
+                } else if (trimmed.startsWith('ALT:')) {
+                    alternatives.push(trimmed.substring(4).trim());
+                } else if (trimmed.startsWith('EXP:')) {
+                    explanation = trimmed.substring(4).trim();
                 }
             }
             
             if (question && answer && question.length > 5 && answer.length > 2) {
-                cards.push({
+                const card = {
                     id: Date.now() + Math.random(),
                     question: question,
                     answer: answer,
                     difficulty: 'ai-generated',
                     dateCreated: Date.now()
-                });
+                };
+                
+                // Add alternatives if available
+                if (alternatives.length > 0) {
+                    card.alternatives = alternatives;
+                }
+                
+                // Add explanation if available
+                if (explanation) {
+                    card.explanation = explanation;
+                }
+                
+                cards.push(card);
             }
         }
         

@@ -354,19 +354,11 @@ class AIManager {
         dialog.className = 'ai-setup-dialog';
         dialog.innerHTML = `
             <div class="setup-content">
-                <h2>🤖 Unlimited AI Setup</h2>
-                <p>Get unlimited, free AI for your flashcards! Set up one or more sources:</p>
                 
                 <div class="setup-options">
                     <div class="setup-option" data-source="ollama">
                         <h3>🦙 Ollama (Recommended)</h3>
                         <p>Run AI locally on your computer</p>
-                        <div class="pros">
-                            ✅ Completely free and unlimited<br>
-                            ✅ Works offline<br>
-                            ✅ Privacy-focused<br>
-                            ✅ High quality
-                        </div>
                         <button class="setup-btn" onclick="aiManager.showOllamaSetup()">Set Up Ollama</button>
                     </div>
                     
@@ -382,15 +374,6 @@ class AIManager {
                         <button class="setup-btn" onclick="aiManager.setupWebLLM()">Try WebLLM</button>
                     </div>
                     
-                    <div class="setup-option" data-source="api">
-                        <h3>🔑 API Services</h3>
-                        <p>Use cloud AI services with free tiers</p>
-                        <div class="pros">
-                            ✅ High quality<br>
-                            ✅ Fast responses<br>
-                            ⚠️ Limited free usage<br>
-                            ⚠️ Requires API keys
-                        </div>
                         <button class="setup-btn" onclick="aiManager.showAPISetup()">Configure APIs</button>
                     </div>
                 </div>
@@ -535,23 +518,7 @@ class AIManager {
                 <h2>🔑 API Configuration</h2>
                 <p>Add your API keys for cloud AI services:</p>
                 
-                <div class="api-services">
-                    <div class="api-service">
-                        <h3>Cohere (Recommended)</h3>
-                        <p>Free tier: 100 requests/month</p>
-                        <input type="password" placeholder="Enter Cohere API key" id="cohere-key">
-                        <button onclick="aiManager.saveAPIKey('cohere', document.getElementById('cohere-key').value)">Save</button>
-                        <a href="https://dashboard.cohere.ai/api-keys" target="_blank">Get Free API Key</a>
-                    </div>
-                    
-                    <div class="api-service">
-                        <h3>Together AI</h3>
-                        <p>Free tier: $25 credit</p>
-                        <input type="password" placeholder="Enter Together API key" id="together-key">
-                        <button onclick="aiManager.saveAPIKey('together', document.getElementById('together-key').value)">Save</button>
-                        <a href="https://api.together.xyz/" target="_blank">Get Free API Key</a>
-                    </div>
-                </div>
+                
                 
                 <button class="close-btn" onclick="this.parentElement.parentElement.remove()">Close</button>
             </div>

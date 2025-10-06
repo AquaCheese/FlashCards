@@ -1803,27 +1803,43 @@ class FlashCardsApp {
 
 
     async getHuggingFaceHint(question, answer) {
-        // Try multiple AI models with better prompts
+        // Get user statistics for personalized hints
+        const profile = this.getUserProfile();
+        const overallAccuracy = profile.preferences.accuracyTrends?.length > 0 
+            ? profile.preferences.accuracyTrends.reduce((sum, acc) => sum + acc, 0) / profile.preferences.accuracyTrends.length 
+            : 75;
+        const yearGroup = profile.preferences?.yearGroup || 'General';
+        const subjects = Object.keys(profile.deckStats || {}).join(', ') || 'Mixed subjects';
+        const timeSpent = Math.round((profile.totalTimeSpent || 0) / 60); // Convert to minutes
+
+        // Improved hint prompt
+        const hintPrompt = `You are a helpful school tutor that likes to give hints to students based on questions, can you please create a helpful hint for this question: ${question} with this answer: ${answer}, that doesn't fully reveal the answer but it helps significantly towards the answer, an example would be a "Fill in the Blank" type hint or give the right equation to solve the question, just make a decent hint only based on the question and answer: ${question} and ${answer}.
+
+Student Statistics:
+- Overall Accuracy: ${overallAccuracy.toFixed(1)}%
+- Overall Time Spent: ${timeSpent} minutes
+- Year Group: ${yearGroup}  
+- Subjects Studied: ${subjects}
+
+Please tailor the hint complexity to match the student's performance level and year group.`;
+
+        // Try multiple AI models with the improved prompt
         const models = [
             {
                 name: 'microsoft/DialoGPT-medium',
-                prompt: `Create a study hint for: "${question}" (Answer: ${answer})
-
-Give a helpful clue about the context or topic without revealing the answer. Be specific to the subject matter.
-
-Hint:`
+                prompt: hintPrompt
             },
             {
                 name: 'facebook/blenderbot-400M-distill',  
-                prompt: `Help a student with this question: "${question}". The answer is "${answer}". Give them a contextual hint about what to think about, without giving away the answer.`
+                prompt: hintPrompt
             },
             {
                 name: 'huggingface/CodeBERTa-small-v1',
-                prompt: `Educational hint needed for: ${question}\nAnswer: ${answer}\nHint:`
+                prompt: hintPrompt
             },
             {
                 name: 'distilbert-base-uncased-distilled-squad',
-                prompt: `Question: ${question}\nAnswer: ${answer}\nProvide a study hint:`
+                prompt: hintPrompt
             }
         ];
 
@@ -8295,25 +8311,36 @@ CREATE ${dynamicCardCount} cards that:
 - Consider GCSE curriculum requirements`;
         }
         
-        prompt += `\n\nFORMAT REQUIREMENTS:
-Q: [Clear, specific question]
-A: [Primary answer]
-ALT: [Alternative answer 1] (if applicable)
-ALT: [Alternative answer 2] (if applicable)
-EXP: [Brief explanation providing context or additional learning information]
+        prompt += `\n\nYou are a helpful school tutor that is helping to create a deck of flash cards using these fields: QUESTION FIELD, ANSWER FIELD, only put simple answers in ANSWER FIELD and other acceptable answers related to the question in MULTIPLE ANSWER FIELD(S), for detailed explanations, use this field: EXPLANATION FIELD, you can format questions and explanations using these options: **bold text**, __underline text__, ~~strikethrough text~~, subscript₂, superscript², <span style="color: #FF0000">colored text</span>, and <span style="background-color: #FFFF00">highlighted text</span>.
 
-EXAMPLES:
-Q: What percentage of Earth's surface is covered by water?
+FORMAT REQUIREMENTS:
+Q: [Clear, specific question with formatting if helpful]
+A: [Primary simple answer - keep it short and direct]
+ALT: [Alternative acceptable answer 1] (if applicable)
+ALT: [Alternative acceptable answer 2] (if applicable)
+EXP: [Detailed explanation with formatting to enhance learning]
+
+FORMATTING EXAMPLES:
+- **Bold for emphasis**: **Important concept**
+- __Underline for key terms__: __mitochondria__
+- ~~Strikethrough for common mistakes~~: ~~incorrect assumption~~
+- Subscript for chemistry: H₂O, CO₂
+- Superscript for math: x², E=mc²
+- <span style="color: #FF0000">Red for warnings or critical info</span>
+- <span style="background-color: #FFFF00">Yellow highlight for key facts</span>
+
+SAMPLE CARDS:
+Q: What percentage of Earth's surface is covered by **water**?
 A: 71%
 ALT: 70%
 ALT: approximately 71%
-EXP: About 71% of Earth's surface is covered by water, with the vast majority being ocean water. This includes all oceans, seas, lakes, and other bodies of water.
+EXP: About __71% of Earth's surface__ is covered by water, with the vast majority being **ocean water**. This includes all oceans, seas, lakes, and other bodies of water. <span style="color: #0066CC">Fun fact</span>: Only about 3% of this water is freshwater!
 
-Q: What is the chemical symbol for gold?
+Q: What is the chemical symbol for **gold**?
 A: Au
-EXP: The symbol Au comes from the Latin word "aurum" meaning gold. Gold is element 79 on the periodic table.
+EXP: The symbol __Au__ comes from the Latin word **"aurum"** meaning gold. Gold is element **79** on the periodic table and is a <span style="background-color: #FFFF00">precious metal</span> known for its resistance to corrosion.
 
-Make cards educational, engaging, and perfectly matched to this student's learning level.`;
+Make cards educational, engaging, and perfectly matched to this student's learning level with appropriate formatting.`;
 
         return prompt;
     }
@@ -8838,26 +8865,48 @@ A: This concept is significant because it helps bridge basic understanding with 
     buildComprehensiveDeckPrompt(options, profile) {
         const { subject, difficulty, cardCount } = options;
         
-        return `Generate ${cardCount} educational flashcards for ${subject} at ${difficulty} level.
-
-CRITICAL REQUIREMENTS:
-1. Each card must have a SIMPLE, SHORT answer (1-10 words max)
-2. Include a detailed explanation after each answer
-3. Format: Q: [question] | A: [simple answer] | E: [detailed explanation]
-4. Make questions progressively build on each other
-5. Focus on practical, testable knowledge
-6. Include variety: definitions, calculations, applications, examples
-
-EXAMPLES:
-Q: What is 2x + 3x? | A: 5x | E: When adding terms with the same variable, you add the coefficients (2 + 3 = 5) and keep the variable (x). This is called combining like terms.
-
-Q: What is photosynthesis? | A: Plants making food from sunlight | E: Photosynthesis is the process where plants use sunlight, water, and carbon dioxide to create glucose (sugar) for energy and release oxygen as a byproduct. The equation is 6CO₂ + 6H₂O + light energy → C₆H₁₂O₆ + 6O₂.
-
-Q: What is the capital of France? | A: Paris | E: Paris has been the capital of France since 508 AD and is located in north-central France along the Seine River. It's known for landmarks like the Eiffel Tower, Louvre Museum, and Notre-Dame Cathedral.
+        // Get user statistics for personalized deck generation
+        const overallAccuracy = profile.preferences.accuracyTrends?.length > 0 
+            ? profile.preferences.accuracyTrends.reduce((sum, acc) => sum + acc, 0) / profile.preferences.accuracyTrends.length 
+            : 75;
+        const yearGroup = profile.preferences?.yearGroup || 'General';
+        const subjects = Object.keys(profile.deckStats || {}).join(', ') || 'Mixed subjects';
+        const timeSpent = Math.round((profile.totalTimeSpent || 0) / 60); // Convert to minutes
+        
+        return `You are a helpful school tutor that is helping to create a deck of flash cards using these fields: QUESTION FIELD, ANSWER FIELD, only put simple answers in ANSWER FIELD and other acceptable answers related to the question in MULTIPLE ANSWER FIELD(S), for detailed explanations, use this field: EXPLANATION FIELD, you can format questions and explanations using these options: **bold text**, __underline text__, ~~strikethrough text~~, subscript₂, superscript², <span style="color: #FF0000">colored text</span>, and <span style="background-color: #FFFF00">highlighted text</span>, please can you create ${cardCount} cards using those fields, format options and user statistics: ${overallAccuracy.toFixed(1)}% accuracy, ${timeSpent} minutes study time, ${yearGroup} year group, studying ${subjects}.
 
 Subject: ${subject}
-Difficulty: ${difficulty}
-Generate exactly ${cardCount} cards following this format.`;
+Difficulty Level: ${difficulty}
+Number of Cards Required: ${cardCount}
+
+FORMAT REQUIREMENTS:
+Q: [Clear, specific question with formatting if helpful]
+A: [Primary simple answer - keep it short and direct]
+ALT: [Alternative acceptable answer 1] (if applicable)
+ALT: [Alternative acceptable answer 2] (if applicable)  
+EXP: [Detailed explanation with formatting to enhance learning - this should provide comprehensive understanding]
+
+FORMATTING EXAMPLES:
+- **Bold for emphasis**: **Important concept**
+- __Underline for key terms__: __mitochondria__
+- ~~Strikethrough for common mistakes~~: ~~incorrect assumption~~
+- Subscript for chemistry: H₂O, CO₂
+- Superscript for math: x², E=mc²
+- <span style="color: #FF0000">Red for warnings or critical info</span>
+- <span style="background-color: #FFFF00">Yellow highlight for key facts</span>
+
+SAMPLE CARDS:
+Q: What is the chemical formula for **water**?
+A: H₂O
+ALT: H2O
+EXP: Water consists of __two hydrogen atoms__ and __one oxygen atom__ bonded together. The subscript numbers show how many of each atom: H₂O means 2 hydrogen + 1 oxygen. This is a **covalent compound** essential for all life.
+
+Q: Solve: 3x + 5 = **14**
+A: x = 3
+ALT: 3
+EXP: To solve this equation: **Step 1**: Subtract 5 from both sides → 3x = 9. **Step 2**: Divide both sides by 3 → x = 3. Always <span style="color: #FF0000">check your answer</span>: 3(3) + 5 = 9 + 5 = 14 ✓
+
+Generate exactly ${cardCount} cards following this format, tailored to ${yearGroup} level students studying ${subject}.`;
     }
     
     generateTemplateBasedCards(options, count) {
