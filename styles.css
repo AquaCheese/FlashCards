@@ -2204,56 +2204,56 @@ button:disabled:hover {
 /* For "next": current card slides right, moves back, slides left to back */
 @keyframes moveToBack {
     0% {
-        transform: translateZ(20px) translateY(-10px) scale(1.02);
+        transform: translateZ(20px) translateY(-10px) translateX(0px) scale(1.02);
         z-index: 15;
         opacity: 1;
     }
-    20% {
-        transform: translateZ(20px) translateY(-10px) translateX(150px) scale(1.02);
+    25% {
+        transform: translateZ(20px) translateY(-10px) translateX(200px) scale(1.02);
         z-index: 15;
         opacity: 1;
     }
-    40% {
-        transform: translateZ(-40px) translateY(25px) translateX(150px) scale(0.85);
-        z-index: 8;
-        opacity: 0.9;
-    }
-    70% {
-        transform: translateZ(-40px) translateY(25px) translateX(-150px) scale(0.85);
-        z-index: 8;
+    50% {
+        transform: translateZ(-60px) translateY(30px) translateX(200px) scale(0.8);
+        z-index: 5;
         opacity: 0.8;
     }
-    100% {
-        transform: var(--end-transform);
-        z-index: var(--end-z);
+    75% {
+        transform: translateZ(-60px) translateY(30px) translateX(-200px) scale(0.8);
+        z-index: 5;
         opacity: 0.7;
+    }
+    100% {
+        transform: translateZ(-80px) translateY(32px) translateX(0px) scale(0.8);
+        z-index: 6;
+        opacity: 0.6;
     }
 }
 
 /* For "prev": back card slides left, moves forward, slides right to front */
 @keyframes moveToFront {
     0% {
-        transform: var(--start-transform);
-        z-index: var(--start-z);
+        transform: translateZ(-80px) translateY(32px) translateX(0px) scale(0.8);
+        z-index: 6;
         opacity: 0.6;
     }
-    20% {
-        transform: var(--start-transform) translateX(-150px);
-        z-index: var(--start-z);
+    25% {
+        transform: translateZ(-80px) translateY(32px) translateX(-200px) scale(0.8);
+        z-index: 6;
         opacity: 0.7;
     }
-    40% {
-        transform: translateZ(30px) translateY(-15px) translateX(-150px) scale(1.05);
-        z-index: 18;
+    50% {
+        transform: translateZ(40px) translateY(-20px) translateX(-200px) scale(1.1);
+        z-index: 20;
         opacity: 0.9;
     }
-    70% {
-        transform: translateZ(30px) translateY(-15px) translateX(150px) scale(1.05);
-        z-index: 18;
+    75% {
+        transform: translateZ(40px) translateY(-20px) translateX(200px) scale(1.1);
+        z-index: 20;
         opacity: 0.95;
     }
     100% {
-        transform: translateZ(20px) translateY(-10px) scale(1.02);
+        transform: translateZ(20px) translateY(-10px) translateX(0px) scale(1.02);
         z-index: 15;
         opacity: 1;
     }
