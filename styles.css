@@ -2193,41 +2193,59 @@ button:disabled:hover {
 }
 
 /* Card transition animations */
-.title-card-layer.moving-to-front {
-    animation: moveToFront 0.6s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
-}
-
 .title-card-layer.moving-to-back {
-    animation: moveToBack 0.6s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+    animation: moveToBack 1.2s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
 }
 
-@keyframes moveToFront {
-    0% {
-        transform: var(--start-transform);
-        z-index: var(--start-z);
-    }
-    50% {
-        transform: translateZ(50px) translateY(-20px) scale(1.1);
-        z-index: 20;
-    }
-    100% {
-        transform: translateZ(20px) translateY(-10px) scale(1.02);
-        z-index: 15;
-    }
+.title-card-layer.moving-to-front {
+    animation: moveToFront 1.2s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
 }
 
+/* For "next": current card slides right, moves back, slides left to back */
 @keyframes moveToBack {
     0% {
         transform: translateZ(20px) translateY(-10px) scale(1.02);
         z-index: 15;
     }
+    25% {
+        transform: translateZ(20px) translateY(-10px) translateX(120px) scale(1.02);
+        z-index: 15;
+    }
     50% {
-        transform: translateZ(-30px) translateY(20px) scale(0.8);
+        transform: translateZ(-60px) translateY(40px) translateX(120px) scale(0.8);
+        z-index: 5;
+    }
+    75% {
+        transform: translateZ(-60px) translateY(40px) translateX(-120px) scale(0.8);
         z-index: 5;
     }
     100% {
         transform: var(--end-transform);
         z-index: var(--end-z);
+    }
+}
+
+/* For "prev": back card slides left, moves forward, slides right to front */
+@keyframes moveToFront {
+    0% {
+        transform: var(--start-transform);
+        z-index: var(--start-z);
+    }
+    25% {
+        transform: var(--start-transform) translateX(-120px);
+        z-index: var(--start-z);
+    }
+    50% {
+        transform: translateZ(50px) translateY(-20px) translateX(-120px) scale(1.1);
+        z-index: 20;
+    }
+    75% {
+        transform: translateZ(50px) translateY(-20px) translateX(120px) scale(1.1);
+        z-index: 20;
+    }
+    100% {
+        transform: translateZ(20px) translateY(-10px) scale(1.02);
+        z-index: 15;
     }
 }
 
