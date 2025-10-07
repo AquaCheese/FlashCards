@@ -2112,45 +2112,147 @@ button:disabled:hover {
 }
 
 .title-card-content-display {
+    position: relative;
+    margin: 2rem 0;
+    min-height: 300px;
+    perspective: 1000px;
+    perspective-origin: center center;
+}
+
+/* 3D Stacked Cards Container */
+.title-cards-stack {
+    position: relative;
+    width: 100%;
+    height: 350px;
+    transform-style: preserve-3d;
+}
+
+/* Individual Title Card in Stack */
+.title-card-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
     background: white;
     border-radius: 12px;
     padding: 3rem 2rem;
-    margin: 2rem 0;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     border: 1px solid #e5e7eb;
     min-height: 300px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    position: relative;
-    overflow: hidden;
+    transition: all 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+    transform-origin: center center;
+    backface-visibility: hidden;
+    cursor: pointer;
 }
 
-/* Title Card Animation Classes */
-.title-card-content-display.slide-out-left {
-    transform: translateX(-100%);
-    opacity: 0;
-}
-
-.title-card-content-display.slide-out-right {
-    transform: translateX(100%);
-    opacity: 0;
-}
-
-.title-card-content-display.slide-in-left {
-    transform: translateX(-100%);
-    opacity: 0;
-}
-
-.title-card-content-display.slide-in-right {
-    transform: translateX(100%);
-    opacity: 0;
-}
-
-.title-card-content-display.slide-in-center {
-    transform: translateX(0);
+/* Stacking effect - each card positioned behind the previous */
+.title-card-layer:nth-child(1) {
+    z-index: 10;
+    transform: translateZ(0px) translateY(0px);
     opacity: 1;
+}
+
+.title-card-layer:nth-child(2) {
+    z-index: 9;
+    transform: translateZ(-20px) translateY(8px) scale(0.95);
+    opacity: 0.9;
+    filter: brightness(0.95);
+}
+
+.title-card-layer:nth-child(3) {
+    z-index: 8;
+    transform: translateZ(-40px) translateY(16px) scale(0.90);
+    opacity: 0.8;
+    filter: brightness(0.90);
+}
+
+.title-card-layer:nth-child(4) {
+    z-index: 7;
+    transform: translateZ(-60px) translateY(24px) scale(0.85);
+    opacity: 0.7;
+    filter: brightness(0.85);
+}
+
+.title-card-layer:nth-child(n+5) {
+    z-index: 6;
+    transform: translateZ(-80px) translateY(32px) scale(0.80);
+    opacity: 0.6;
+    filter: brightness(0.80);
+}
+
+/* Active card highlight */
+.title-card-layer.active {
+    z-index: 15 !important;
+    transform: translateZ(20px) translateY(-10px) scale(1.02) !important;
+    opacity: 1 !important;
+    filter: brightness(1) !important;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2) !important;
+}
+
+/* Card transition animations */
+.title-card-layer.moving-to-front {
+    animation: moveToFront 0.6s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+}
+
+.title-card-layer.moving-to-back {
+    animation: moveToBack 0.6s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+}
+
+@keyframes moveToFront {
+    0% {
+        transform: var(--start-transform);
+        z-index: var(--start-z);
+    }
+    50% {
+        transform: translateZ(50px) translateY(-20px) scale(1.1);
+        z-index: 20;
+    }
+    100% {
+        transform: translateZ(20px) translateY(-10px) scale(1.02);
+        z-index: 15;
+    }
+}
+
+@keyframes moveToBack {
+    0% {
+        transform: translateZ(20px) translateY(-10px) scale(1.02);
+        z-index: 15;
+    }
+    50% {
+        transform: translateZ(-30px) translateY(20px) scale(0.8);
+        z-index: 5;
+    }
+    100% {
+        transform: var(--end-transform);
+        z-index: var(--end-z);
+    }
+}
+
+/* Hover effects for stacked cards */
+.title-card-layer:not(.active):hover {
+    transform: translateZ(-10px) translateY(4px) scale(0.98);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+}
+
+/* Card content styling */
+.title-card-layer .title-card-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+}
+
+.title-card-layer .title-card-text {
+    font-size: 1.1rem;
+    color: #4b5563;
+    line-height: 1.6;
+    text-align: left;
+    max-width: none;
 }
 
 .title-card-title {

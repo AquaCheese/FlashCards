@@ -489,6 +489,7 @@ class FlashCardsApp {
         this.isEditMode = false;
         this.editingDeckId = null;
         this.currentTitleCardIndex = 0;
+        this.isAnimating = false;
         
         // Advanced GCSE AI Learning System
         console.log('Initializing Advanced GCSE AI Engine...');
@@ -7353,33 +7354,107 @@ Please tailor the hint complexity to match the student's performance level and y
         document.getElementById('title-card-display').style.display = 'block';
         document.getElementById('study-card-container').style.display = 'none';
         
-        this.showCurrentTitleCard();
+        this.create3DTitleCardStack();
+        this.updateTitleCardNavigation();
+    }
+
+    create3DTitleCardStack() {
+        const titleCards = this.currentDeck.titleCards;
+        const contentDisplay = document.getElementById('display-title-card-content').parentElement;
+        
+        // Clear existing content and create stack container
+        contentDisplay.innerHTML = `
+            <div class="title-cards-stack" id="title-cards-stack">
+                ${titleCards.map((card, index) => `
+                    <div class="title-card-layer ${index === this.currentTitleCardIndex ? 'active' : ''}" 
+                         data-card-index="${index}"
+                         onclick="app.selectTitleCard(${index})">
+                        <h2 class="title-card-title">${this.escapeHtml(card.title || '')}</h2>
+                        <div class="title-card-text">${this.escapeHtml(card.content || card.description || '')}</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        // Update counter
+        document.getElementById('title-card-counter').textContent = 
+            `${this.currentTitleCardIndex + 1} / ${titleCards.length}`;
+        
+        // Apply stacking positions
+        this.updateCardStackPositions();
+    }
+
+    updateCardStackPositions() {
+        const titleCards = this.currentDeck.titleCards;
+        const cardLayers = document.querySelectorAll('.title-card-layer');
+        
+        cardLayers.forEach((layer, index) => {
+            const relativePosition = index - this.currentTitleCardIndex;
+            layer.classList.remove('active');
+            
+            if (relativePosition === 0) {
+                // Active card (front)
+                layer.classList.add('active');
+                layer.style.zIndex = '15';
+                layer.style.transform = 'translateZ(20px) translateY(-10px) scale(1.02)';
+                layer.style.opacity = '1';
+                layer.style.filter = 'brightness(1)';
+            } else if (relativePosition > 0) {
+                // Cards behind the active card
+                const stackLevel = Math.min(relativePosition, 4);
+                const zIndex = 10 - stackLevel;
+                const translateZ = -stackLevel * 20;
+                const translateY = stackLevel * 8;
+                const scale = 1 - (stackLevel * 0.05);
+                const opacity = Math.max(0.6, 1 - (stackLevel * 0.1));
+                const brightness = Math.max(0.8, 1 - (stackLevel * 0.05));
+                
+                layer.style.zIndex = zIndex;
+                layer.style.transform = `translateZ(${translateZ}px) translateY(${translateY}px) scale(${scale})`;
+                layer.style.opacity = opacity;
+                layer.style.filter = `brightness(${brightness})`;
+            } else {
+                // Cards in front of active card (when going backwards)
+                layer.style.zIndex = '5';
+                layer.style.transform = 'translateZ(-100px) translateY(40px) scale(0.75)';
+                layer.style.opacity = '0.5';
+                layer.style.filter = 'brightness(0.75)';
+            }
+        });
+    }
+
+    selectTitleCard(index) {
+        if (index === this.currentTitleCardIndex || this.isAnimating) return;
+        
+        const direction = index > this.currentTitleCardIndex ? 'next' : 'prev';
+        this.currentTitleCardIndex = index;
+        this.animateStackTransition(direction);
     }
 
     showCurrentTitleCard() {
-        // Reset any animation classes
-        const contentDisplay = document.getElementById('display-title-card-content').parentElement;
-        contentDisplay.classList.remove('slide-out-left', 'slide-out-right', 'slide-in-left', 'slide-in-right', 'slide-in-center');
-        
-        this.updateTitleCardContent();
+        this.updateCardStackPositions();
         this.updateTitleCardNavigation();
     }
 
     previousTitleCard() {
-        if (this.currentTitleCardIndex > 0) {
-            this.animateTitleCardTransition('prev');
+        if (this.currentTitleCardIndex > 0 && !this.isAnimating) {
+            this.currentTitleCardIndex--;
+            this.animateStackTransition('prev');
         }
     }
 
     nextTitleCard() {
         const titleCards = this.currentDeck.titleCards;
-        if (this.currentTitleCardIndex < titleCards.length - 1) {
-            this.animateTitleCardTransition('next');
+        if (this.currentTitleCardIndex < titleCards.length - 1 && !this.isAnimating) {
+            this.currentTitleCardIndex++;
+            this.animateStackTransition('next');
         }
     }
 
-    animateTitleCardTransition(direction) {
-        const contentDisplay = document.getElementById('display-title-card-content').parentElement;
+    animateStackTransition(direction) {
+        if (this.isAnimating) return;
+        
+        this.isAnimating = true;
         
         // Disable navigation buttons during animation
         const prevBtn = document.getElementById('title-prev-btn');
@@ -7390,75 +7465,81 @@ Please tailor the hint complexity to match the student's performance level and y
         nextBtn.disabled = true;
         actionButtons.forEach(btn => btn.disabled = true);
         
-        // Start exit animation
-        if (direction === 'next') {
-            contentDisplay.classList.add('slide-out-left');
-        } else {
-            contentDisplay.classList.add('slide-out-right');
+        const cardLayers = document.querySelectorAll('.title-card-layer');
+        const currentActiveCard = document.querySelector('.title-card-layer.active');
+        const newActiveIndex = this.currentTitleCardIndex;
+        const newActiveCard = cardLayers[newActiveIndex];
+        
+        // Remove active class from current card
+        if (currentActiveCard) {
+            currentActiveCard.classList.remove('active');
         }
         
-        setTimeout(() => {
-            // Update card index
-            if (direction === 'next') {
-                this.currentTitleCardIndex++;
-            } else {
-                this.currentTitleCardIndex--;
-            }
+        if (direction === 'next') {
+            // Card moving to front (new active card)
+            newActiveCard.classList.add('moving-to-front');
             
-            // Update content without animation
-            this.updateTitleCardContent();
+            // Set CSS custom properties for animation
+            const currentTransform = window.getComputedStyle(newActiveCard).transform;
+            newActiveCard.style.setProperty('--start-transform', currentTransform);
+            newActiveCard.style.setProperty('--start-z', window.getComputedStyle(newActiveCard).zIndex);
             
-            // Remove exit animation and prepare for entry
-            contentDisplay.classList.remove('slide-out-left', 'slide-out-right');
-            
-            if (direction === 'next') {
-                contentDisplay.classList.add('slide-in-right');
-            } else {
-                contentDisplay.classList.add('slide-in-left');
-            }
-            
-            // Small delay to ensure the element is positioned for entry animation
-            setTimeout(() => {
-                contentDisplay.classList.remove('slide-in-left', 'slide-in-right');
-                contentDisplay.classList.add('slide-in-center');
+        } else { // prev
+            // Current active card moving to back
+            if (currentActiveCard) {
+                currentActiveCard.classList.add('moving-to-back');
                 
-                // Re-enable buttons after animation
-                setTimeout(() => {
-                    prevBtn.disabled = false;
-                    nextBtn.disabled = false;
-                    actionButtons.forEach(btn => btn.disabled = false);
-                    
-                    // Update navigation state
-                    this.updateTitleCardNavigation();
-                }, 300);
-            }, 50);
-        }, 300);
+                // Calculate target position for the card moving back
+                const targetIndex = newActiveIndex + 1;
+                const relativePosition = targetIndex - newActiveIndex;
+                const stackLevel = Math.min(relativePosition, 4);
+                const translateZ = -stackLevel * 20;
+                const translateY = stackLevel * 8;
+                const scale = 1 - (stackLevel * 0.05);
+                
+                currentActiveCard.style.setProperty('--end-transform', 
+                    `translateZ(${translateZ}px) translateY(${translateY}px) scale(${scale})`);
+                currentActiveCard.style.setProperty('--end-z', 10 - stackLevel);
+            }
+            
+            // New active card
+            newActiveCard.classList.add('moving-to-front');
+            const currentTransform = window.getComputedStyle(newActiveCard).transform;
+            newActiveCard.style.setProperty('--start-transform', currentTransform);
+            newActiveCard.style.setProperty('--start-z', window.getComputedStyle(newActiveCard).zIndex);
+        }
+        
+        // Update counter immediately
+        document.getElementById('title-card-counter').textContent = 
+            `${this.currentTitleCardIndex + 1} / ${this.currentDeck.titleCards.length}`;
+        
+        // Wait for animation to complete
+        setTimeout(() => {
+            // Clean up animation classes
+            cardLayers.forEach(layer => {
+                layer.classList.remove('moving-to-front', 'moving-to-back');
+            });
+            
+            // Apply final positions
+            this.updateCardStackPositions();
+            
+            // Re-enable buttons
+            prevBtn.disabled = false;
+            nextBtn.disabled = false;
+            actionButtons.forEach(btn => btn.disabled = false);
+            
+            // Update navigation state
+            this.updateTitleCardNavigation();
+            
+            this.isAnimating = false;
+        }, 600);
     }
 
-    updateTitleCardContent() {
-        const titleCards = this.currentDeck.titleCards;
-        const currentTitleCard = titleCards[this.currentTitleCardIndex];
-        
-        // Update counter
-        document.getElementById('title-card-counter').textContent = 
-            `${this.currentTitleCardIndex + 1} / ${titleCards.length}`;
-        
-        // Update content
-        const titleElement = document.getElementById('display-title-card-title');
-        const contentElement = document.getElementById('display-title-card-content');
-        
-        // Handle formatted content
-        if (currentTitleCard.title && currentTitleCard.title.indexOf('<') === -1) {
-            titleElement.textContent = currentTitleCard.title;
-        } else {
-            titleElement.innerHTML = currentTitleCard.title || '';
-        }
-        
-        if (currentTitleCard.content && currentTitleCard.content.indexOf('<') === -1) {
-            contentElement.textContent = currentTitleCard.content;
-        } else {
-            contentElement.innerHTML = currentTitleCard.content || '';
-        }
+    escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     updateTitleCardNavigation() {
