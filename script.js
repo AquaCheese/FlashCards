@@ -7357,6 +7357,85 @@ Please tailor the hint complexity to match the student's performance level and y
     }
 
     showCurrentTitleCard() {
+        // Reset any animation classes
+        const contentDisplay = document.getElementById('display-title-card-content').parentElement;
+        contentDisplay.classList.remove('slide-out-left', 'slide-out-right', 'slide-in-left', 'slide-in-right', 'slide-in-center');
+        
+        this.updateTitleCardContent();
+        this.updateTitleCardNavigation();
+    }
+
+    previousTitleCard() {
+        if (this.currentTitleCardIndex > 0) {
+            this.animateTitleCardTransition('prev');
+        }
+    }
+
+    nextTitleCard() {
+        const titleCards = this.currentDeck.titleCards;
+        if (this.currentTitleCardIndex < titleCards.length - 1) {
+            this.animateTitleCardTransition('next');
+        }
+    }
+
+    animateTitleCardTransition(direction) {
+        const contentDisplay = document.getElementById('display-title-card-content').parentElement;
+        
+        // Disable navigation buttons during animation
+        const prevBtn = document.getElementById('title-prev-btn');
+        const nextBtn = document.getElementById('title-next-btn');
+        const actionButtons = document.querySelectorAll('.title-card-actions button');
+        
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+        actionButtons.forEach(btn => btn.disabled = true);
+        
+        // Start exit animation
+        if (direction === 'next') {
+            contentDisplay.classList.add('slide-out-left');
+        } else {
+            contentDisplay.classList.add('slide-out-right');
+        }
+        
+        setTimeout(() => {
+            // Update card index
+            if (direction === 'next') {
+                this.currentTitleCardIndex++;
+            } else {
+                this.currentTitleCardIndex--;
+            }
+            
+            // Update content without animation
+            this.updateTitleCardContent();
+            
+            // Remove exit animation and prepare for entry
+            contentDisplay.classList.remove('slide-out-left', 'slide-out-right');
+            
+            if (direction === 'next') {
+                contentDisplay.classList.add('slide-in-right');
+            } else {
+                contentDisplay.classList.add('slide-in-left');
+            }
+            
+            // Small delay to ensure the element is positioned for entry animation
+            setTimeout(() => {
+                contentDisplay.classList.remove('slide-in-left', 'slide-in-right');
+                contentDisplay.classList.add('slide-in-center');
+                
+                // Re-enable buttons after animation
+                setTimeout(() => {
+                    prevBtn.disabled = false;
+                    nextBtn.disabled = false;
+                    actionButtons.forEach(btn => btn.disabled = false);
+                    
+                    // Update navigation state
+                    this.updateTitleCardNavigation();
+                }, 300);
+            }, 50);
+        }, 300);
+    }
+
+    updateTitleCardContent() {
         const titleCards = this.currentDeck.titleCards;
         const currentTitleCard = titleCards[this.currentTitleCardIndex];
         
@@ -7380,6 +7459,10 @@ Please tailor the hint complexity to match the student's performance level and y
         } else {
             contentElement.innerHTML = currentTitleCard.content || '';
         }
+    }
+
+    updateTitleCardNavigation() {
+        const titleCards = this.currentDeck.titleCards;
         
         // Update navigation buttons
         const prevBtn = document.getElementById('title-prev-btn');
@@ -7416,21 +7499,6 @@ Please tailor the hint complexity to match the student's performance level and y
                     Next →
                 </button>
             `;
-        }
-    }
-
-    previousTitleCard() {
-        if (this.currentTitleCardIndex > 0) {
-            this.currentTitleCardIndex--;
-            this.showCurrentTitleCard();
-        }
-    }
-
-    nextTitleCard() {
-        const titleCards = this.currentDeck.titleCards;
-        if (this.currentTitleCardIndex < titleCards.length - 1) {
-            this.currentTitleCardIndex++;
-            this.showCurrentTitleCard();
         }
     }
 

@@ -2122,6 +2122,35 @@ button:disabled:hover {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Title Card Animation Classes */
+.title-card-content-display.slide-out-left {
+    transform: translateX(-100%);
+    opacity: 0;
+}
+
+.title-card-content-display.slide-out-right {
+    transform: translateX(100%);
+    opacity: 0;
+}
+
+.title-card-content-display.slide-in-left {
+    transform: translateX(-100%);
+    opacity: 0;
+}
+
+.title-card-content-display.slide-in-right {
+    transform: translateX(100%);
+    opacity: 0;
+}
+
+.title-card-content-display.slide-in-center {
+    transform: translateX(0);
+    opacity: 1;
 }
 
 .title-card-title {
