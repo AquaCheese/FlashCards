@@ -6494,7 +6494,6 @@ Please tailor the hint complexity to match the student's performance level and y
                 this.renderGeneratedDecks(generatedDecks);
             } else {
                 statusElement.innerHTML = `
-                    <div class="status-icon">🤖</div>
                     <div class="status-content">
                         <div class="status-title">Learning more about you...</div>
                         <div class="status-description">Keep studying! We need a bit more data to create perfect decks for you.</div>
@@ -7388,6 +7387,36 @@ Please tailor the hint complexity to match the student's performance level and y
         
         prevBtn.style.visibility = this.currentTitleCardIndex === 0 ? 'hidden' : 'visible';
         nextBtn.style.visibility = this.currentTitleCardIndex === titleCards.length - 1 ? 'hidden' : 'visible';
+        
+        // Update action buttons based on title card position and count
+        const titleCardActions = document.querySelector('.title-card-actions');
+        const isLastCard = this.currentTitleCardIndex === titleCards.length - 1;
+        const isSingleCard = titleCards.length === 1;
+        
+        // Show Start/Skip buttons only for single card OR at the last card
+        if (isSingleCard || isLastCard) {
+            titleCardActions.innerHTML = `
+                <button class="btn btn-primary" onclick="startActualStudy()">
+                    Start Studying →
+                </button>
+                <button class="btn btn-secondary" onclick="skipToStudy()">
+                    Skip to Cards
+                </button>
+            `;
+        } else {
+            // Show Next/Prev buttons for multi-card navigation
+            const prevDisabled = this.currentTitleCardIndex === 0 ? 'disabled' : '';
+            const nextDisabled = isLastCard ? 'disabled' : '';
+            
+            titleCardActions.innerHTML = `
+                <button class="btn btn-secondary" onclick="previousTitleCard()" ${prevDisabled}>
+                    ← Previous
+                </button>
+                <button class="btn btn-primary" onclick="nextTitleCard()" ${nextDisabled}>
+                    Next →
+                </button>
+            `;
+        }
     }
 
     previousTitleCard() {
