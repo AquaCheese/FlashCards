@@ -7675,33 +7675,38 @@ Please tailor the hint complexity to match the student's performance level and y
         document.getElementById('card-number').textContent = `${this.cardCount + 1} / ${this.currentDeck.cards.length}`;
         this.hideFeedback();
         
-        // Apply deck style and color
-        const studyCard = document.getElementById('study-card');
+        // Apply deck style and color to all study card elements
+        const studyCards = document.querySelectorAll('.study-card');
         
-        // Remove existing style and animation classes
-        studyCard.classList.remove('classic', 'modern', 'vintage', 'neon');
-        studyCard.classList.remove('blue', 'green', 'purple', 'red', 'orange', 'teal');
-        studyCard.classList.remove('fall-correct', 'slide-incorrect', 'slide-out', 'slide-in', 'bounce-in', 'slide-in-top');
-        
-        // Apply deck's style and color (with fallbacks for older decks)
+        // Get deck's style and color (with fallbacks for older decks)
         const deckStyle = this.currentDeck.style || 'classic';
         const deckColor = this.currentDeck.color || 'blue';
         
-        // Ensure styles are applied correctly
-        console.log('Applying card styles:', { deckStyle, deckColor });
-        studyCard.classList.add(deckStyle, deckColor);
+        console.log('Applying card styles:', { deckStyle, deckColor, cardCount: studyCards.length });
+        
+        studyCards.forEach(studyCard => {
+            // Remove existing style and animation classes
+            studyCard.classList.remove('classic', 'modern', 'vintage', 'neon');
+            studyCard.classList.remove('blue', 'green', 'purple', 'red', 'orange', 'teal');
+            studyCard.classList.remove('fall-correct', 'slide-incorrect', 'slide-out', 'slide-in', 'bounce-in', 'slide-in-top');
+            
+            // Apply deck's style and color
+            studyCard.classList.add(deckStyle, deckColor);
+            
+            // Reset any inline styles from animations
+            studyCard.style.transform = '';
+            studyCard.style.opacity = '1';
+        });
         
         // Double-check that the classes were applied
         setTimeout(() => {
-            if (!studyCard.classList.contains(deckStyle) || !studyCard.classList.contains(deckColor)) {
-                console.warn('Card styles not applied properly, retrying...');
-                studyCard.classList.add(deckStyle, deckColor);
-            }
+            studyCards.forEach(studyCard => {
+                if (!studyCard.classList.contains(deckStyle) || !studyCard.classList.contains(deckColor)) {
+                    console.warn('Card styles not applied properly, retrying...');
+                    studyCard.classList.add(deckStyle, deckColor);
+                }
+            });
         }, 10);
-        
-        // Reset any inline styles from animations
-        studyCard.style.transform = '';
-        studyCard.style.opacity = '1';
         
         // Focus on answer input
         setTimeout(() => {
@@ -7877,7 +7882,7 @@ Please tailor the hint complexity to match the student's performance level and y
     }
 
     animateCorrectAnswer() {
-        const studyCard = document.getElementById('study-card');
+        const studyCard = document.getElementById('flip-card');
         
         // Clear any existing animation classes
         studyCard.classList.remove('slide-out', 'slide-in', 'slide-incorrect', 'fall-correct', 'bounce-in');
@@ -7890,7 +7895,7 @@ Please tailor the hint complexity to match the student's performance level and y
     }
 
     animateIncorrectAnswer() {
-        const studyCard = document.getElementById('study-card');
+        const studyCard = document.getElementById('flip-card');
         
         // Clear any existing animation classes
         studyCard.classList.remove('slide-out', 'slide-in', 'slide-incorrect', 'fall-correct', 'bounce-in');
@@ -7911,7 +7916,7 @@ Please tailor the hint complexity to match the student's performance level and y
                 this.currentCardIndex + 1 : 0;
             
             // For incorrect answers, the "next" card is actually the current one going to the back
-            const isIncorrectAnswer = document.getElementById('study-card').classList.contains('slide-incorrect');
+            const isIncorrectAnswer = document.getElementById('flip-card').classList.contains('slide-incorrect');
             
             if (isIncorrectAnswer && this.currentCards.length > 1) {
                 // Show the actual next card in deck
@@ -7942,7 +7947,7 @@ Please tailor the hint complexity to match the student's performance level and y
         nextCardPreview.style.display = 'none';
         
         // Get the current card element
-        const studyCard = document.getElementById('study-card');
+        const studyCard = document.getElementById('flip-card');
         
         // Clear all animation classes and reset the card
         studyCard.classList.remove('fall-correct', 'slide-incorrect', 'slide-out', 'slide-in', 'bounce-in', 'slide-in-top');
