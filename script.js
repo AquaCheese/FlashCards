@@ -1019,7 +1019,14 @@ class FlashCardsApp {
 
     loadGeneratedDecks() {
         const saved = localStorage.getItem('flashcards-generated-decks');
-        return saved ? JSON.parse(saved) : [];
+        const decks = saved ? JSON.parse(saved) : [];
+        
+        // Ensure all generated decks have style and color properties
+        return decks.map(deck => ({
+            ...deck,
+            style: deck.style || 'classic',
+            color: deck.color || 'blue'
+        }));
     }
 
     renderGeneratedDecks(decks) {
@@ -1141,7 +1148,14 @@ class FlashCardsApp {
     // Deck Management
     loadDecks() {
         const saved = localStorage.getItem('flashcards-decks');
-        return saved ? JSON.parse(saved) : [];
+        const decks = saved ? JSON.parse(saved) : [];
+        
+        // Ensure all decks have style and color properties (for backward compatibility)
+        return decks.map(deck => ({
+            ...deck,
+            style: deck.style || 'classic',
+            color: deck.color || 'blue'
+        }));
     }
 
     saveDecks() {
@@ -7297,6 +7311,12 @@ Please tailor the hint complexity to match the student's performance level and y
         // Mark if this is a generated deck for analytics
         deck.isGeneratedStudy = isGenerated;
 
+        // Ensure deck has style and color properties
+        if (!deck.style) deck.style = 'classic';
+        if (!deck.color) deck.color = 'blue';
+        
+        console.log('Starting study with deck:', { name: deck.name, style: deck.style, color: deck.color });
+        
         this.currentDeck = deck;
         
         // Use adaptive learning to prioritize difficult cards
@@ -7666,7 +7686,18 @@ Please tailor the hint complexity to match the student's performance level and y
         // Apply deck's style and color (with fallbacks for older decks)
         const deckStyle = this.currentDeck.style || 'classic';
         const deckColor = this.currentDeck.color || 'blue';
+        
+        // Ensure styles are applied correctly
+        console.log('Applying card styles:', { deckStyle, deckColor });
         studyCard.classList.add(deckStyle, deckColor);
+        
+        // Double-check that the classes were applied
+        setTimeout(() => {
+            if (!studyCard.classList.contains(deckStyle) || !studyCard.classList.contains(deckColor)) {
+                console.warn('Card styles not applied properly, retrying...');
+                studyCard.classList.add(deckStyle, deckColor);
+            }
+        }, 10);
         
         // Reset any inline styles from animations
         studyCard.style.transform = '';
