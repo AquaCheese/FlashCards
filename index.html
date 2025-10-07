@@ -304,8 +304,151 @@
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary">Save Deck</button>
                             <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear</button>
+                            <button type="button" class="btn btn-accent" onclick="switchToInteractiveEditor()">
+                                🎨 Switch to Interactive Editor
+                            </button>
                         </div>
                     </form>
+                </div>
+
+                <!-- Interactive Card Creator View -->
+                <div class="view" id="interactive-create-view" style="display: none;">
+                    <div class="interactive-editor">
+                        <div class="editor-header">
+                            <h2>🎨 Interactive Card Creator</h2>
+                            <div class="editor-controls">
+                                <button class="btn btn-secondary" onclick="switchToSimpleEditor()">
+                                    📝 Switch to Simple Editor
+                                </button>
+                                <button class="btn btn-secondary" onclick="saveInteractiveDeck()">
+                                    💾 Save Deck
+                                </button>
+                                <button class="btn btn-secondary" id="back-to-home-from-interactive">← Back</button>
+                            </div>
+                        </div>
+
+                        <!-- Deck Settings Panel -->
+                        <div class="editor-settings-panel">
+                            <div class="settings-row">
+                                <div class="form-group">
+                                    <label for="interactive-deck-name">Deck Name</label>
+                                    <input type="text" id="interactive-deck-name" placeholder="e.g., Advanced Biology" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="interactive-deck-subject">Subject</label>
+                                    <select id="interactive-deck-subject" required>
+                                        <option value="">Select subject...</option>
+                                        <option value="Mathematics">Mathematics</option>
+                                        <option value="English">English</option>
+                                        <option value="Biology">Biology</option>
+                                        <option value="Chemistry">Chemistry</option>
+                                        <option value="Physics">Physics</option>
+                                        <option value="History">History</option>
+                                        <option value="Geography">Geography</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Main Editor Area -->
+                        <div class="editor-main">
+                            <!-- Toolbar -->
+                            <div class="editor-toolbar">
+                                <div class="toolbar-section">
+                                    <h4>Elements</h4>
+                                    <button class="tool-btn" data-tool="text" title="Add Text Box">
+                                        <span class="tool-icon">📝</span> Text
+                                    </button>
+                                    <button class="tool-btn" data-tool="image" title="Add Image">
+                                        <span class="tool-icon">🖼️</span> Image
+                                    </button>
+                                    <button class="tool-btn" data-tool="shape" title="Add Shape">
+                                        <span class="tool-icon">⬜</span> Shape
+                                    </button>
+                                    <button class="tool-btn" data-tool="answer-zone" title="Add Answer Zone">
+                                        <span class="tool-icon">✅</span> Answer
+                                    </button>
+                                </div>
+                                <div class="toolbar-section">
+                                    <h4>Format</h4>
+                                    <select id="font-family" class="format-control">
+                                        <option value="Inter">Inter</option>
+                                        <option value="Arial">Arial</option>
+                                        <option value="Times New Roman">Times New Roman</option>
+                                        <option value="Helvetica">Helvetica</option>
+                                    </select>
+                                    <input type="number" id="font-size" class="format-control" value="16" min="8" max="72">
+                                    <input type="color" id="text-color" class="format-control" value="#000000">
+                                    <input type="color" id="bg-color" class="format-control" value="#ffffff">
+                                </div>
+                                <div class="toolbar-section">
+                                    <h4>Layout</h4>
+                                    <button class="tool-btn" data-action="align-left" title="Align Left">
+                                        <span class="tool-icon">⬅️</span>
+                                    </button>
+                                    <button class="tool-btn" data-action="align-center" title="Align Center">
+                                        <span class="tool-icon">⬆️</span>
+                                    </button>
+                                    <button class="tool-btn" data-action="align-right" title="Align Right">
+                                        <span class="tool-icon">➡️</span>
+                                    </button>
+                                    <button class="tool-btn" data-action="bring-forward" title="Bring Forward">
+                                        <span class="tool-icon">⬆️</span>
+                                    </button>
+                                    <button class="tool-btn" data-action="send-backward" title="Send Backward">
+                                        <span class="tool-icon">⬇️</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Card Workspace -->
+                            <div class="editor-workspace">
+                                <!-- Card Tabs -->
+                                <div class="card-tabs">
+                                    <button class="card-tab active" data-card="0">
+                                        <span class="tab-title">Card 1</span>
+                                        <button class="tab-close" onclick="removeInteractiveCard(0)">×</button>
+                                    </button>
+                                    <button class="add-card-tab" onclick="addInteractiveCard()">+ Add Card</button>
+                                </div>
+
+                                <!-- Canvas Area -->
+                                <div class="canvas-container">
+                                    <div class="canvas-sidebar">
+                                        <h4>Card Sides</h4>
+                                        <div class="side-tabs">
+                                            <button class="side-tab active" data-side="front">Question</button>
+                                            <button class="side-tab" data-side="back">Answer</button>
+                                        </div>
+                                        
+                                        <h4>Layers</h4>
+                                        <div class="layers-panel" id="layers-panel">
+                                            <!-- Layers will be listed here -->
+                                        </div>
+                                    </div>
+
+                                    <div class="canvas-main">
+                                        <div class="canvas" id="interactive-canvas">
+                                            <div class="canvas-side active" data-side="front" id="canvas-front">
+                                                <!-- Interactive elements will be added here -->
+                                            </div>
+                                            <div class="canvas-side" data-side="back" id="canvas-back">
+                                                <!-- Interactive elements will be added here -->
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="properties-panel">
+                                        <h4>Properties</h4>
+                                        <div id="element-properties">
+                                            <p>Select an element to edit its properties</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Study View -->

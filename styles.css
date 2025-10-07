@@ -7152,7 +7152,433 @@ select:focus {
     }
     
     .customization-options {
-        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+
+/* ========================================
+   INTERACTIVE CARD CREATOR STYLES
+   ======================================== */
+
+.interactive-editor {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #f8f9fa;
+}
+
+.editor-header {
+    background: white;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.editor-header h2 {
+    margin: 0;
+    color: #2d3748;
+}
+
+.editor-controls {
+    display: flex;
+    gap: 1rem;
+}
+
+.editor-settings-panel {
+    background: white;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.settings-row {
+    display: flex;
+    gap: 2rem;
+    align-items: end;
+}
+
+.editor-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.editor-toolbar {
+    background: white;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    gap: 2rem;
+    overflow-x: auto;
+}
+
+.toolbar-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 150px;
+}
+
+.toolbar-section h4 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #4a5568;
+    font-weight: 600;
+}
+
+.tool-btn {
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.tool-btn:hover {
+    background: #edf2f7;
+    border-color: #cbd5e0;
+}
+
+.tool-btn.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.format-control {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.editor-workspace {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.card-tabs {
+    background: white;
+    padding: 0.5rem 2rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.card-tab {
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    padding: 0.5rem 1rem;
+    border-radius: 6px 6px 0 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.card-tab.active {
+    background: white;
+    border-bottom-color: white;
+    margin-bottom: -1px;
+}
+
+.tab-close {
+    background: transparent;
+    border: none;
+    color: #a0aec0;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0;
+    margin-left: 0.5rem;
+}
+
+.tab-close:hover {
+    color: #e53e3e;
+}
+
+.add-card-tab {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.canvas-container {
+    flex: 1;
+    display: flex;
+    background: white;
+    overflow: hidden;
+}
+
+.canvas-sidebar {
+    width: 250px;
+    background: #f8f9fa;
+    border-right: 1px solid #e2e8f0;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.canvas-sidebar h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.9rem;
+    color: #4a5568;
+    font-weight: 600;
+}
+
+.side-tabs {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.side-tab {
+    flex: 1;
+    background: #e2e8f0;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+}
+
+.side-tab.active {
+    background: #667eea;
+    color: white;
+}
+
+.layers-panel {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.layer-item {
+    background: white;
+    border: 1px solid #e2e8f0;
+    padding: 0.5rem;
+    margin-bottom: 0.25rem;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+}
+
+.layer-item.selected {
+    border-color: #667eea;
+    background: #f0f4ff;
+}
+
+.canvas-main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    background: #edf2f7;
+}
+
+.canvas {
+    width: 600px;
+    height: 400px;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.canvas-side {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 1rem;
+    display: none;
+}
+
+.canvas-side.active {
+    display: block;
+}
+
+.properties-panel {
+    width: 250px;
+    background: #f8f9fa;
+    border-left: 1px solid #e2e8f0;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.properties-panel h4 {
+    margin: 0 0 1rem 0;
+    font-size: 0.9rem;
+    color: #4a5568;
+    font-weight: 600;
+}
+
+/* Interactive Elements */
+.interactive-element {
+    position: absolute;
+    border: 2px dashed transparent;
+    cursor: move;
+    min-width: 50px;
+    min-height: 30px;
+}
+
+.interactive-element.selected {
+    border-color: #667eea;
+}
+
+.interactive-element .resize-handle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #667eea;
+    border: 1px solid white;
+    border-radius: 50%;
+}
+
+.resize-handle.nw { top: -4px; left: -4px; cursor: nw-resize; }
+.resize-handle.ne { top: -4px; right: -4px; cursor: ne-resize; }
+.resize-handle.sw { bottom: -4px; left: -4px; cursor: sw-resize; }
+.resize-handle.se { bottom: -4px; right: -4px; cursor: se-resize; }
+.resize-handle.n { top: -4px; left: 50%; transform: translateX(-50%); cursor: n-resize; }
+.resize-handle.s { bottom: -4px; left: 50%; transform: translateX(-50%); cursor: s-resize; }
+.resize-handle.w { top: 50%; left: -4px; transform: translateY(-50%); cursor: w-resize; }
+.resize-handle.e { top: 50%; right: -4px; transform: translateY(-50%); cursor: e-resize; }
+
+.text-element {
+    background: rgba(255,255,255,0.9);
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-family: Inter, sans-serif;
+    line-height: 1.4;
+}
+
+.image-element {
+    background: #f0f4ff;
+    border: 2px dashed #cbd5e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    color: #4a5568;
+}
+
+.image-element img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.shape-element {
+    background: #e2e8f0;
+    border-radius: 4px;
+}
+
+.answer-zone {
+    background: rgba(72, 187, 120, 0.1);
+    border: 2px dashed #48bb78;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    color: #38a169;
+    font-weight: 500;
+}
+
+/* Property Panel Controls */
+.property-group {
+    margin-bottom: 1rem;
+}
+
+.property-group label {
+    display: block;
+    font-size: 0.8rem;
+    color: #4a5568;
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+.property-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.property-slider {
+    width: 100%;
+    margin: 0.5rem 0;
+}
+
+.property-checkbox {
+    margin-right: 0.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .canvas-sidebar,
+    .properties-panel {
+        width: 200px;
+    }
+    
+    .canvas {
+        width: 500px;
+        height: 350px;
+    }
+}
+
+@media (max-width: 768px) {
+    .editor-toolbar {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .toolbar-section {
+        min-width: auto;
+    }
+    
+    .canvas-container {
+        flex-direction: column;
+    }
+    
+    .canvas-sidebar,
+    .properties-panel {
+        width: 100%;
+        height: 150px;
+    }
+    
+    .canvas {
+        width: 90%;
+        height: 300px;
+    }
+    
+    .settings-row {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
     }
     
     .colors-grid {

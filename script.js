@@ -199,6 +199,34 @@ window.closeStatsModal = function() {
     }
 };
 
+// Interactive Editor global functions
+window.moveElementUp = function(elementId) {
+    console.log('moveElementUp called with:', elementId, 'app:', !!app);
+    if (app && app.moveElementUp) {
+        app.moveElementUp(elementId);
+    } else {
+        console.log('App not ready or moveElementUp method missing');
+    }
+};
+
+window.moveElementDown = function(elementId) {
+    console.log('moveElementDown called with:', elementId, 'app:', !!app);
+    if (app && app.moveElementDown) {
+        app.moveElementDown(elementId);
+    } else {
+        console.log('App not ready or moveElementDown method missing');
+    }
+};
+
+window.deleteElement = function(elementId) {
+    console.log('deleteElement called with:', elementId, 'app:', !!app);
+    if (app && app.deleteElement) {
+        app.deleteElement(elementId);
+    } else {
+        console.log('App not ready or deleteElement method missing');
+    }
+};
+
 window.previousTitleCard = function() {
     console.log('previousTitleCard called, app:', !!app);
     if (app && app.previousTitleCard) {
@@ -7653,6 +7681,564 @@ Please tailor the hint complexity to match the student's performance level and y
         });
     }
 
+    // Interactive Card Editor Methods
+    initInteractiveEditor() {
+        console.log('Initializing Interactive Editor...');
+        
+        this.interactiveEditor = {
+            canvas: null,
+            elements: [],
+            selectedElement: null,
+            isDragging: false,
+            dragOffset: { x: 0, y: 0 },
+            isResizing: false,
+            currentTool: 'select',
+            currentCard: 'front',
+            zoom: 1,
+            canvasOffset: { x: 0, y: 0 }
+        };
+        
+        this.setupInteractiveEditorEvents();
+        console.log('Interactive Editor initialized successfully');
+    }
+    
+    setupInteractiveEditorEvents() {
+        // Mode toggle buttons
+        const simpleEditorBtn = document.getElementById('simple-editor-btn');
+        const interactiveEditorBtn = document.getElementById('interactive-editor-btn');
+        
+        if (simpleEditorBtn && interactiveEditorBtn) {
+            simpleEditorBtn.addEventListener('click', () => this.switchEditorMode('simple'));
+            interactiveEditorBtn.addEventListener('click', () => this.switchEditorMode('interactive'));
+        }
+        
+        // Tool buttons
+        document.querySelectorAll('.ie-tool-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.selectTool(e.target.dataset.tool);
+            });
+        });
+        
+        // Card tabs
+        document.querySelectorAll('.ie-card-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                this.switchCard(e.target.dataset.card);
+            });
+        });
+        
+        // Canvas events
+        const canvas = document.getElementById('ie-canvas');
+        if (canvas) {
+            this.interactiveEditor.canvas = canvas;
+            canvas.addEventListener('mousedown', (e) => this.handleCanvasMouseDown(e));
+            canvas.addEventListener('mousemove', (e) => this.handleCanvasMouseMove(e));
+            canvas.addEventListener('mouseup', (e) => this.handleCanvasMouseUp(e));
+            canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
+        }
+        
+        // Property panel events
+        this.setupPropertyPanelEvents();
+        
+        // Layer panel events
+        this.setupLayerPanelEvents();
+    }
+    
+    switchEditorMode(mode) {
+        const simpleEditor = document.querySelector('.simple-editor');
+        const interactiveEditor = document.querySelector('.interactive-editor');
+        const simpleBtn = document.getElementById('simple-editor-btn');
+        const interactiveBtn = document.getElementById('interactive-editor-btn');
+        
+        if (mode === 'simple') {
+            simpleEditor?.classList.add('active');
+            interactiveEditor?.classList.remove('active');
+            simpleBtn?.classList.add('active');
+            interactiveBtn?.classList.remove('active');
+        } else {
+            simpleEditor?.classList.remove('active');
+            interactiveEditor?.classList.add('active');
+            simpleBtn?.classList.remove('active');
+            interactiveBtn?.classList.add('active');
+            
+            // Initialize canvas if switching to interactive mode
+            this.initCanvas();
+        }
+    }
+    
+    selectTool(tool) {
+        this.interactiveEditor.currentTool = tool;
+        
+        // Update UI
+        document.querySelectorAll('.ie-tool-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-tool="${tool}"]`)?.classList.add('active');
+        
+        // Update cursor
+        const canvas = this.interactiveEditor.canvas;
+        if (canvas) {
+            canvas.style.cursor = tool === 'select' ? 'default' : 'crosshair';
+        }
+    }
+    
+    switchCard(card) {
+        this.interactiveEditor.currentCard = card;
+        
+        // Update UI
+        document.querySelectorAll('.ie-card-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelector(`[data-card="${card}"]`)?.classList.add('active');
+        
+        // Clear canvas and reload elements for this card
+        this.loadCardElements(card);
+    }
+    
+    initCanvas() {
+        const canvas = this.interactiveEditor.canvas;
+        if (!canvas) return;
+        
+        // Set canvas size
+        canvas.width = 800;
+        canvas.height = 600;
+        
+        // Clear canvas
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw card background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.strokeRect(0, 0, canvas.width, canvas.height);
+        
+        // Load current card elements
+        this.loadCardElements(this.interactiveEditor.currentCard);
+    }
+    
+    loadCardElements(card) {
+        // Clear current elements
+        this.interactiveEditor.elements = this.interactiveEditor.elements.filter(el => el.card === card);
+        
+        // Redraw canvas
+        this.redrawCanvas();
+        
+        // Update layers panel
+        this.updateLayersPanel();
+    }
+    
+    handleCanvasMouseDown(e) {
+        const rect = this.interactiveEditor.canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / this.interactiveEditor.zoom;
+        const y = (e.clientY - rect.top) / this.interactiveEditor.zoom;
+        
+        if (this.interactiveEditor.currentTool === 'select') {
+            // Check if clicking on an element
+            const element = this.getElementAt(x, y);
+            if (element) {
+                this.selectElement(element);
+                this.interactiveEditor.isDragging = true;
+                this.interactiveEditor.dragOffset = {
+                    x: x - element.x,
+                    y: y - element.y
+                };
+            } else {
+                this.selectElement(null);
+            }
+        } else {
+            // Create new element
+            this.createElementAt(x, y);
+        }
+    }
+    
+    handleCanvasMouseMove(e) {
+        const rect = this.interactiveEditor.canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / this.interactiveEditor.zoom;
+        const y = (e.clientY - rect.top) / this.interactiveEditor.zoom;
+        
+        if (this.interactiveEditor.isDragging && this.interactiveEditor.selectedElement) {
+            // Move selected element
+            this.interactiveEditor.selectedElement.x = x - this.interactiveEditor.dragOffset.x;
+            this.interactiveEditor.selectedElement.y = y - this.interactiveEditor.dragOffset.y;
+            this.redrawCanvas();
+            this.updatePropertyPanel();
+        }
+    }
+    
+    handleCanvasMouseUp(e) {
+        this.interactiveEditor.isDragging = false;
+        this.interactiveEditor.isResizing = false;
+    }
+    
+    handleCanvasClick(e) {
+        // Handle click events for tools
+    }
+    
+    getElementAt(x, y) {
+        // Return the topmost element at the given coordinates
+        for (let i = this.interactiveEditor.elements.length - 1; i >= 0; i--) {
+            const element = this.interactiveEditor.elements[i];
+            if (element.card !== this.interactiveEditor.currentCard) continue;
+            
+            if (x >= element.x && x <= element.x + element.width &&
+                y >= element.y && y <= element.y + element.height) {
+                return element;
+            }
+        }
+        return null;
+    }
+    
+    selectElement(element) {
+        this.interactiveEditor.selectedElement = element;
+        this.redrawCanvas();
+        this.updatePropertyPanel();
+        this.updateLayersPanel();
+    }
+    
+    createElementAt(x, y) {
+        const tool = this.interactiveEditor.currentTool;
+        const element = {
+            id: Date.now(),
+            type: tool,
+            card: this.interactiveEditor.currentCard,
+            x: x,
+            y: y,
+            width: 100,
+            height: 50,
+            text: tool === 'text' ? 'Text' : '',
+            fontSize: 16,
+            fontFamily: 'Arial',
+            color: '#000000',
+            backgroundColor: tool === 'shape' ? '#ffffff' : 'transparent',
+            borderColor: '#000000',
+            borderWidth: 1,
+            rotation: 0,
+            zIndex: this.interactiveEditor.elements.length
+        };
+        
+        if (tool === 'image') {
+            // Handle image upload
+            this.uploadImage(element);
+        } else {
+            this.interactiveEditor.elements.push(element);
+            this.selectElement(element);
+            this.redrawCanvas();
+            this.updateLayersPanel();
+        }
+    }
+    
+    uploadImage(element) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    element.imageData = e.target.result;
+                    this.interactiveEditor.elements.push(element);
+                    this.selectElement(element);
+                    this.redrawCanvas();
+                    this.updateLayersPanel();
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        input.click();
+    }
+    
+    redrawCanvas() {
+        const canvas = this.interactiveEditor.canvas;
+        const ctx = canvas.getContext('2d');
+        
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.strokeRect(0, 0, canvas.width, canvas.height);
+        
+        // Sort elements by z-index
+        const elements = this.interactiveEditor.elements
+            .filter(el => el.card === this.interactiveEditor.currentCard)
+            .sort((a, b) => a.zIndex - b.zIndex);
+        
+        // Draw elements
+        elements.forEach(element => {
+            this.drawElement(ctx, element);
+        });
+        
+        // Draw selection handles
+        if (this.interactiveEditor.selectedElement) {
+            this.drawSelectionHandles(ctx, this.interactiveEditor.selectedElement);
+        }
+    }
+    
+    drawElement(ctx, element) {
+        ctx.save();
+        
+        // Apply transformations
+        const centerX = element.x + element.width / 2;
+        const centerY = element.y + element.height / 2;
+        ctx.translate(centerX, centerY);
+        ctx.rotate(element.rotation * Math.PI / 180);
+        ctx.translate(-centerX, -centerY);
+        
+        // Draw based on element type
+        switch (element.type) {
+            case 'text':
+                this.drawTextElement(ctx, element);
+                break;
+            case 'image':
+                this.drawImageElement(ctx, element);
+                break;
+            case 'shape':
+                this.drawShapeElement(ctx, element);
+                break;
+            case 'answer-zone':
+                this.drawAnswerZoneElement(ctx, element);
+                break;
+        }
+        
+        ctx.restore();
+    }
+    
+    drawTextElement(ctx, element) {
+        ctx.font = `${element.fontSize}px ${element.fontFamily}`;
+        ctx.fillStyle = element.color;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        
+        // Word wrap text
+        const words = element.text.split(' ');
+        const lines = [];
+        let currentLine = '';
+        
+        words.forEach(word => {
+            const testLine = currentLine + (currentLine ? ' ' : '') + word;
+            const metrics = ctx.measureText(testLine);
+            if (metrics.width > element.width && currentLine) {
+                lines.push(currentLine);
+                currentLine = word;
+            } else {
+                currentLine = testLine;
+            }
+        });
+        if (currentLine) lines.push(currentLine);
+        
+        // Draw lines
+        lines.forEach((line, index) => {
+            ctx.fillText(line, element.x, element.y + index * element.fontSize * 1.2);
+        });
+    }
+    
+    drawImageElement(ctx, element) {
+        if (element.imageData) {
+            const img = new Image();
+            img.onload = () => {
+                ctx.drawImage(img, element.x, element.y, element.width, element.height);
+            };
+            img.src = element.imageData;
+        } else {
+            // Draw placeholder
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(element.x, element.y, element.width, element.height);
+            ctx.strokeStyle = '#ccc';
+            ctx.strokeRect(element.x, element.y, element.width, element.height);
+            ctx.fillStyle = '#999';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Image', element.x + element.width/2, element.y + element.height/2);
+        }
+    }
+    
+    drawShapeElement(ctx, element) {
+        ctx.fillStyle = element.backgroundColor;
+        ctx.fillRect(element.x, element.y, element.width, element.height);
+        
+        if (element.borderWidth > 0) {
+            ctx.strokeStyle = element.borderColor;
+            ctx.lineWidth = element.borderWidth;
+            ctx.strokeRect(element.x, element.y, element.width, element.height);
+        }
+    }
+    
+    drawAnswerZoneElement(ctx, element) {
+        // Draw dashed border for answer zone
+        ctx.setLineDash([5, 5]);
+        ctx.strokeStyle = '#007bff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(element.x, element.y, element.width, element.height);
+        ctx.setLineDash([]);
+        
+        // Draw label
+        ctx.fillStyle = '#007bff';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText('Answer Zone', element.x + 5, element.y + 15);
+    }
+    
+    drawSelectionHandles(ctx, element) {
+        const handleSize = 8;
+        const handles = [
+            { x: element.x - handleSize/2, y: element.y - handleSize/2 }, // top-left
+            { x: element.x + element.width - handleSize/2, y: element.y - handleSize/2 }, // top-right
+            { x: element.x - handleSize/2, y: element.y + element.height - handleSize/2 }, // bottom-left
+            { x: element.x + element.width - handleSize/2, y: element.y + element.height - handleSize/2 } // bottom-right
+        ];
+        
+        ctx.fillStyle = '#007bff';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        
+        handles.forEach(handle => {
+            ctx.fillRect(handle.x, handle.y, handleSize, handleSize);
+            ctx.strokeRect(handle.x, handle.y, handleSize, handleSize);
+        });
+    }
+    
+    setupPropertyPanelEvents() {
+        // Property input event listeners will be added here
+        const propertyInputs = document.querySelectorAll('.ie-property-input');
+        propertyInputs.forEach(input => {
+            input.addEventListener('change', (e) => {
+                this.updateElementProperty(e.target.dataset.property, e.target.value);
+            });
+        });
+    }
+    
+    setupLayerPanelEvents() {
+        // Layer panel event listeners will be added here
+    }
+    
+    updatePropertyPanel() {
+        const element = this.interactiveEditor.selectedElement;
+        const panel = document.querySelector('.ie-properties-panel');
+        
+        if (!element || !panel) return;
+        
+        // Update property inputs based on selected element
+        const inputs = panel.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            const property = input.dataset.property;
+            if (property && element.hasOwnProperty(property)) {
+                input.value = element[property];
+            }
+        });
+    }
+    
+    updateElementProperty(property, value) {
+        const element = this.interactiveEditor.selectedElement;
+        if (!element) return;
+        
+        // Convert value to appropriate type
+        if (['x', 'y', 'width', 'height', 'fontSize', 'borderWidth', 'rotation', 'zIndex'].includes(property)) {
+            value = parseFloat(value) || 0;
+        }
+        
+        element[property] = value;
+        this.redrawCanvas();
+        this.updateLayersPanel();
+    }
+    
+    updateLayersPanel() {
+        const panel = document.querySelector('.ie-layers-list');
+        if (!panel) return;
+        
+        // Clear current layers
+        panel.innerHTML = '';
+        
+        // Get elements for current card, sorted by z-index (reverse for UI)
+        const elements = this.interactiveEditor.elements
+            .filter(el => el.card === this.interactiveEditor.currentCard)
+            .sort((a, b) => b.zIndex - a.zIndex);
+        
+        // Create layer items
+        elements.forEach(element => {
+            const layerItem = document.createElement('div');
+            layerItem.className = 'ie-layer-item';
+            if (element === this.interactiveEditor.selectedElement) {
+                layerItem.classList.add('selected');
+            }
+            
+            const icon = this.getElementIcon(element.type);
+            const name = element.text || element.type.charAt(0).toUpperCase() + element.type.slice(1);
+            
+            layerItem.innerHTML = `
+                <span class="layer-icon">${icon}</span>
+                <span class="layer-name">${name}</span>
+                <div class="layer-actions">
+                    <button class="layer-btn" onclick="app.moveElementUp('${element.id}')">↑</button>
+                    <button class="layer-btn" onclick="app.moveElementDown('${element.id}')">↓</button>
+                    <button class="layer-btn" onclick="app.deleteElement('${element.id}')">×</button>
+                </div>
+            `;
+            
+            layerItem.addEventListener('click', () => {
+                this.selectElement(element);
+            });
+            
+            panel.appendChild(layerItem);
+        });
+    }
+    
+    getElementIcon(type) {
+        const icons = {
+            text: '📝',
+            image: '🖼️',
+            shape: '⬜',
+            'answer-zone': '💭'
+        };
+        return icons[type] || '❓';
+    }
+    
+    moveElementUp(elementId) {
+        const element = this.interactiveEditor.elements.find(el => el.id == elementId);
+        if (element) {
+            element.zIndex += 1;
+            this.redrawCanvas();
+            this.updateLayersPanel();
+        }
+    }
+    
+    moveElementDown(elementId) {
+        const element = this.interactiveEditor.elements.find(el => el.id == elementId);
+        if (element && element.zIndex > 0) {
+            element.zIndex -= 1;
+            this.redrawCanvas();
+            this.updateLayersPanel();
+        }
+    }
+    
+    deleteElement(elementId) {
+        const index = this.interactiveEditor.elements.findIndex(el => el.id == elementId);
+        if (index > -1) {
+            this.interactiveEditor.elements.splice(index, 1);
+            if (this.interactiveEditor.selectedElement?.id == elementId) {
+                this.interactiveEditor.selectedElement = null;
+            }
+            this.redrawCanvas();
+            this.updateLayersPanel();
+            this.updatePropertyPanel();
+        }
+    }
+    
+    // Global functions for onclick handlers
+    moveElementUp(elementId) {
+        return this.moveElementUp(elementId);
+    }
+    
+    moveElementDown(elementId) {
+        return this.moveElementDown(elementId);
+    }
+    
+    deleteElement(elementId) {
+        return this.deleteElement(elementId);
+    }
+
     showCurrentCard() {
         if (this.currentCards.length === 0) {
             this.showStudyComplete();
@@ -11947,6 +12533,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Initialize XP and profile system
         initializeXPSystem();
+        // Initialize Interactive Editor
+        this.initInteractiveEditor();
+        
         console.log('XP and profile system initialized');
         
         // Make app globally available for debugging
