@@ -7571,7 +7571,7 @@ Please tailor the hint complexity to match the student's performance level and y
                 </button>
             `;
         } else {
-            // Show Next/Prev buttons for multi-card navigation
+            // Show Next/Prev buttons for multi-card navigation + Skip to Cards
             const prevDisabled = this.currentTitleCardIndex === 0 ? 'disabled' : '';
             const nextDisabled = isLastCard ? 'disabled' : '';
             
@@ -7581,6 +7581,9 @@ Please tailor the hint complexity to match the student's performance level and y
                 </button>
                 <button class="btn btn-primary" onclick="nextTitleCard()" ${nextDisabled}>
                     Next →
+                </button>
+                <button class="btn btn-outline" onclick="skipToStudy()" title="Skip all title cards and go directly to flashcards">
+                    Skip to Cards
                 </button>
             `;
         }
