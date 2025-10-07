@@ -259,6 +259,14 @@ body {
     height: auto;
     min-height: calc(100vh - 120px);
     overflow-y: auto;
+    /* Break out of container constraints for full-screen editor */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    background: #f8f9fa;
 }
 
 @keyframes fadeIn {
@@ -7170,11 +7178,11 @@ select:focus {
    ======================================== */
 
 .interactive-editor {
-    min-height: calc(100vh - 120px); /* Account for header height */
+    height: 100vh; /* Full viewport height */
     display: flex;
     flex-direction: column;
     background: #f8f9fa;
-    height: auto;
+    padding-top: 80px; /* Account for header height */
 }
 
 .editor-header {
@@ -7213,8 +7221,8 @@ select:focus {
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: visible; /* Allow content to be visible */
-    min-height: 600px; /* Ensure minimum height */
+    overflow: auto; /* Allow scrolling when needed */
+    height: calc(100vh - 200px); /* Account for header and other elements */
 }
 
 .editor-toolbar {
@@ -7333,8 +7341,8 @@ select:focus {
     flex: 1;
     display: flex;
     background: white;
-    overflow: hidden;
-    min-height: 500px; /* Ensure minimum visible height */
+    overflow: auto; /* Allow scrolling */
+    min-height: 400px; /* Ensure minimum visible height */
 }
 
 .canvas-sidebar {
