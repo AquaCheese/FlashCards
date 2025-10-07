@@ -121,8 +121,7 @@ window.generateSubjectSpecificDeck = function() {
 };
 
 window.devBonus = function() {
-    if (app && app.earnCoins) {
-        app.earnCoins(9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999, 'Dev bonus');
+    if (app && app.earnCoins) {app.earnCoins(1000, 'Dev bonus');
     }
 };
 
@@ -7389,8 +7388,11 @@ Please tailor the hint complexity to match the student's performance level and y
         const cardLayers = document.querySelectorAll('.title-card-layer');
         
         cardLayers.forEach((layer, index) => {
+            // Clear any leftover animation properties
+            layer.style.removeProperty('animation');
+            layer.classList.remove('active', 'moving-to-front', 'moving-to-back');
+            
             const relativePosition = index - this.currentTitleCardIndex;
-            layer.classList.remove('active');
             
             if (relativePosition === 0) {
                 // Active card (front)
@@ -7402,10 +7404,10 @@ Please tailor the hint complexity to match the student's performance level and y
             } else if (relativePosition > 0) {
                 // Cards behind the active card
                 const stackLevel = Math.min(relativePosition, 4);
-                const zIndex = 10 - stackLevel;
+                const zIndex = Math.max(6, 10 - stackLevel);
                 const translateZ = -stackLevel * 20;
                 const translateY = stackLevel * 8;
-                const scale = 1 - (stackLevel * 0.05);
+                const scale = Math.max(0.8, 1 - (stackLevel * 0.05));
                 const opacity = Math.max(0.6, 1 - (stackLevel * 0.1));
                 const brightness = Math.max(0.8, 1 - (stackLevel * 0.05));
                 
@@ -7414,7 +7416,7 @@ Please tailor the hint complexity to match the student's performance level and y
                 layer.style.opacity = opacity;
                 layer.style.filter = `brightness(${brightness})`;
             } else {
-                // Cards in front of active card (when going backwards)
+                // Cards that would be "before" the current active card
                 layer.style.zIndex = '5';
                 layer.style.transform = 'translateZ(-100px) translateY(40px) scale(0.75)';
                 layer.style.opacity = '0.5';
@@ -7466,59 +7468,70 @@ Please tailor the hint complexity to match the student's performance level and y
         actionButtons.forEach(btn => btn.disabled = true);
         
         const cardLayers = document.querySelectorAll('.title-card-layer');
-        const oldActiveIndex = direction === 'next' ? this.currentTitleCardIndex - 1 : this.currentTitleCardIndex + 1;
-        const newActiveIndex = this.currentTitleCardIndex;
-        
-        if (direction === 'next') {
-            // For "next": current (front) card moves to back
-            const currentActiveCard = cardLayers[oldActiveIndex];
-            if (currentActiveCard) {
-                currentActiveCard.classList.remove('active');
-                currentActiveCard.classList.add('moving-to-back');
-                
-                // Calculate where this card will end up in the stack
-                const finalPosition = this.currentDeck.titleCards.length - 1; // Back of deck
-                const stackLevel = Math.min(finalPosition - newActiveIndex, 4);
-                const translateZ = stackLevel > 0 ? -stackLevel * 20 : -80;
-                const translateY = stackLevel > 0 ? stackLevel * 8 : 32;
-                const scale = stackLevel > 0 ? 1 - (stackLevel * 0.05) : 0.80;
-                
-                currentActiveCard.style.setProperty('--end-transform', 
-                    `translateZ(${translateZ}px) translateY(${translateY}px) scale(${scale})`);
-                currentActiveCard.style.setProperty('--end-z', Math.max(1, 10 - stackLevel));
-            }
-            
-        } else { // prev
-            // For "prev": back card moves to front
-            const backCard = cardLayers[oldActiveIndex];
-            if (backCard) {
-                backCard.classList.add('moving-to-front');
-                
-                // Set starting position (where it currently is in the stack)
-                const currentTransform = window.getComputedStyle(backCard).transform;
-                backCard.style.setProperty('--start-transform', currentTransform);
-                backCard.style.setProperty('--start-z', window.getComputedStyle(backCard).zIndex);
-            }
-            
-            // Remove active from current card
-            const currentActiveCard = cardLayers[newActiveIndex + 1];
-            if (currentActiveCard) {
-                currentActiveCard.classList.remove('active');
-            }
-        }
+        const titleCards = this.currentDeck.titleCards;
         
         // Update counter immediately
         document.getElementById('title-card-counter').textContent = 
-            `${this.currentTitleCardIndex + 1} / ${this.currentDeck.titleCards.length}`;
+            `${this.currentTitleCardIndex + 1} / ${titleCards.length}`;
         
-        // Wait for animation to complete (increased to 1.2s)
+        if (direction === 'next') {
+            // Find the previous active card (the one that should move to back)
+            const previousIndex = this.currentTitleCardIndex - 1;
+            const movingCard = cardLayers[previousIndex];
+            
+            if (movingCard) {
+                movingCard.classList.remove('active');
+                movingCard.classList.add('moving-to-back');
+                
+                // Calculate final position at back of stack
+                const backPosition = titleCards.length - 1;
+                const relativePos = backPosition - this.currentTitleCardIndex;
+                const stackLevel = Math.min(Math.max(relativePos, 1), 4);
+                const translateZ = -stackLevel * 20;
+                const translateY = stackLevel * 8;
+                const scale = 1 - (stackLevel * 0.05);
+                
+                movingCard.style.setProperty('--end-transform', 
+                    `translateZ(${translateZ}px) translateY(${translateY}px) scale(${scale})`);
+                movingCard.style.setProperty('--end-z', 10 - stackLevel);
+            }
+            
+        } else { // prev
+            // Find the card that should move from back to front
+            const nextIndex = this.currentTitleCardIndex + 1;
+            const movingCard = cardLayers[nextIndex];
+            
+            if (movingCard) {
+                // Remove active from any current active card
+                const currentActive = document.querySelector('.title-card-layer.active');
+                if (currentActive) {
+                    currentActive.classList.remove('active');
+                }
+                
+                movingCard.classList.add('moving-to-front');
+                
+                // Get current transform as starting position
+                const computedStyle = window.getComputedStyle(movingCard);
+                const currentTransform = computedStyle.transform !== 'none' ? computedStyle.transform : 'translateZ(-80px) translateY(32px) scale(0.8)';
+                const currentZ = computedStyle.zIndex || '6';
+                
+                movingCard.style.setProperty('--start-transform', currentTransform);
+                movingCard.style.setProperty('--start-z', currentZ);
+            }
+        }
+        
+        // Wait for animation to complete
         setTimeout(() => {
             // Clean up animation classes
             cardLayers.forEach(layer => {
-                layer.classList.remove('moving-to-front', 'moving-to-back');
+                layer.classList.remove('moving-to-front', 'moving-to-back', 'active');
+                layer.style.removeProperty('--start-transform');
+                layer.style.removeProperty('--start-z');
+                layer.style.removeProperty('--end-transform');
+                layer.style.removeProperty('--end-z');
             });
             
-            // Apply final positions
+            // Apply final positions to all cards
             this.updateCardStackPositions();
             
             // Re-enable buttons

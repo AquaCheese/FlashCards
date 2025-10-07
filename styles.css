@@ -2206,22 +2206,27 @@ button:disabled:hover {
     0% {
         transform: translateZ(20px) translateY(-10px) scale(1.02);
         z-index: 15;
+        opacity: 1;
     }
-    25% {
-        transform: translateZ(20px) translateY(-10px) translateX(120px) scale(1.02);
+    20% {
+        transform: translateZ(20px) translateY(-10px) translateX(150px) scale(1.02);
         z-index: 15;
+        opacity: 1;
     }
-    50% {
-        transform: translateZ(-60px) translateY(40px) translateX(120px) scale(0.8);
-        z-index: 5;
+    40% {
+        transform: translateZ(-40px) translateY(25px) translateX(150px) scale(0.85);
+        z-index: 8;
+        opacity: 0.9;
     }
-    75% {
-        transform: translateZ(-60px) translateY(40px) translateX(-120px) scale(0.8);
-        z-index: 5;
+    70% {
+        transform: translateZ(-40px) translateY(25px) translateX(-150px) scale(0.85);
+        z-index: 8;
+        opacity: 0.8;
     }
     100% {
         transform: var(--end-transform);
         z-index: var(--end-z);
+        opacity: 0.7;
     }
 }
 
@@ -2230,22 +2235,27 @@ button:disabled:hover {
     0% {
         transform: var(--start-transform);
         z-index: var(--start-z);
+        opacity: 0.6;
     }
-    25% {
-        transform: var(--start-transform) translateX(-120px);
+    20% {
+        transform: var(--start-transform) translateX(-150px);
         z-index: var(--start-z);
+        opacity: 0.7;
     }
-    50% {
-        transform: translateZ(50px) translateY(-20px) translateX(-120px) scale(1.1);
-        z-index: 20;
+    40% {
+        transform: translateZ(30px) translateY(-15px) translateX(-150px) scale(1.05);
+        z-index: 18;
+        opacity: 0.9;
     }
-    75% {
-        transform: translateZ(50px) translateY(-20px) translateX(120px) scale(1.1);
-        z-index: 20;
+    70% {
+        transform: translateZ(30px) translateY(-15px) translateX(150px) scale(1.05);
+        z-index: 18;
+        opacity: 0.95;
     }
     100% {
         transform: translateZ(20px) translateY(-10px) scale(1.02);
         z-index: 15;
+        opacity: 1;
     }
 }
 
