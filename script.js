@@ -227,6 +227,42 @@ window.deleteElement = function(elementId) {
     }
 };
 
+window.switchToInteractiveEditor = function() {
+    console.log('switchToInteractiveEditor called, app:', !!app);
+    if (app && app.switchToInteractiveEditor) {
+        app.switchToInteractiveEditor();
+    } else {
+        console.log('App not ready or switchToInteractiveEditor method missing');
+    }
+};
+
+window.switchToSimpleEditor = function() {
+    console.log('switchToSimpleEditor called, app:', !!app);
+    if (app && app.switchToSimpleEditor) {
+        app.switchToSimpleEditor();
+    } else {
+        console.log('App not ready or switchToSimpleEditor method missing');
+    }
+};
+
+window.saveInteractiveDeck = function() {
+    console.log('saveInteractiveDeck called, app:', !!app);
+    if (app && app.saveInteractiveDeck) {
+        app.saveInteractiveDeck();
+    } else {
+        console.log('App not ready or saveInteractiveDeck method missing');
+    }
+};
+
+window.switchCanvasSide = function(side) {
+    console.log('switchCanvasSide called with:', side, 'app:', !!app);
+    if (app && app.switchCanvasSide) {
+        app.switchCanvasSide(side);
+    } else {
+        console.log('App not ready or switchCanvasSide method missing');
+    }
+};
+
 window.previousTitleCard = function() {
     console.log('previousTitleCard called, app:', !!app);
     if (app && app.previousTitleCard) {
@@ -7713,7 +7749,7 @@ Please tailor the hint complexity to match the student's performance level and y
         }
         
         // Tool buttons
-        document.querySelectorAll('.ie-tool-btn').forEach(btn => {
+        document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 this.selectTool(e.target.dataset.tool);
             });
@@ -7727,7 +7763,7 @@ Please tailor the hint complexity to match the student's performance level and y
         });
         
         // Canvas events
-        const canvas = document.getElementById('ie-canvas');
+        const canvas = document.getElementById('interactive-canvas');
         if (canvas) {
             this.interactiveEditor.canvas = canvas;
             canvas.addEventListener('mousedown', (e) => this.handleCanvasMouseDown(e));
@@ -7767,9 +7803,10 @@ Please tailor the hint complexity to match the student's performance level and y
     
     selectTool(tool) {
         this.interactiveEditor.currentTool = tool;
+        console.log('Selected tool:', tool);
         
         // Update UI
-        document.querySelectorAll('.ie-tool-btn').forEach(btn => {
+        document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
             btn.classList.remove('active');
         });
         document.querySelector(`[data-tool="${tool}"]`)?.classList.add('active');
@@ -7785,13 +7822,17 @@ Please tailor the hint complexity to match the student's performance level and y
         this.interactiveEditor.currentCard = card;
         
         // Update UI
-        document.querySelectorAll('.ie-card-tab').forEach(tab => {
+        document.querySelectorAll('.canvas-tab').forEach(tab => {
             tab.classList.remove('active');
         });
-        document.querySelector(`[data-card="${card}"]`)?.classList.add('active');
+        document.querySelector(`[data-side="${card}"]`)?.classList.add('active');
         
         // Clear canvas and reload elements for this card
         this.loadCardElements(card);
+    }
+    
+    switchCanvasSide(side) {
+        this.switchCard(side);
     }
     
     initCanvas() {
@@ -8116,17 +8157,74 @@ Please tailor the hint complexity to match the student's performance level and y
     
     updatePropertyPanel() {
         const element = this.interactiveEditor.selectedElement;
-        const panel = document.querySelector('.ie-properties-panel');
+        const panel = document.getElementById('element-properties');
         
-        if (!element || !panel) return;
+        if (!panel) return;
         
-        // Update property inputs based on selected element
-        const inputs = panel.querySelectorAll('input, select, textarea');
-        inputs.forEach(input => {
-            const property = input.dataset.property;
-            if (property && element.hasOwnProperty(property)) {
-                input.value = element[property];
-            }
+        if (!element) {
+            panel.innerHTML = '<p>Select an element to edit its properties</p>';
+            return;
+        }
+        
+        // Create property form based on element type
+        let propertiesHTML = `
+            <div class="property-group">
+                <label>Position</label>
+                <div class="property-row">
+                    <input type="number" data-property="x" value="${Math.round(element.x)}" placeholder="X">
+                    <input type="number" data-property="y" value="${Math.round(element.y)}" placeholder="Y">
+                </div>
+            </div>
+            <div class="property-group">
+                <label>Size</label>
+                <div class="property-row">
+                    <input type="number" data-property="width" value="${Math.round(element.width)}" placeholder="Width">
+                    <input type="number" data-property="height" value="${Math.round(element.height)}" placeholder="Height">
+                </div>
+            </div>
+        `;
+        
+        if (element.type === 'text') {
+            propertiesHTML += `
+                <div class="property-group">
+                    <label>Text</label>
+                    <textarea data-property="text" placeholder="Enter text">${element.text || ''}</textarea>
+                </div>
+                <div class="property-group">
+                    <label>Font Size</label>
+                    <input type="number" data-property="fontSize" value="${element.fontSize}" min="8" max="72">
+                </div>
+                <div class="property-group">
+                    <label>Color</label>
+                    <input type="color" data-property="color" value="${element.color}">
+                </div>
+            `;
+        }
+        
+        if (element.type === 'shape') {
+            propertiesHTML += `
+                <div class="property-group">
+                    <label>Background Color</label>
+                    <input type="color" data-property="backgroundColor" value="${element.backgroundColor}">
+                </div>
+                <div class="property-group">
+                    <label>Border Color</label>
+                    <input type="color" data-property="borderColor" value="${element.borderColor}">
+                </div>
+                <div class="property-group">
+                    <label>Border Width</label>
+                    <input type="number" data-property="borderWidth" value="${element.borderWidth}" min="0" max="10">
+                </div>
+            `;
+        }
+        
+        panel.innerHTML = propertiesHTML;
+        
+        // Add event listeners to new inputs
+        panel.querySelectorAll('input, select, textarea').forEach(input => {
+            input.addEventListener('change', (e) => {
+                this.updateElementProperty(e.target.dataset.property, e.target.value);
+            });
         });
     }
     
@@ -8145,7 +8243,7 @@ Please tailor the hint complexity to match the student's performance level and y
     }
     
     updateLayersPanel() {
-        const panel = document.querySelector('.ie-layers-list');
+        const panel = document.getElementById('layers-list');
         if (!panel) return;
         
         // Clear current layers
@@ -8237,6 +8335,141 @@ Please tailor the hint complexity to match the student's performance level and y
     
     deleteElement(elementId) {
         return this.deleteElement(elementId);
+    }
+    
+    // Interactive Editor View Management
+    switchToInteractiveEditor() {
+        console.log('Switching to Interactive Editor');
+        
+        // Hide all views first
+        document.querySelectorAll('.view').forEach(view => {
+            view.classList.remove('active');
+        });
+        
+        // Show the interactive editor view
+        const interactiveView = document.getElementById('interactive-create-view');
+        if (interactiveView) {
+            interactiveView.style.display = 'block';
+            interactiveView.classList.add('active');
+        }
+        
+        // Initialize the interactive editor if not already done
+        if (!this.interactiveEditor) {
+            this.initInteractiveEditor();
+        }
+        
+        // Set up the canvas
+        setTimeout(() => {
+            this.initCanvas();
+        }, 100); // Small delay to ensure DOM is ready
+        
+        // Set up back button for interactive editor
+        const backBtn = document.getElementById('back-to-home-from-interactive');
+        if (backBtn) {
+            backBtn.onclick = () => this.showView('home');
+        }
+    }
+    
+    switchToSimpleEditor() {
+        console.log('Switching to Simple Editor');
+        
+        // Hide interactive editor
+        const interactiveView = document.getElementById('interactive-create-view');
+        if (interactiveView) {
+            interactiveView.style.display = 'none';
+            interactiveView.classList.remove('active');
+        }
+        
+        // Show the create view properly
+        this.showView('create');
+    }
+    
+    saveInteractiveDeck() {
+        console.log('Saving Interactive Deck');
+        
+        const deckName = document.getElementById('interactive-deck-name')?.value;
+        const deckSubject = document.getElementById('interactive-deck-subject')?.value;
+        
+        if (!deckName || !deckSubject) {
+            this.showNotification('Missing Information', 'Please enter deck name and subject', 'warning');
+            return;
+        }
+        
+        // Create deck from interactive editor elements
+        const frontElements = this.interactiveEditor.elements.filter(el => el.card === 'front');
+        const backElements = this.interactiveEditor.elements.filter(el => el.card === 'back');
+        
+        // Convert interactive elements to standard cards
+        const cards = this.convertInteractiveElementsToCards(frontElements, backElements);
+        
+        if (cards.length === 0) {
+            this.showNotification('No Content', 'Please add some elements to create cards', 'warning');
+            return;
+        }
+        
+        // Create the deck
+        const deck = {
+            id: Date.now(),
+            name: deckName,
+            subject: deckSubject,
+            cards: cards,
+            style: 'modern', // Interactive decks use modern style
+            color: 'blue',
+            createdAt: new Date().toISOString(),
+            interactiveElements: {
+                front: frontElements,
+                back: backElements
+            }
+        };
+        
+        // Save deck
+        this.decks.push(deck);
+        this.saveDecks();
+        
+        // Clear interactive editor
+        this.clearInteractiveEditor();
+        
+        // Show success and return to home
+        this.showNotification('Deck Created!', `"${deckName}" has been saved successfully`, 'success');
+        this.showView('home');
+    }
+    
+    convertInteractiveElementsToCards(frontElements, backElements) {
+        // For now, create a single card from the elements
+        // In a more advanced version, this could create multiple cards based on answer zones
+        
+        const cards = [];
+        
+        // Find text elements to use as question/answer
+        const frontTexts = frontElements.filter(el => el.type === 'text');
+        const backTexts = backElements.filter(el => el.type === 'text');
+        const answerZones = [...frontElements, ...backElements].filter(el => el.type === 'answer-zone');
+        
+        if (frontTexts.length > 0 && backTexts.length > 0) {
+            const card = {
+                question: frontTexts.map(el => el.text).join(' '),
+                answer: backTexts.map(el => el.text).join(' '),
+                explanation: answerZones.length > 0 ? 'Interactive card with answer zones' : '',
+                hint: 'Use the interactive elements to help you answer'
+            };
+            cards.push(card);
+        }
+        
+        return cards;
+    }
+    
+    clearInteractiveEditor() {
+        if (this.interactiveEditor) {
+            this.interactiveEditor.elements = [];
+            this.interactiveEditor.selectedElement = null;
+            this.redrawCanvas();
+            this.updateLayersPanel();
+            this.updatePropertyPanel();
+        }
+        
+        // Clear form fields
+        document.getElementById('interactive-deck-name').value = '';
+        document.getElementById('interactive-deck-subject').value = '';
     }
 
     showCurrentCard() {

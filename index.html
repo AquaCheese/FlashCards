@@ -356,6 +356,12 @@
                             <!-- Toolbar -->
                             <div class="editor-toolbar">
                                 <div class="toolbar-section">
+                                    <h4>Tools</h4>
+                                    <button class="tool-btn active" data-tool="select" title="Select and Move Elements">
+                                        <span class="tool-icon">👆</span> Select
+                                    </button>
+                                </div>
+                                <div class="toolbar-section">
                                     <h4>Elements</h4>
                                     <button class="tool-btn" data-tool="text" title="Add Text Box">
                                         <span class="tool-icon">📝</span> Text
@@ -422,6 +428,13 @@
                                             <button class="side-tab" data-side="back">Answer</button>
                                         </div>
                                         
+                                        <div class="layers-panel">
+                                            <h4>Layers</h4>
+                                            <div class="layers-list" id="layers-list">
+                                                <p class="no-layers">No elements on this side</p>
+                                            </div>
+                                        </div>
+                                        
                                         <h4>Layers</h4>
                                         <div class="layers-panel" id="layers-panel">
                                             <!-- Layers will be listed here -->
@@ -429,12 +442,13 @@
                                     </div>
 
                                     <div class="canvas-main">
-                                        <div class="canvas" id="interactive-canvas">
-                                            <div class="canvas-side active" data-side="front" id="canvas-front">
-                                                <!-- Interactive elements will be added here -->
+                                        <div class="canvas-wrapper">
+                                            <div class="canvas-tabs">
+                                                <button class="canvas-tab active" data-side="front" onclick="app.switchCanvasSide('front')">Front</button>
+                                                <button class="canvas-tab" data-side="back" onclick="app.switchCanvasSide('back')">Back</button>
                                             </div>
-                                            <div class="canvas-side" data-side="back" id="canvas-back">
-                                                <!-- Interactive elements will be added here -->
+                                            <div class="canvas-container-inner">
+                                                <canvas id="interactive-canvas" width="800" height="600"></canvas>
                                             </div>
                                         </div>
                                     </div>

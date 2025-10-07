@@ -7449,6 +7449,175 @@ select:focus {
     border-color: #667eea;
 }
 
+/* Canvas Tabs */
+.canvas-tabs {
+    display: flex;
+    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 1rem;
+}
+
+.canvas-tab {
+    background: none;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    font-weight: 500;
+    color: #64748b;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.canvas-tab:hover {
+    color: #3b82f6;
+    background-color: #f8fafc;
+}
+
+.canvas-tab.active {
+    color: #3b82f6;
+    border-bottom-color: #3b82f6;
+    background-color: #f8fafc;
+}
+
+/* Canvas Container */
+.canvas-container-inner {
+    position: relative;
+    background: #ffffff;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+#interactive-canvas {
+    display: block;
+    background: #ffffff;
+    cursor: default;
+}
+
+/* Layers Panel */
+.layers-panel {
+    margin-top: 2rem;
+}
+
+.layers-panel h4 {
+    margin: 0 0 1rem 0;
+    font-size: 0.9rem;
+    color: #4a5568;
+    font-weight: 600;
+}
+
+.layers-list {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.layer-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    border-bottom: 1px solid #e2e8f0;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.layer-item:last-child {
+    border-bottom: none;
+}
+
+.layer-item:hover {
+    background-color: #f1f5f9;
+}
+
+.layer-item.selected {
+    background-color: #dbeafe;
+    border-left: 3px solid #3b82f6;
+}
+
+.layer-icon {
+    margin-right: 0.5rem;
+}
+
+.layer-name {
+    flex: 1;
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+.layer-actions {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.layer-btn {
+    background: none;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    color: #6b7280;
+    transition: all 0.2s ease;
+}
+
+.layer-btn:hover {
+    background-color: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.no-layers {
+    padding: 1rem;
+    text-align: center;
+    color: #9ca3af;
+    font-size: 0.875rem;
+    font-style: italic;
+}
+
+/* Property Panel Enhancements */
+.property-group {
+    margin-bottom: 1rem;
+}
+
+.property-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+.property-row {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.property-group input,
+.property-group textarea,
+.property-group select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    transition: border-color 0.2s ease;
+}
+
+.property-group input:focus,
+.property-group textarea:focus,
+.property-group select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.property-group textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
 .interactive-element .resize-handle {
     position: absolute;
     width: 8px;
