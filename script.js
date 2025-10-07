@@ -7749,8 +7749,11 @@ Please tailor the hint complexity to match the student's performance level and y
         }
         
         // Tool buttons
-        document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+        const toolButtons = document.querySelectorAll('.tool-btn[data-tool]');
+        console.log('Setting up tool buttons, found:', toolButtons.length);
+        toolButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
+                console.log('Tool button clicked:', e.target.dataset.tool);
                 this.selectTool(e.target.dataset.tool);
             });
         });
@@ -7764,12 +7767,16 @@ Please tailor the hint complexity to match the student's performance level and y
         
         // Canvas events
         const canvas = document.getElementById('interactive-canvas');
+        console.log('Setting up canvas events, canvas found:', !!canvas);
         if (canvas) {
             this.interactiveEditor.canvas = canvas;
             canvas.addEventListener('mousedown', (e) => this.handleCanvasMouseDown(e));
             canvas.addEventListener('mousemove', (e) => this.handleCanvasMouseMove(e));
             canvas.addEventListener('mouseup', (e) => this.handleCanvasMouseUp(e));
             canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
+            console.log('Canvas events set up successfully');
+        } else {
+            console.error('Canvas element not found!');
         }
         
         // Property panel events
@@ -7837,11 +7844,16 @@ Please tailor the hint complexity to match the student's performance level and y
     
     initCanvas() {
         const canvas = this.interactiveEditor.canvas;
-        if (!canvas) return;
+        console.log('initCanvas called, canvas:', canvas);
+        if (!canvas) {
+            console.error('Canvas not found!');
+            return;
+        }
         
         // Set canvas size
         canvas.width = 800;
         canvas.height = 600;
+        console.log('Canvas initialized with size:', canvas.width, 'x', canvas.height);
         
         // Clear canvas
         const ctx = canvas.getContext('2d');
@@ -7869,9 +7881,11 @@ Please tailor the hint complexity to match the student's performance level and y
     }
     
     handleCanvasMouseDown(e) {
+        console.log('Canvas mouse down event');
         const rect = this.interactiveEditor.canvas.getBoundingClientRect();
         const x = (e.clientX - rect.left) / this.interactiveEditor.zoom;
         const y = (e.clientY - rect.top) / this.interactiveEditor.zoom;
+        console.log('Mouse position:', x, y, 'Current tool:', this.interactiveEditor.currentTool);
         
         if (this.interactiveEditor.currentTool === 'select') {
             // Check if clicking on an element
@@ -7938,6 +7952,7 @@ Please tailor the hint complexity to match the student's performance level and y
     
     createElementAt(x, y) {
         const tool = this.interactiveEditor.currentTool;
+        console.log('Creating element at:', x, y, 'with tool:', tool);
         const element = {
             id: Date.now(),
             type: tool,
@@ -8357,10 +8372,11 @@ Please tailor the hint complexity to match the student's performance level and y
             this.initInteractiveEditor();
         }
         
-        // Set up the canvas
+        // Set up the canvas and events after DOM is ready
         setTimeout(() => {
+            this.setupInteractiveEditorEvents(); // Re-setup events for newly visible elements
             this.initCanvas();
-        }, 100); // Small delay to ensure DOM is ready
+        }, 200); // Longer delay to ensure DOM is ready
         
         // Set up back button for interactive editor
         const backBtn = document.getElementById('back-to-home-from-interactive');

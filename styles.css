@@ -7498,6 +7498,15 @@ select:focus {
     background-color: #f8fafc;
 }
 
+/* Canvas Wrapper */
+.canvas-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
 /* Canvas Container */
 .canvas-container-inner {
     position: relative;
@@ -7512,6 +7521,9 @@ select:focus {
     display: block;
     background: #ffffff;
     cursor: default;
+    width: 800px;
+    height: 600px;
+    border: 1px solid #ccc; /* Add visible border for debugging */
 }
 
 /* Layers Panel */
