@@ -304,7 +304,7 @@
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary">Save Deck</button>
                             <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear</button>
-                            <button type="button" class="btn btn-accent" onclick="switchToInteractiveEditor()">
+                            <button type="button" class="btn btn-accent" onclick="event.preventDefault(); switchToInteractiveEditor();">
                                 🎨 Switch to Interactive Editor
                             </button>
                         </div>
@@ -312,7 +312,7 @@
                 </div>
 
                 <!-- Interactive Card Creator View -->
-                <div class="view" id="interactive-create-view" style="display: none;">
+                <div class="view" id="interactive-create-view">
                     <div class="interactive-editor">
                         <div class="editor-header">
                             <h2>🎨 Interactive Card Creator</h2>

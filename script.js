@@ -8349,7 +8349,6 @@ Please tailor the hint complexity to match the student's performance level and y
         // Show the interactive editor view
         const interactiveView = document.getElementById('interactive-create-view');
         if (interactiveView) {
-            interactiveView.style.display = 'block';
             interactiveView.classList.add('active');
         }
         
@@ -8376,7 +8375,6 @@ Please tailor the hint complexity to match the student's performance level and y
         // Hide interactive editor
         const interactiveView = document.getElementById('interactive-create-view');
         if (interactiveView) {
-            interactiveView.style.display = 'none';
             interactiveView.classList.remove('active');
         }
         
