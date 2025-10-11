@@ -7717,126 +7717,805 @@ Please tailor the hint complexity to match the student's performance level and y
         });
     }
 
-    // Interactive Card Editor Methods
+    // Professional Card Editor Methods
     initInteractiveEditor() {
-        console.log('Initializing Interactive Editor...');
+        console.log('Initializing Professional Card Editor...');
         
-        this.interactiveEditor = {
-            canvas: null,
+        this.professionalEditor = {
             elements: [],
             selectedElement: null,
             isDragging: false,
             dragOffset: { x: 0, y: 0 },
             isResizing: false,
             currentTool: 'select',
-            currentCard: 'front',
+            currentCard: 1,
+            currentSide: 'front',
+            selectedStyle: 'neon',
+            selectedTheme: 'blue',
             zoom: 1,
-            canvasOffset: { x: 0, y: 0 }
+            history: [{ action: 'Document Created', timestamp: Date.now() }],
+            historyIndex: 0,
+            layers: [{ id: 'background', name: 'Background', visible: true, locked: true }]
         };
         
-        this.setupInteractiveEditorEvents();
-        console.log('Interactive Editor initialized successfully');
+        this.setupProfessionalEditorEvents();
+        this.initCardCanvas();
+        console.log('Professional Card Editor initialized successfully');
     }
     
-    setupInteractiveEditorEvents() {
-        // Mode toggle buttons
-        const simpleEditorBtn = document.getElementById('simple-editor-btn');
-        const interactiveEditorBtn = document.getElementById('interactive-editor-btn');
-        
-        if (simpleEditorBtn && interactiveEditorBtn) {
-            simpleEditorBtn.addEventListener('click', () => this.switchEditorMode('simple'));
-            interactiveEditorBtn.addEventListener('click', () => this.switchEditorMode('interactive'));
-        }
-        
-        // Tool buttons
-        const toolButtons = document.querySelectorAll('.tool-btn[data-tool]');
-        console.log('Setting up tool buttons, found:', toolButtons.length);
-        toolButtons.forEach(btn => {
+    setupProfessionalEditorEvents() {
+        // Tool button events
+        document.querySelectorAll('.tool-button[data-tool]').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                console.log('Tool button clicked:', e.target.dataset.tool);
                 this.selectTool(e.target.dataset.tool);
             });
         });
-        
-        // Card tabs
-        document.querySelectorAll('.ie-card-tab').forEach(tab => {
-            tab.addEventListener('click', (e) => {
-                this.switchCard(e.target.dataset.card);
+
+        // Style selection events
+        document.querySelectorAll('.style-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                this.selectCardStyle(e.target.dataset.style);
             });
         });
-        
+
+        // Theme selection events
+        document.querySelectorAll('.theme-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                this.selectTheme(e.target.dataset.theme);
+            });
+        });
+
+        // Side tab events
+        document.querySelectorAll('.side-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                this.switchSide(e.target.dataset.side);
+            });
+        });
+
         // Canvas events
-        const canvas = document.getElementById('interactive-canvas');
-        console.log('Setting up canvas events, canvas found:', !!canvas);
+        const canvas = document.getElementById('editing-surface');
         if (canvas) {
-            this.interactiveEditor.canvas = canvas;
             canvas.addEventListener('mousedown', (e) => this.handleCanvasMouseDown(e));
             canvas.addEventListener('mousemove', (e) => this.handleCanvasMouseMove(e));
             canvas.addEventListener('mouseup', (e) => this.handleCanvasMouseUp(e));
             canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
-            console.log('Canvas events set up successfully');
-        } else {
-            console.error('Canvas element not found!');
-        }
-        
-        // Property panel events
-        this.setupPropertyPanelEvents();
-        
-        // Layer panel events
-        this.setupLayerPanelEvents();
-    }
-    
-    switchEditorMode(mode) {
-        const simpleEditor = document.querySelector('.simple-editor');
-        const interactiveEditor = document.querySelector('.interactive-editor');
-        const simpleBtn = document.getElementById('simple-editor-btn');
-        const interactiveBtn = document.getElementById('interactive-editor-btn');
-        
-        if (mode === 'simple') {
-            simpleEditor?.classList.add('active');
-            interactiveEditor?.classList.remove('active');
-            simpleBtn?.classList.add('active');
-            interactiveBtn?.classList.remove('active');
-        } else {
-            simpleEditor?.classList.remove('active');
-            interactiveEditor?.classList.add('active');
-            simpleBtn?.classList.remove('active');
-            interactiveBtn?.classList.add('active');
             
-            // Initialize canvas if switching to interactive mode
-            this.initCanvas();
+            // Prevent context menu
+            canvas.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                this.showContextMenu(e);
+            });
         }
+
+        // Format controls
+        document.getElementById('font-family-select')?.addEventListener('change', (e) => {
+            this.updateSelectedElementProperty('fontFamily', e.target.value);
+        });
+
+        document.getElementById('font-size-input')?.addEventListener('input', (e) => {
+            this.updateSelectedElementProperty('fontSize', e.target.value + 'px');
+        });
+
+        document.getElementById('text-color-picker')?.addEventListener('change', (e) => {
+            this.updateSelectedElementProperty('color', e.target.value);
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => this.handleKeyboardShortcuts(e));
+
+        // Asset items
+        document.querySelectorAll('.asset-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                if (e.target.dataset.shape) {
+                    this.addShape(e.target.dataset.shape);
+                } else if (e.target.dataset.icon) {
+                    this.addIcon(e.target.dataset.icon);
+                }
+            });
+        });
+
+        // Layer controls
+        document.querySelectorAll('.layer-control-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const action = e.target.textContent;
+                if (action === '➕') this.addLayer();
+                else if (action === '🗑️') this.deleteLayer();
+                else if (action === '📄') this.duplicateLayer();
+            });
+        });
+
+        console.log('Professional editor events set up successfully');
     }
     
+    initCardCanvas() {
+        const cardCanvas = document.getElementById('card-canvas');
+        if (cardCanvas) {
+            // Set initial style and theme
+            cardCanvas.setAttribute('data-style', this.professionalEditor.selectedStyle);
+            cardCanvas.setAttribute('data-theme', this.professionalEditor.selectedTheme);
+            this.updateCanvasBackground();
+        }
+    }
+
     selectTool(tool) {
-        this.interactiveEditor.currentTool = tool;
-        console.log('Selected tool:', tool);
+        this.professionalEditor.currentTool = tool;
         
         // Update UI
-        document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+        document.querySelectorAll('.tool-button').forEach(btn => {
             btn.classList.remove('active');
         });
-        document.querySelector(`[data-tool="${tool}"]`)?.classList.add('active');
+        document.querySelector(`.tool-button[data-tool="${tool}"]`)?.classList.add('active');
         
         // Update cursor
-        const canvas = this.interactiveEditor.canvas;
-        if (canvas) {
-            canvas.style.cursor = tool === 'select' ? 'default' : 'crosshair';
+        const editingSurface = document.getElementById('editing-surface');
+        if (editingSurface) {
+            switch (tool) {
+                case 'select':
+                    editingSurface.style.cursor = 'default';
+                    break;
+                case 'text':
+                    editingSurface.style.cursor = 'text';
+                    break;
+                default:
+                    editingSurface.style.cursor = 'crosshair';
+            }
+        }
+        
+        console.log('Selected tool:', tool);
+    }
+
+    selectCardStyle(style) {
+        this.professionalEditor.selectedStyle = style;
+        
+        // Update UI
+        document.querySelectorAll('.style-option').forEach(option => {
+            option.classList.remove('active');
+        });
+        document.querySelector(`.style-option[data-style="${style}"]`)?.classList.add('active');
+        
+        // Update canvas
+        const cardCanvas = document.getElementById('card-canvas');
+        if (cardCanvas) {
+            cardCanvas.setAttribute('data-style', style);
+            this.updateCanvasBackground();
+        }
+        
+        console.log('Selected style:', style);
+    }
+
+    selectTheme(theme) {
+        this.professionalEditor.selectedTheme = theme;
+        
+        // Update UI
+        document.querySelectorAll('.theme-option').forEach(option => {
+            option.classList.remove('active');
+        });
+        document.querySelector(`.theme-option[data-theme="${theme}"]`)?.classList.add('active');
+        
+        // Update canvas
+        const cardCanvas = document.getElementById('card-canvas');
+        if (cardCanvas) {
+            cardCanvas.setAttribute('data-theme', theme);
+        }
+        
+        console.log('Selected theme:', theme);
+    }
+
+    switchSide(side) {
+        this.professionalEditor.currentSide = side;
+        
+        // Update UI
+        document.querySelectorAll('.side-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelector(`.side-tab[data-side="${side}"]`)?.classList.add('active');
+        
+        // Load elements for this side
+        this.loadSideElements();
+        
+        console.log('Switched to side:', side);
+    }
+
+    updateCanvasBackground() {
+        // This method updates the visual appearance of the canvas based on selected style
+        const cardCanvas = document.getElementById('card-canvas');
+        if (!cardCanvas) return;
+        
+        // The CSS handles the visual styling based on data attributes
+        // We just need to ensure the canvas reflects the current state
+        this.rerenderElements();
+    }
+
+    loadSideElements() {
+        // Clear current display and show elements for current side
+        const editingSurface = document.getElementById('editing-surface');
+        if (!editingSurface) return;
+        
+        // Clear existing elements
+        editingSurface.innerHTML = '';
+        
+        // Add elements for current side
+        const sideElements = this.professionalEditor.elements.filter(
+            el => el.side === this.professionalEditor.currentSide && 
+                  el.card === this.professionalEditor.currentCard
+        );
+        
+        sideElements.forEach(element => {
+            this.renderElement(element);
+        });
+        
+        this.updateLayersPanel();
+    }
+
+    editorAction(action) {
+        switch (action) {
+            case 'new':
+                this.newDocument();
+                break;
+            case 'save':
+                this.saveDocument();
+                break;
+            case 'export':
+                this.exportDocument();
+                break;
+            case 'undo':
+                this.undo();
+                break;
+            case 'redo':
+                this.redo();
+                break;
+            default:
+                console.log('Unknown editor action:', action);
+        }
+    }
+
+    zoomCanvas(zoomLevel) {
+        this.professionalEditor.zoom = zoomLevel;
+        
+        // Update zoom UI
+        document.querySelectorAll('.zoom-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`.zoom-btn[onclick*="${zoomLevel}"]`)?.classList.add('active');
+        
+        // Apply zoom to canvas wrapper
+        const canvasWrapper = document.getElementById('canvas-wrapper');
+        if (canvasWrapper) {
+            canvasWrapper.style.transform = `scale(${zoomLevel})`;
+        }
+        
+        console.log('Zoom level set to:', zoomLevel);
+    }
+    
+    handleCanvasMouseDown(e) {
+        const rect = e.target.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / this.professionalEditor.zoom;
+        const y = (e.clientY - rect.top) / this.professionalEditor.zoom;
+        
+        if (this.professionalEditor.currentTool === 'select') {
+            const element = this.getElementAt(x, y);
+            if (element) {
+                this.selectElement(element);
+                this.professionalEditor.isDragging = true;
+                this.professionalEditor.dragOffset = {
+                    x: x - element.x,
+                    y: y - element.y
+                };
+            } else {
+                this.selectElement(null);
+            }
+        } else {
+            this.createElement(x, y);
+        }
+    }
+
+    handleCanvasMouseMove(e) {
+        const rect = e.target.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / this.professionalEditor.zoom;
+        const y = (e.clientY - rect.top) / this.professionalEditor.zoom;
+        
+        // Update cursor position display
+        document.getElementById('cursor-position').textContent = `x: ${Math.round(x)}, y: ${Math.round(y)}`;
+        
+        if (this.professionalEditor.isDragging && this.professionalEditor.selectedElement) {
+            const element = this.professionalEditor.selectedElement;
+            element.x = Math.max(0, x - this.professionalEditor.dragOffset.x);
+            element.y = Math.max(0, y - this.professionalEditor.dragOffset.y);
+            
+            this.updateElementPosition(element);
+            this.updatePropertiesPanel();
+        }
+    }
+
+    handleCanvasMouseUp(e) {
+        if (this.professionalEditor.isDragging) {
+            this.addToHistory('Move Element');
+        }
+        
+        this.professionalEditor.isDragging = false;
+        this.professionalEditor.isResizing = false;
+    }
+
+    handleCanvasClick(e) {
+        // Handle tool-specific click actions
+    }
+
+    getElementAt(x, y) {
+        const elements = this.professionalEditor.elements.filter(
+            el => el.side === this.professionalEditor.currentSide && 
+                  el.card === this.professionalEditor.currentCard
+        );
+        
+        for (let i = elements.length - 1; i >= 0; i--) {
+            const element = elements[i];
+            if (x >= element.x && x <= element.x + element.width &&
+                y >= element.y && y <= element.y + element.height) {
+                return element;
+            }
+        }
+        return null;
+    }
+
+    createElement(x, y) {
+        const tool = this.professionalEditor.currentTool;
+        const element = {
+            id: `element_${Date.now()}`,
+            type: tool,
+            side: this.professionalEditor.currentSide,
+            card: this.professionalEditor.currentCard,
+            x: x,
+            y: y,
+            width: tool === 'text' ? 200 : 100,
+            height: tool === 'text' ? 50 : 100,
+            zIndex: this.professionalEditor.elements.length,
+            style: {
+                fontFamily: 'Inter',
+                fontSize: '16px',
+                color: '#000000',
+                backgroundColor: tool === 'shape' ? '#e2e8f0' : 'transparent',
+                borderColor: '#d1d5db',
+                borderWidth: '1px',
+                borderRadius: '4px'
+            }
+        };
+
+        if (tool === 'text') {
+            element.content = 'Enter text here';
+            element.editable = true;
+        } else if (tool === 'image') {
+            this.handleImageUpload(element);
+            return;
+        } else if (tool === 'shape') {
+            element.shapeType = 'rectangle';
+        }
+
+        this.professionalEditor.elements.push(element);
+        this.renderElement(element);
+        this.selectElement(element);
+        this.addToHistory(`Add ${tool} element`);
+        this.updateLayersPanel();
+        
+        console.log('Created element:', element);
+    }
+
+    renderElement(element) {
+        const editingSurface = document.getElementById('editing-surface');
+        if (!editingSurface) return;
+
+        const elementDiv = document.createElement('div');
+        elementDiv.className = `editor-element ${element.type}-element`;
+        elementDiv.id = element.id;
+        elementDiv.style.cssText = `
+            left: ${element.x}px;
+            top: ${element.y}px;
+            width: ${element.width}px;
+            height: ${element.height}px;
+            z-index: ${element.zIndex};
+            font-family: ${element.style.fontFamily};
+            font-size: ${element.style.fontSize};
+            color: ${element.style.color};
+            background-color: ${element.style.backgroundColor};
+            border: ${element.style.borderWidth} solid ${element.style.borderColor};
+            border-radius: ${element.style.borderRadius};
+        `;
+
+        if (element.type === 'text') {
+            elementDiv.innerHTML = `<div contenteditable="true" style="width: 100%; height: 100%; outline: none; padding: 8px;">${element.content}</div>`;
+            const textContent = elementDiv.querySelector('[contenteditable]');
+            textContent.addEventListener('blur', () => {
+                element.content = textContent.innerHTML;
+                this.addToHistory('Edit text');
+            });
+        } else if (element.type === 'image' && element.imageData) {
+            elementDiv.innerHTML = `<img src="${element.imageData}" style="width: 100%; height: 100%; object-fit: cover;" alt="Image">`;
+        } else if (element.type === 'shape') {
+            // Shape styling is handled by CSS
+        }
+
+        elementDiv.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+            this.selectElement(element);
+        });
+
+        editingSurface.appendChild(elementDiv);
+    }
+
+    selectElement(element) {
+        // Remove selection from all elements
+        document.querySelectorAll('.editor-element').forEach(el => {
+            el.classList.remove('selected');
+        });
+
+        this.professionalEditor.selectedElement = element;
+
+        if (element) {
+            // Add selection to current element
+            document.getElementById(element.id)?.classList.add('selected');
+            this.addResizeHandles(element);
+            document.getElementById('selection-info').textContent = `Selected: ${element.type} element`;
+        } else {
+            document.getElementById('selection-info').textContent = 'No selection';
+        }
+
+        this.updatePropertiesPanel();
+        this.updateLayersPanel();
+    }
+
+    addResizeHandles(element) {
+        // Remove existing handles
+        document.querySelectorAll('.resize-handle').forEach(handle => handle.remove());
+
+        const elementDiv = document.getElementById(element.id);
+        if (!elementDiv) return;
+
+        const positions = ['nw', 'ne', 'sw', 'se', 'n', 's', 'w', 'e'];
+        positions.forEach(pos => {
+            const handle = document.createElement('div');
+            handle.className = `resize-handle ${pos}`;
+            handle.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                this.startResize(element, pos, e);
+            });
+            elementDiv.appendChild(handle);
+        });
+    }
+
+    updateElementPosition(element) {
+        const elementDiv = document.getElementById(element.id);
+        if (elementDiv) {
+            elementDiv.style.left = element.x + 'px';
+            elementDiv.style.top = element.y + 'px';
+        }
+    }
+
+    handleKeyboardShortcuts(e) {
+        if (e.ctrlKey || e.metaKey) {
+            switch (e.key) {
+                case 'z':
+                    e.preventDefault();
+                    if (e.shiftKey) {
+                        this.redo();
+                    } else {
+                        this.undo();
+                    }
+                    break;
+                case 's':
+                    e.preventDefault();
+                    this.saveDocument();
+                    break;
+                case 'c':
+                    e.preventDefault();
+                    this.copyElement();
+                    break;
+                case 'v':
+                    e.preventDefault();
+                    this.pasteElement();
+                    break;
+                case 'Delete':
+                case 'Backspace':
+                    e.preventDefault();
+                    this.deleteSelectedElement();
+                    break;
+            }
+        }
+
+        // Tool shortcuts
+        switch (e.key) {
+            case 'v':
+                if (!e.ctrlKey && !e.metaKey) this.selectTool('select');
+                break;
+            case 't':
+                if (!e.ctrlKey && !e.metaKey) this.selectTool('text');
+                break;
+            case 'u':
+                if (!e.ctrlKey && !e.metaKey) this.selectTool('shape');
+                break;
+            case 'i':
+                if (!e.ctrlKey && !e.metaKey) this.selectTool('image');
+                break;
         }
     }
     
-    switchCard(card) {
-        this.interactiveEditor.currentCard = card;
+    updatePropertiesPanel() {
+        const propertiesContainer = document.getElementById('element-properties');
+        if (!propertiesContainer) return;
+
+        const element = this.professionalEditor.selectedElement;
         
-        // Update UI
-        document.querySelectorAll('.canvas-tab').forEach(tab => {
-            tab.classList.remove('active');
+        if (!element) {
+            propertiesContainer.innerHTML = `
+                <div class="no-selection">
+                    <span class="no-selection-icon">👆</span>
+                    <p>Select an element to edit its properties</p>
+                </div>
+            `;
+            return;
+        }
+
+        propertiesContainer.innerHTML = `
+            <div class="property-group">
+                <label>Position</label>
+                <div class="property-row">
+                    <input type="number" id="element-x" value="${Math.round(element.x)}" placeholder="X">
+                    <input type="number" id="element-y" value="${Math.round(element.y)}" placeholder="Y">
+                </div>
+            </div>
+            <div class="property-group">
+                <label>Size</label>
+                <div class="property-row">
+                    <input type="number" id="element-width" value="${element.width}" placeholder="Width">
+                    <input type="number" id="element-height" value="${element.height}" placeholder="Height">
+                </div>
+            </div>
+            ${element.type === 'text' ? `
+                <div class="property-group">
+                    <label>Text Content</label>
+                    <textarea id="element-text" rows="3">${element.content}</textarea>
+                </div>
+                <div class="property-group">
+                    <label>Font Family</label>
+                    <select id="element-font-family">
+                        <option value="Inter" ${element.style.fontFamily === 'Inter' ? 'selected' : ''}>Inter</option>
+                        <option value="Arial" ${element.style.fontFamily === 'Arial' ? 'selected' : ''}>Arial</option>
+                        <option value="Helvetica" ${element.style.fontFamily === 'Helvetica' ? 'selected' : ''}>Helvetica</option>
+                        <option value="Times New Roman" ${element.style.fontFamily === 'Times New Roman' ? 'selected' : ''}>Times New Roman</option>
+                    </select>
+                </div>
+                <div class="property-group">
+                    <label>Font Size</label>
+                    <input type="number" id="element-font-size" value="${parseInt(element.style.fontSize)}" min="8" max="128">
+                </div>
+            ` : ''}
+            <div class="property-group">
+                <label>Colors</label>
+                <div class="property-row">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem;">
+                        <label style="font-size: 0.7rem;">Text</label>
+                        <input type="color" id="element-color" value="${element.style.color}">
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem;">
+                        <label style="font-size: 0.7rem;">Background</label>
+                        <input type="color" id="element-bg-color" value="${element.style.backgroundColor}">
+                    </div>
+                </div>
+            </div>
+            <div class="property-group">
+                <label>Border</label>
+                <div class="property-row">
+                    <input type="color" id="element-border-color" value="${element.style.borderColor}">
+                    <input type="number" id="element-border-width" value="${parseInt(element.style.borderWidth)}" min="0" max="10">
+                </div>
+            </div>
+        `;
+
+        // Add event listeners for property changes
+        ['element-x', 'element-y', 'element-width', 'element-height'].forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('input', () => this.updateElementFromProperties());
+            }
         });
-        document.querySelector(`[data-side="${card}"]`)?.classList.add('active');
-        
-        // Clear canvas and reload elements for this card
-        this.loadCardElements(card);
+
+        if (element.type === 'text') {
+            ['element-text', 'element-font-family', 'element-font-size'].forEach(id => {
+                const input = document.getElementById(id);
+                if (input) {
+                    input.addEventListener('input', () => this.updateElementFromProperties());
+                }
+            });
+        }
+
+        ['element-color', 'element-bg-color', 'element-border-color', 'element-border-width'].forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('input', () => this.updateElementFromProperties());
+            }
+        });
     }
+
+    updateElementFromProperties() {
+        const element = this.professionalEditor.selectedElement;
+        if (!element) return;
+
+        // Update position and size
+        const x = document.getElementById('element-x')?.value;
+        const y = document.getElementById('element-y')?.value;
+        const width = document.getElementById('element-width')?.value;
+        const height = document.getElementById('element-height')?.value;
+
+        if (x !== undefined) element.x = parseFloat(x);
+        if (y !== undefined) element.y = parseFloat(y);
+        if (width !== undefined) element.width = parseFloat(width);
+        if (height !== undefined) element.height = parseFloat(height);
+
+        // Update text properties
+        if (element.type === 'text') {
+            const text = document.getElementById('element-text')?.value;
+            const fontFamily = document.getElementById('element-font-family')?.value;
+            const fontSize = document.getElementById('element-font-size')?.value;
+
+            if (text !== undefined) element.content = text;
+            if (fontFamily) element.style.fontFamily = fontFamily;
+            if (fontSize) element.style.fontSize = fontSize + 'px';
+        }
+
+        // Update colors and border
+        const color = document.getElementById('element-color')?.value;
+        const bgColor = document.getElementById('element-bg-color')?.value;
+        const borderColor = document.getElementById('element-border-color')?.value;
+        const borderWidth = document.getElementById('element-border-width')?.value;
+
+        if (color) element.style.color = color;
+        if (bgColor) element.style.backgroundColor = bgColor;
+        if (borderColor) element.style.borderColor = borderColor;
+        if (borderWidth !== undefined) element.style.borderWidth = borderWidth + 'px';
+
+        // Re-render the element
+        this.rerenderElement(element);
+    }
+
+    rerenderElement(element) {
+        const elementDiv = document.getElementById(element.id);
+        if (!elementDiv) return;
+
+        elementDiv.style.cssText = `
+            left: ${element.x}px;
+            top: ${element.y}px;
+            width: ${element.width}px;
+            height: ${element.height}px;
+            z-index: ${element.zIndex};
+            font-family: ${element.style.fontFamily};
+            font-size: ${element.style.fontSize};
+            color: ${element.style.color};
+            background-color: ${element.style.backgroundColor};
+            border: ${element.style.borderWidth} solid ${element.style.borderColor};
+            border-radius: ${element.style.borderRadius};
+        `;
+
+        if (element.type === 'text') {
+            const textContent = elementDiv.querySelector('[contenteditable]');
+            if (textContent) {
+                textContent.innerHTML = element.content;
+            }
+        }
+    }
+
+    updateLayersPanel() {
+        const layersList = document.getElementById('editor-layers-list');
+        if (!layersList) return;
+
+        const currentElements = this.professionalEditor.elements.filter(
+            el => el.side === this.professionalEditor.currentSide && 
+                  el.card === this.professionalEditor.currentCard
+        );
+
+        layersList.innerHTML = `
+            <div class="layer-item">
+                <span class="layer-visibility">👁️</span>
+                <span class="layer-name">Background</span>
+                <span class="layer-lock">🔒</span>
+            </div>
+        `;
+
+        currentElements.reverse().forEach(element => {
+            const layerItem = document.createElement('div');
+            layerItem.className = `layer-item ${element === this.professionalEditor.selectedElement ? 'active' : ''}`;
+            layerItem.innerHTML = `
+                <span class="layer-visibility">👁️</span>
+                <span class="layer-name">${element.type} ${element.id.split('_')[1]}</span>
+                <span class="layer-lock"></span>
+            `;
+            layerItem.addEventListener('click', () => this.selectElement(element));
+            layersList.appendChild(layerItem);
+        });
+    }
+
+    addToHistory(action) {
+        this.professionalEditor.history.push({
+            action: action,
+            timestamp: Date.now(),
+            state: JSON.parse(JSON.stringify(this.professionalEditor.elements))
+        });
+
+        // Update history panel
+        this.updateHistoryPanel();
+    }
+
+    updateHistoryPanel() {
+        const historyContainer = document.querySelector('.history-container');
+        if (!historyContainer) return;
+
+        historyContainer.innerHTML = '';
+        this.professionalEditor.history.slice(-10).forEach((item, index) => {
+            const historyItem = document.createElement('div');
+            historyItem.className = `history-item ${index === this.professionalEditor.history.length - 1 ? 'active' : ''}`;
+            historyItem.innerHTML = `
+                <span class="history-icon">📝</span>
+                <span class="history-action">${item.action}</span>
+            `;
+            historyContainer.appendChild(historyItem);
+        });
+    }
+
+    handleImageUpload(element) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    element.imageData = event.target.result;
+                    this.professionalEditor.elements.push(element);
+                    this.renderElement(element);
+                    this.selectElement(element);
+                    this.addToHistory('Add image');
+                    this.updateLayersPanel();
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        input.click();
+    }
+
+    rerenderElements() {
+        const editingSurface = document.getElementById('editing-surface');
+        if (!editingSurface) return;
+
+        editingSurface.innerHTML = '';
+        this.loadSideElements();
+    }
+
+    // Placeholder methods for additional functionality
+    newDocument() { console.log('New document'); }
+    saveDocument() { console.log('Save document'); }
+    exportDocument() { console.log('Export document'); }
+    undo() { console.log('Undo'); }
+    redo() { console.log('Redo'); }
+    copyElement() { console.log('Copy element'); }
+    pasteElement() { console.log('Paste element'); }
+    deleteSelectedElement() { 
+        if (this.professionalEditor.selectedElement) {
+            this.deleteElement(this.professionalEditor.selectedElement);
+        }
+    }
+    deleteElement(element) {
+        const index = this.professionalEditor.elements.indexOf(element);
+        if (index > -1) {
+            this.professionalEditor.elements.splice(index, 1);
+            document.getElementById(element.id)?.remove();
+            this.selectElement(null);
+            this.addToHistory('Delete element');
+            this.updateLayersPanel();
+        }
+    }
+    showContextMenu(e) { console.log('Show context menu'); }
+    addShape(shape) { console.log('Add shape:', shape); }
+    addIcon(icon) { console.log('Add icon:', icon); }
+    addLayer() { console.log('Add layer'); }
+    deleteLayer() { console.log('Delete layer'); }
+    duplicateLayer() { console.log('Duplicate layer'); }
     
     switchCanvasSide(side) {
         this.switchCard(side);
@@ -8354,7 +9033,7 @@ Please tailor the hint complexity to match the student's performance level and y
     
     // Interactive Editor View Management
     switchToInteractiveEditor() {
-        console.log('Switching to Interactive Editor');
+        console.log('Switching to Professional Card Editor');
         
         // Hide all views first
         document.querySelectorAll('.view').forEach(view => {
@@ -8367,15 +9046,15 @@ Please tailor the hint complexity to match the student's performance level and y
             interactiveView.classList.add('active');
         }
         
-        // Initialize the interactive editor if not already done
-        if (!this.interactiveEditor) {
+        // Initialize the professional editor if not already done
+        if (!this.professionalEditor) {
             this.initInteractiveEditor();
         }
         
-        // Set up the canvas and events after DOM is ready
+        // Set up the editor after DOM is ready
         setTimeout(() => {
-            this.setupInteractiveEditorEvents(); // Re-setup events for newly visible elements
-            this.initCanvas();
+            this.setupProfessionalEditorEvents(); // Re-setup events for newly visible elements
+            this.initCardCanvas();
         }, 200); // Longer delay to ensure DOM is ready
         
         // Set up back button for interactive editor

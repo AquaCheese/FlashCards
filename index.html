@@ -313,152 +313,315 @@
 
                 <!-- Interactive Card Creator View -->
                 <div class="view" id="interactive-create-view">
-                    <div class="interactive-editor">
-                        <div class="editor-header">
-                            <h2>🎨 Interactive Card Creator</h2>
-                            <div class="editor-controls">
-                                <button class="btn btn-secondary" onclick="switchToSimpleEditor()">
-                                    📝 Switch to Simple Editor
+                    <div class="professional-editor">
+                        <!-- Top Menu Bar -->
+                        <div class="editor-menu-bar">
+                            <div class="menu-section">
+                                <button class="menu-item" onclick="app.editorAction('new')">
+                                    <span class="menu-icon">📄</span> New
                                 </button>
-                                <button class="btn btn-secondary" onclick="saveInteractiveDeck()">
-                                    💾 Save Deck
+                                <button class="menu-item" onclick="app.editorAction('save')">
+                                    <span class="menu-icon">💾</span> Save
                                 </button>
-                                <button class="btn btn-secondary" id="back-to-home-from-interactive">← Back</button>
+                                <button class="menu-item" onclick="app.editorAction('export')">
+                                    <span class="menu-icon">📤</span> Export
+                                </button>
+                            </div>
+                            <div class="editor-title">
+                                <h2>🎨 Professional Card Designer</h2>
+                            </div>
+                            <div class="menu-section">
+                                <button class="menu-item" onclick="app.editorAction('undo')">
+                                    <span class="menu-icon">↶</span> Undo
+                                </button>
+                                <button class="menu-item" onclick="app.editorAction('redo')">
+                                    <span class="menu-icon">↷</span> Redo
+                                </button>
+                                <button class="menu-item" onclick="switchToSimpleEditor()">
+                                    <span class="menu-icon">📝</span> Simple Mode
+                                </button>
+                                <button class="menu-item exit-btn" id="back-to-home-from-interactive">
+                                    <span class="menu-icon">←</span> Exit
+                                </button>
                             </div>
                         </div>
 
-                        <!-- Deck Settings Panel -->
-                        <div class="editor-settings-panel">
-                            <div class="settings-row">
-                                <div class="form-group">
-                                    <label for="interactive-deck-name">Deck Name</label>
-                                    <input type="text" id="interactive-deck-name" placeholder="e.g., Advanced Biology" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="interactive-deck-subject">Subject</label>
-                                    <select id="interactive-deck-subject" required>
-                                        <option value="">Select subject...</option>
-                                        <option value="Mathematics">Mathematics</option>
-                                        <option value="English">English</option>
-                                        <option value="Biology">Biology</option>
-                                        <option value="Chemistry">Chemistry</option>
-                                        <option value="Physics">Physics</option>
-                                        <option value="History">History</option>
-                                        <option value="Geography">Geography</option>
-                                        <option value="Other">Other</option>
-                                    </select>
+                        <!-- Main Toolbar -->
+                        <div class="main-toolbar">
+                            <div class="toolbar-group">
+                                <div class="tool-section">
+                                    <button class="tool-button active" data-tool="select" title="Selection Tool (V)">
+                                        <span class="tool-icon">🖱️</span>
+                                    </button>
+                                    <button class="tool-button" data-tool="text" title="Text Tool (T)">
+                                        <span class="tool-icon">🔤</span>
+                                    </button>
+                                    <button class="tool-button" data-tool="shape" title="Shape Tool (U)">
+                                        <span class="tool-icon">⬜</span>
+                                    </button>
+                                    <button class="tool-button" data-tool="image" title="Image Tool (I)">
+                                        <span class="tool-icon">🖼️</span>
+                                    </button>
+                                    <button class="tool-button" data-tool="pen" title="Pen Tool (P)">
+                                        <span class="tool-icon">✏️</span>
+                                    </button>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Main Editor Area -->
-                        <div class="editor-main">
-                            <!-- Toolbar -->
-                            <div class="editor-toolbar">
-                                <div class="toolbar-section">
-                                    <h4>Tools</h4>
-                                    <button class="tool-btn active" data-tool="select" title="Select and Move Elements">
-                                        <span class="tool-icon">👆</span> Select
-                                    </button>
-                                </div>
-                                <div class="toolbar-section">
-                                    <h4>Elements</h4>
-                                    <button class="tool-btn" data-tool="text" title="Add Text Box">
-                                        <span class="tool-icon">📝</span> Text
-                                    </button>
-                                    <button class="tool-btn" data-tool="image" title="Add Image">
-                                        <span class="tool-icon">🖼️</span> Image
-                                    </button>
-                                    <button class="tool-btn" data-tool="shape" title="Add Shape">
-                                        <span class="tool-icon">⬜</span> Shape
-                                    </button>
-                                    <button class="tool-btn" data-tool="answer-zone" title="Add Answer Zone">
-                                        <span class="tool-icon">✅</span> Answer
-                                    </button>
-                                </div>
-                                <div class="toolbar-section">
-                                    <h4>Format</h4>
-                                    <select id="font-family" class="format-control">
+                            
+                            <div class="toolbar-separator"></div>
+                            
+                            <div class="toolbar-group">
+                                <div class="format-section">
+                                    <select class="toolbar-select" id="font-family-select">
                                         <option value="Inter">Inter</option>
                                         <option value="Arial">Arial</option>
-                                        <option value="Times New Roman">Times New Roman</option>
                                         <option value="Helvetica">Helvetica</option>
+                                        <option value="Times New Roman">Times New Roman</option>
+                                        <option value="Georgia">Georgia</option>
                                     </select>
-                                    <input type="number" id="font-size" class="format-control" value="16" min="8" max="72">
-                                    <input type="color" id="text-color" class="format-control" value="#000000">
-                                    <input type="color" id="bg-color" class="format-control" value="#ffffff">
+                                    <input type="number" class="toolbar-input" id="font-size-input" value="16" min="8" max="128">
+                                    <button class="format-button" data-format="bold" title="Bold (Ctrl+B)"><strong>B</strong></button>
+                                    <button class="format-button" data-format="italic" title="Italic (Ctrl+I)"><em>I</em></button>
+                                    <button class="format-button" data-format="underline" title="Underline (Ctrl+U)"><u>U</u></button>
                                 </div>
-                                <div class="toolbar-section">
-                                    <h4>Layout</h4>
-                                    <button class="tool-btn" data-action="align-left" title="Align Left">
-                                        <span class="tool-icon">⬅️</span>
+                            </div>
+                            
+                            <div class="toolbar-separator"></div>
+                            
+                            <div class="toolbar-group">
+                                <div class="color-section">
+                                    <div class="color-picker-wrapper">
+                                        <label for="text-color-picker">Text</label>
+                                        <input type="color" class="color-picker" id="text-color-picker" value="#000000">
+                                    </div>
+                                    <div class="color-picker-wrapper">
+                                        <label for="bg-color-picker">Background</label>
+                                        <input type="color" class="color-picker" id="bg-color-picker" value="#ffffff">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="toolbar-separator"></div>
+                            
+                            <div class="toolbar-group">
+                                <div class="alignment-section">
+                                    <button class="align-button" data-align="left" title="Align Left (Ctrl+Shift+L)">
+                                        <span class="align-icon">⬅️</span>
                                     </button>
-                                    <button class="tool-btn" data-action="align-center" title="Align Center">
-                                        <span class="tool-icon">⬆️</span>
+                                    <button class="align-button" data-align="center" title="Align Center (Ctrl+Shift+C)">
+                                        <span class="align-icon">⬌</span>
                                     </button>
-                                    <button class="tool-btn" data-action="align-right" title="Align Right">
-                                        <span class="tool-icon">➡️</span>
+                                    <button class="align-button" data-align="right" title="Align Right (Ctrl+Shift+R)">
+                                        <span class="align-icon">➡️</span>
                                     </button>
-                                    <button class="tool-btn" data-action="bring-forward" title="Bring Forward">
-                                        <span class="tool-icon">⬆️</span>
+                                    <button class="layer-button" data-layer="forward" title="Bring Forward (Ctrl+])">
+                                        <span class="layer-icon">⬆️</span>
                                     </button>
-                                    <button class="tool-btn" data-action="send-backward" title="Send Backward">
-                                        <span class="tool-icon">⬇️</span>
+                                    <button class="layer-button" data-layer="backward" title="Send Backward (Ctrl+[)">
+                                        <span class="layer-icon">⬇️</span>
                                     </button>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- Card Workspace -->
-                            <div class="editor-workspace">
-                                <!-- Card Tabs -->
-                                <div class="card-tabs">
-                                    <button class="card-tab active" data-card="0">
-                                        <span class="tab-title">Card 1</span>
-                                        <button class="tab-close" onclick="removeInteractiveCard(0)">×</button>
-                                    </button>
-                                    <button class="add-card-tab" onclick="addInteractiveCard()">+ Add Card</button>
+                        <!-- Editor Workspace -->
+                        <div class="editor-workspace">
+                            <!-- Left Panel -->
+                            <div class="left-panel">
+                                <!-- Card Style Selector -->
+                                <div class="panel-section">
+                                    <h3 class="panel-title">Card Style</h3>
+                                    <div class="card-style-grid">
+                                        <div class="style-option" data-style="classic" title="Classic White">
+                                            <div class="style-preview classic-preview"></div>
+                                            <span>Classic</span>
+                                        </div>
+                                        <div class="style-option" data-style="modern" title="Modern Gradient">
+                                            <div class="style-preview modern-preview"></div>
+                                            <span>Modern</span>
+                                        </div>
+                                        <div class="style-option" data-style="vintage" title="Vintage Paper">
+                                            <div class="style-preview vintage-preview"></div>
+                                            <span>Vintage</span>
+                                        </div>
+                                        <div class="style-option active" data-style="neon" title="Neon Glow">
+                                            <div class="style-preview neon-preview"></div>
+                                            <span>Neon</span>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <!-- Canvas Area -->
+                                <!-- Color Theme Selector -->
+                                <div class="panel-section">
+                                    <h3 class="panel-title">Color Theme</h3>
+                                    <div class="color-theme-grid">
+                                        <div class="theme-option active" data-theme="blue" style="background: linear-gradient(45deg, #667eea, #764ba2)"></div>
+                                        <div class="theme-option" data-theme="green" style="background: linear-gradient(45deg, #48bb78, #38a169)"></div>
+                                        <div class="theme-option" data-theme="purple" style="background: linear-gradient(45deg, #9f7aea, #805ad5)"></div>
+                                        <div class="theme-option" data-theme="red" style="background: linear-gradient(45deg, #f56565, #e53e3e)"></div>
+                                        <div class="theme-option" data-theme="orange" style="background: linear-gradient(45deg, #ed8936, #dd6b20)"></div>
+                                        <div class="theme-option" data-theme="teal" style="background: linear-gradient(45deg, #4fd1c7, #38b2ac)"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Layers Panel -->
+                                <div class="panel-section">
+                                    <h3 class="panel-title">Layers</h3>
+                                    <div class="layers-container">
+                                        <div class="layer-controls">
+                                            <button class="layer-control-btn" title="Add Layer">➕</button>
+                                            <button class="layer-control-btn" title="Delete Layer">🗑️</button>
+                                            <button class="layer-control-btn" title="Duplicate Layer">📄</button>
+                                        </div>
+                                        <div class="layers-list" id="editor-layers-list">
+                                            <div class="layer-item">
+                                                <span class="layer-visibility">👁️</span>
+                                                <span class="layer-name">Background</span>
+                                                <span class="layer-lock">🔒</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Canvas Area -->
+                            <div class="canvas-area">
+                                <!-- Canvas Header -->
+                                <div class="canvas-header">
+                                    <div class="card-tabs">
+                                        <button class="card-tab active" data-card="1">
+                                            <span class="card-icon">📋</span>
+                                            <span class="card-name">Card 1</span>
+                                            <button class="card-close">×</button>
+                                        </button>
+                                        <button class="add-card-btn" title="Add New Card">+ Add Card</button>
+                                    </div>
+                                    <div class="canvas-side-tabs">
+                                        <button class="side-tab active" data-side="front">
+                                            <span class="side-icon">❓</span> Question
+                                        </button>
+                                        <button class="side-tab" data-side="back">
+                                            <span class="side-icon">✅</span> Answer
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Canvas Container -->
                                 <div class="canvas-container">
-                                    <div class="canvas-sidebar">
-                                        <h4>Card Sides</h4>
-                                        <div class="side-tabs">
-                                            <button class="side-tab active" data-side="front">Question</button>
-                                            <button class="side-tab" data-side="back">Answer</button>
-                                        </div>
-                                        
-                                        <div class="layers-panel">
-                                            <h4>Layers</h4>
-                                            <div class="layers-list" id="layers-list">
-                                                <p class="no-layers">No elements on this side</p>
-                                            </div>
-                                        </div>
-                                        
-                                        <h4>Layers</h4>
-                                        <div class="layers-panel" id="layers-panel">
-                                            <!-- Layers will be listed here -->
-                                        </div>
+                                    <div class="canvas-rulers">
+                                        <div class="ruler ruler-horizontal"></div>
+                                        <div class="ruler ruler-vertical"></div>
                                     </div>
-
-                                    <div class="canvas-main">
-                                        <div class="canvas-wrapper">
-                                            <div class="canvas-tabs">
-                                                <button class="canvas-tab active" data-side="front" onclick="app.switchCanvasSide('front')">Front</button>
-                                                <button class="canvas-tab" data-side="back" onclick="app.switchCanvasSide('back')">Back</button>
-                                            </div>
-                                            <div class="canvas-container-inner">
-                                                <canvas id="interactive-canvas" width="800" height="600"></canvas>
+                                    <div class="canvas-wrapper" id="canvas-wrapper">
+                                        <div class="card-canvas" id="card-canvas" data-style="neon" data-theme="blue">
+                                            <!-- Grid overlay -->
+                                            <div class="canvas-grid" id="canvas-grid"></div>
+                                            <!-- Actual editing surface -->
+                                            <div class="editing-surface" id="editing-surface">
+                                                <!-- Elements will be added here -->
                                             </div>
                                         </div>
                                     </div>
+                                </div>
 
-                                    <div class="properties-panel">
-                                        <h4>Properties</h4>
-                                        <div id="element-properties">
+                                <!-- Canvas Footer -->
+                                <div class="canvas-footer">
+                                    <div class="zoom-controls">
+                                        <button class="zoom-btn" onclick="app.zoomCanvas(0.5)">25%</button>
+                                        <button class="zoom-btn" onclick="app.zoomCanvas(0.75)">50%</button>
+                                        <button class="zoom-btn active" onclick="app.zoomCanvas(1)">100%</button>
+                                        <button class="zoom-btn" onclick="app.zoomCanvas(1.5)">150%</button>
+                                        <button class="zoom-btn" onclick="app.zoomCanvas(2)">200%</button>
+                                    </div>
+                                    <div class="canvas-info">
+                                        <span id="cursor-position">x: 0, y: 0</span>
+                                        <span class="separator">|</span>
+                                        <span id="selection-info">No selection</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Panel -->
+                            <div class="right-panel">
+                                <!-- Properties Panel -->
+                                <div class="panel-section">
+                                    <h3 class="panel-title">Properties</h3>
+                                    <div class="properties-container" id="element-properties">
+                                        <div class="no-selection">
+                                            <span class="no-selection-icon">👆</span>
                                             <p>Select an element to edit its properties</p>
                                         </div>
                                     </div>
+                                </div>
+
+                                <!-- History Panel -->
+                                <div class="panel-section">
+                                    <h3 class="panel-title">History</h3>
+                                    <div class="history-container">
+                                        <div class="history-item active">
+                                            <span class="history-icon">📝</span>
+                                            <span class="history-action">Document Created</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Assets Panel -->
+                                <div class="panel-section">
+                                    <h3 class="panel-title">Assets</h3>
+                                    <div class="assets-container">
+                                        <div class="asset-category active" data-category="shapes">
+                                            <h4>Shapes</h4>
+                                            <div class="asset-grid">
+                                                <div class="asset-item" data-shape="rectangle">⬜</div>
+                                                <div class="asset-item" data-shape="circle">⭕</div>
+                                                <div class="asset-item" data-shape="triangle">🔺</div>
+                                                <div class="asset-item" data-shape="star">⭐</div>
+                                            </div>
+                                        </div>
+                                        <div class="asset-category" data-category="icons">
+                                            <h4>Icons</h4>
+                                            <div class="asset-grid">
+                                                <div class="asset-item" data-icon="check">✅</div>
+                                                <div class="asset-item" data-icon="cross">❌</div>
+                                                <div class="asset-item" data-icon="question">❓</div>
+                                                <div class="asset-item" data-icon="lightbulb">💡</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Deck Settings Modal -->
+                        <div class="deck-settings-modal" id="deck-settings-modal">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h3>Deck Settings</h3>
+                                    <button class="modal-close">&times;</button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="form-group">
+                                        <label for="interactive-deck-name">Deck Name</label>
+                                        <input type="text" id="interactive-deck-name" placeholder="e.g., Advanced Biology" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="interactive-deck-subject">Subject</label>
+                                        <select id="interactive-deck-subject" required>
+                                            <option value="">Select subject...</option>
+                                            <option value="Mathematics">Mathematics</option>
+                                            <option value="English">English</option>
+                                            <option value="Biology">Biology</option>
+                                            <option value="Chemistry">Chemistry</option>
+                                            <option value="Physics">Physics</option>
+                                            <option value="History">History</option>
+                                            <option value="Geography">Geography</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button class="btn btn-secondary" onclick="app.closeDeckSettings()">Cancel</button>
+                                    <button class="btn btn-primary" onclick="app.saveDeckSettings()">Save</button>
                                 </div>
                             </div>
                         </div>
