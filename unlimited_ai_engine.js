@@ -12,6 +12,11 @@ class UnlimitedAIEngine {
         
         // AI Model configurations
         this.models = {
+            openai: {
+                endpoint: 'https://api.openai.com/v1/chat/completions',
+                model: 'gpt-4o-mini',
+                available: false
+            },
             webllm: {
                 name: 'Llama-2-7b-chat-hf-q4f32_1',
                 available: false
@@ -39,6 +44,7 @@ class UnlimitedAIEngine {
         
         this.cache = new Map();
         this.failureCount = {
+            openai: 0,
             webllm: 0,
             ollama: 0,
             spaces: 0,
@@ -52,6 +58,7 @@ class UnlimitedAIEngine {
         
         // Initialize all AI sources in parallel
         await Promise.allSettled([
+            this.initializeOpenAI(),
             this.initializeWebLLM(),
             this.checkOllama(),
             this.checkHuggingFaceSpaces(),
@@ -63,6 +70,47 @@ class UnlimitedAIEngine {
         this.logAvailableModels();
         
         return this.getAvailableModelCount() > 0;
+    }
+
+    async initializeOpenAI() {
+        try {
+            console.log('🤖 Initializing OpenAI API...');
+            
+            const apiKey = localStorage.getItem('openai_api_key') ||
+                          sessionStorage.getItem('openai_api_key');
+            
+            if (!apiKey) {
+                console.log('⚠️ OpenAI API key not found');
+                return;
+            }
+            
+            // Validate the key with a minimal test request
+            const response = await fetch(this.models.openai.endpoint, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: this.models.openai.model,
+                    messages: [{ role: 'user', content: 'Hi' }],
+                    max_tokens: 1
+                }),
+                signal: AbortSignal.timeout(8000)
+            });
+            
+            if (response.ok) {
+                this.openai = { apiKey };
+                this.models.openai.available = true;
+                console.log('✅ OpenAI API initialized successfully');
+            } else {
+                const err = await response.json().catch(() => ({}));
+                console.log(`❌ OpenAI key rejected: ${err?.error?.message || response.status}`);
+            }
+        } catch (error) {
+            console.log('❌ OpenAI initialization failed:', error.message);
+            this.models.openai.available = false;
+        }
     }
 
     async initializeWebLLM() {
@@ -206,6 +254,7 @@ class UnlimitedAIEngine {
         
         // Try AI sources in order of preference
         const methods = [
+            () => this.generateOpenAIHint(prompt),
             () => this.generateWebLLMHint(prompt),
             () => this.generateOllamaHint(prompt),
             () => this.generateCohereHint(prompt),
@@ -254,6 +303,7 @@ class UnlimitedAIEngine {
         
         // Try AI sources for deck generation
         const methods = [
+            () => this.generateOpenAIDeck(prompt),
             () => this.generateWebLLMDeck(prompt),
             () => this.generateOllamaDeck(prompt),
             () => this.generateCohereDeck(prompt),
@@ -666,8 +716,82 @@ Cards:`;
     }
 
     getSourceName(index) {
-        const sources = ['WebLLM', 'Ollama', 'Cohere', 'Together AI', 'HuggingFace Spaces'];
+        const sources = ['OpenAI', 'WebLLM', 'Ollama', 'Cohere', 'Together AI', 'HuggingFace Spaces'];
         return sources[index] || 'Unknown AI';
+    }
+
+    async generateOpenAIHint(prompt) {
+        if (!this.models.openai.available || !this.openai) {
+            throw new Error('OpenAI not available');
+        }
+        
+        try {
+            const response = await fetch(this.models.openai.endpoint, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.openai.apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: this.models.openai.model,
+                    messages: [
+                        { role: 'system', content: 'You are a helpful study assistant. Generate concise, helpful hints that guide without giving away the answer.' },
+                        { role: 'user', content: prompt }
+                    ],
+                    max_tokens: 120,
+                    temperature: 0.7
+                }),
+                signal: AbortSignal.timeout(15000)
+            });
+            
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(`OpenAI API error ${response.status}: ${err?.error?.message || ''}`);
+            }
+            
+            const data = await response.json();
+            return data.choices[0].message.content.trim();
+        } catch (error) {
+            this.failureCount.openai++;
+            throw error;
+        }
+    }
+
+    async generateOpenAIDeck(prompt) {
+        if (!this.models.openai.available || !this.openai) {
+            throw new Error('OpenAI not available');
+        }
+        
+        try {
+            const response = await fetch(this.models.openai.endpoint, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.openai.apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: this.models.openai.model,
+                    messages: [
+                        { role: 'system', content: 'You are an educational content creator. Generate flashcard questions and answers in the exact format requested. Follow the format instructions precisely.' },
+                        { role: 'user', content: prompt }
+                    ],
+                    max_tokens: 2000,
+                    temperature: 0.8
+                }),
+                signal: AbortSignal.timeout(30000)
+            });
+            
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(`OpenAI API error ${response.status}: ${err?.error?.message || ''}`);
+            }
+            
+            const data = await response.json();
+            return data.choices[0].message.content.trim();
+        } catch (error) {
+            this.failureCount.openai++;
+            throw error;
+        }
     }
 
     getAvailableModelCount() {
@@ -678,6 +802,7 @@ Cards:`;
 
     logAvailableModels() {
         const available = [];
+        if (this.models.openai.available) available.push('OpenAI (gpt-4o-mini)');
         if (this.models.webllm.available) available.push('WebLLM (Browser)');
         if (this.models.ollama.available) available.push(`Ollama (${this.models.ollama.availableModels?.length || 0} models)`);
         if (this.models.cohere.available) available.push('Cohere API');

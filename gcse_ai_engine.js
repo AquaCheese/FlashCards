@@ -398,36 +398,40 @@ class GCSEAIEngine {
         }
         
         try {
-            const response = await fetch(`https://api-inference.huggingface.co/models/${this.aiModels.analysis}`, {
+            const apiKey = localStorage.getItem('openai_api_key') ||
+                           sessionStorage.getItem('openai_api_key');
+            
+            if (!apiKey) throw new Error('OpenAI API key not configured');
+            
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    inputs: prompt,
-                    parameters: {
-                        max_new_tokens: 200,
-                        temperature: 0.3,
-                        do_sample: true,
-                        return_full_text: false
-                    }
-                })
+                    model: 'gpt-4o-mini',
+                    messages: [
+                        { role: 'system', content: 'You are an expert GCSE learning analytics assistant. Analyse student performance data and provide structured insights.' },
+                        { role: 'user', content: prompt }
+                    ],
+                    max_tokens: 300,
+                    temperature: 0.3
+                }),
+                signal: AbortSignal.timeout(15000)
             });
             
             if (response.ok) {
                 const data = await response.json();
-                let analysis = '';
-                
-                if (Array.isArray(data) && data[0]?.generated_text) {
-                    analysis = data[0].generated_text.trim();
-                } else if (data.generated_text) {
-                    analysis = data.generated_text.trim();
-                }
+                const analysis = data.choices[0].message.content.trim();
                 
                 // Clean and parse the analysis
                 const parsedAnalysis = this.parseAIAnalysis(analysis);
                 this.aiCache.set(cacheKey, parsedAnalysis);
                 return parsedAnalysis;
+            } else {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(`OpenAI error ${response.status}: ${err?.error?.message || ''}`);
             }
         } catch (error) {
             console.error('AI Analysis failed:', error);

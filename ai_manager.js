@@ -16,6 +16,12 @@ class AIManager {
     async initialize() {
         console.log('🚀 Initializing Web-First AI Manager...');
         
+        // Pre-configure OpenAI API key
+        const OPENAI_API_KEY = 'sk-abcdef1234567890abcdef1234567890abcdef12';
+        if (!localStorage.getItem('openai_api_key')) {
+            localStorage.setItem('openai_api_key', OPENAI_API_KEY);
+        }
+        
         try {
             // Initialize the unlimited engine (this checks all sources)
             const success = await this.unlimitedEngine.initialize();
@@ -313,6 +319,7 @@ class AIManager {
         this.aiSources = [];
         
         const models = this.unlimitedEngine.models;
+        if (models.openai.available) this.aiSources.push('OpenAI (gpt-4o-mini)');
         if (models.webllm.available) this.aiSources.push('WebLLM (Browser)');
         if (models.ollama.available) this.aiSources.push('Ollama (Local)');
         if (models.cohere.available) this.aiSources.push('Cohere API');
