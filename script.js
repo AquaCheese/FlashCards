@@ -95,30 +95,6 @@ window.deleteDeck = function(deckId) {
     }
 };
 
-window.generateSubjectSpecificDeck = function() {
-    console.log('generateSubjectSpecificDeck called, app:', !!app);
-    if (app && app.generateAdaptiveDeck) {
-        const subjectSelect = document.getElementById('deck-subject');
-        const subject = subjectSelect.value;
-        
-        if (!subject) {
-            app.showNotification('Subject Required', 'Please select a GCSE subject first', 'warning');
-            return;
-        }
-        
-        // Generate comprehensive 20-card deck with full features
-        app.generateAdaptiveDeck({ 
-            subject: subject, 
-            cardCount: 20,  // Always generate 20 cards
-            difficulty: 'intermediate',
-            includeExplanations: true,
-            includeMultipleAnswers: true,
-            includeTitleCards: true
-        });
-    } else {
-        console.log('App not ready or generateAdaptiveDeck method missing');
-    }
-};
 
 window.devBonus = function() {
     if (app && app.earnCoins) {app.earnCoins(1000, 'Dev bonus');
@@ -154,23 +130,7 @@ window.importDeck = function() {
     }
 };
 
-window.showGenerationInsights = function() {
-    console.log('showGenerationInsights called, app:', !!app);
-    if (app && app.showGenerationInsights) {
-        app.showGenerationInsights();
-    } else {
-        console.log('App not ready or showGenerationInsights method missing');
-    }
-};
 
-window.closeGenerationInsights = function() {
-    console.log('closeGenerationInsights called');
-    if (app && app.closeGenerationInsights) {
-        app.closeGenerationInsights();
-    } else {
-        console.log('App not ready or closeGenerationInsights method missing');
-    }
-};
 
 window.confirmDelete = function() {
     console.log('confirmDelete called, app:', !!app);
@@ -299,41 +259,9 @@ window.skipToStudy = function() {
     }
 };
 
-window.regenerateDecks = function() {
-    console.log('regenerateDecks called, app:', !!app);
-    if (app && app.regenerateDecks) {
-        app.regenerateDecks();
-    } else {
-        console.log('App not ready or regenerateDecks method missing');
-    }
-};
 
-window.viewGeneratedDeck = function(deckId) {
-    console.log('viewGeneratedDeck called with:', deckId);
-    if (app && app.viewGeneratedDeck) {
-        app.viewGeneratedDeck(deckId);
-    } else {
-        console.log('App not ready or viewGeneratedDeck method missing');
-    }
-};
 
-window.adoptDeck = function(deckId) {
-    console.log('adoptDeck called with:', deckId);
-    if (app && app.adoptDeck) {
-        app.adoptDeck(deckId);
-    } else {
-        console.log('App not ready or adoptDeck method missing');
-    }
-};
 
-window.deleteGeneratedDeck = function(deckId) {
-    console.log('deleteGeneratedDeck called with:', deckId);
-    if (app && app.deleteGeneratedDeck) {
-        app.deleteGeneratedDeck(deckId);
-    } else {
-        console.log('App not ready or deleteGeneratedDeck method missing');
-    }
-};
 
 // New flip card functions
 window.showAnswer = function() {
@@ -361,22 +289,6 @@ window.updateAnswerNumbers = function(element) {
 };
 
 // Additional global functions for HTML onclick handlers
-window.generateAdaptiveDeck = function() {
-    console.log('generateAdaptiveDeck called via app.generateAdaptiveDeck()');
-    if (app && app.generateAdaptiveDeck) {
-        // Generate comprehensive 20-card deck with default settings
-        app.generateAdaptiveDeck({
-            cardCount: 20,
-            subject: 'Mathematics',
-            difficulty: 'intermediate',
-            includeExplanations: true,
-            includeMultipleAnswers: true,
-            includeTitleCards: true
-        });
-    } else {
-        console.log('App not ready or generateAdaptiveDeck method missing');
-    }
-};
 
 window.useHint = function() {
     console.log('useHint called via app.useHint()');
@@ -585,19 +497,6 @@ class FlashCardsApp {
         this.renderDecks();
         console.log('renderDecks() completed');
         
-        // Check for first-time user and show onboarding
-        if (this.isFirstTimeUser()) {
-            this.showOnboarding();
-        } else {
-            // Load and render generated decks
-            const generatedDecks = this.loadGeneratedDecks();
-            this.renderGeneratedDecks(generatedDecks);
-            console.log('Generated decks loaded and rendered');
-        }
-        
-        this.updateAdaptiveLockStatus();
-        console.log('updateAdaptiveLockStatus() completed');
-        
         // Initialize level system
         this.initializeLevelSystem();
         console.log('Level system initialized');
@@ -609,9 +508,6 @@ class FlashCardsApp {
         }, 500);
         
         this.showView('home');
-        
-        // Start background Adaptive monitoring
-        this.startBackgroundAdaptiveMonitoring();
         
         console.log('init() completed');
     }
@@ -648,12 +544,6 @@ class FlashCardsApp {
             }
         });
         
-        document.getElementById('generation-insights-modal').addEventListener('click', (e) => {
-            if (e.target.id === 'generation-insights-modal') {
-                this.closeGenerationInsights();
-            }
-        });
-
         document.getElementById('delete-confirmation-modal').addEventListener('click', (e) => {
             if (e.target.id === 'delete-confirmation-modal') {
                 this.cancelDelete();
@@ -676,61 +566,9 @@ class FlashCardsApp {
             createDeckBtn.addEventListener('click', () => this.showView('create'));
         }
 
-        const howItWorksBtn = document.getElementById('how-it-works-btn');
-        if (howItWorksBtn) {
-            howItWorksBtn.addEventListener('click', () => this.showGenerationInsights());
-        }
-
-        const regenerateBtn = document.getElementById('regenerate-btn');
-        if (regenerateBtn) {
-            regenerateBtn.addEventListener('click', () => this.regenerateDecks());
-        }
-
         const backToHomeBtn = document.getElementById('back-to-home-btn');
         if (backToHomeBtn) {
             backToHomeBtn.addEventListener('click', () => this.showView('home'));
-        }
-    }
-
-    updateAdaptiveLockStatus() {
-        const lockOverlay = document.getElementById('generated-lock-overlay');
-        const regenerateBtn = document.getElementById('regenerate-btn');
-        if (lockOverlay) lockOverlay.style.display = 'none';
-        if (regenerateBtn) regenerateBtn.disabled = false;
-    }
-
-    updateAdaptiveGenerationStatus() {
-        const aiRequirements = document.getElementById('generated-requirements');
-        const aiButtons = document.querySelectorAll('.btn-generated, .btn-generated-subject');
-        
-        if (!aiRequirements) return;
-        
-        const profile = JSON.parse(localStorage.getItem('generated-learning-profile') || '{}');
-        const sessionCount = profile.preferences?.accuracyTrends?.length || 0;
-        
-        if (sessionCount >= 2) {
-            aiRequirements.innerHTML = `
-                <p>✅ <strong>Ready!</strong> Generated from ${sessionCount} study sessions</p>
-            `;
-            aiRequirements.style.background = 'rgba(34, 197, 94, 0.1)';
-            aiRequirements.style.borderColor = 'rgba(34, 197, 94, 0.2)';
-            aiRequirements.style.color = '#166534';
-            aiButtons.forEach(btn => {
-                btn.disabled = false;
-                btn.style.opacity = '1';
-            });
-        } else {
-            const needed = 2 - sessionCount;
-            aiRequirements.innerHTML = `
-                <p>📊 <strong>Requirements:</strong> Complete ${needed} more study session${needed === 1 ? '' : 's'}</p>
-            `;
-            aiRequirements.style.background = 'rgba(59, 130, 246, 0.1)';
-            aiRequirements.style.borderColor = 'rgba(59, 130, 246, 0.2)';
-            aiRequirements.style.color = '#1e40af';
-            aiButtons.forEach(btn => {
-                btn.disabled = true;
-                btn.style.opacity = '0.5';
-            });
         }
     }
 
@@ -1005,33 +843,6 @@ class FlashCardsApp {
         return additionalTemplates;
     }
 
-    saveGeneratedDecks(decks) {
-        localStorage.setItem('flashcards-generated-decks', JSON.stringify(decks));
-    }
-
-    loadGeneratedDecks() {
-        const saved = localStorage.getItem('flashcards-generated-decks');
-        const decks = saved ? JSON.parse(saved) : [];
-        
-        // Ensure all generated decks have style and color properties
-        return decks.map(deck => ({
-            ...deck,
-            style: deck.style || 'classic',
-            color: deck.color || 'blue'
-        }));
-    }
-
-    renderGeneratedDecks(decks) {
-        const grid = document.getElementById('generated-decks-grid');
-        if (!grid) return;
-
-        grid.innerHTML = '';
-        
-        decks.forEach(deck => {
-            const deckCard = this.createGeneratedDeckCard(deck);
-            grid.appendChild(deckCard);
-        });
-    }
 
     createGeneratedDeckCard(deck) {
         const card = document.createElement('div');
@@ -1117,9 +928,7 @@ class FlashCardsApp {
         // Special handling for views
         if (viewName === 'home') {
             this.renderDecks();
-            this.updateAdaptiveLockStatus();
         } else if (viewName === 'create') {
-            this.updateAdaptiveGenerationStatus();
             if (!this.isEditMode) {
                 // Reset to create mode if not already in edit mode
                 this.updateUIForEditMode(false);
@@ -2284,19 +2093,9 @@ Please tailor the hint complexity to match the student's performance level and y
     recordStudySession(deckId, cardsStudied, correctAnswers, totalTime) {
         const sessions = this.loadSessionData();
         
-        // Look for deck in both regular decks and generated decks
+        // Look up the deck
         let deck = this.decks.find(d => d.id === deckId);
-        let isGeneratedDeck = false;
-        
-        if (!deck) {
-            // Check generated decks
-            const generatedDecks = this.loadGeneratedDecks();
-            deck = generatedDecks.find(d => d.id === deckId);
-            isGeneratedDeck = !!deck;
-        } else {
-            // Check if it's an adopted deck (originated from Adaptive)
-            isGeneratedDeck = !!deck.adoptedFrom;
-        }
+        const isGeneratedDeck = false;
         
         const session = {
             id: Date.now().toString(),
@@ -2325,1627 +2124,9 @@ Please tailor the hint complexity to match the student's performance level and y
         sessions.push(session);
         this.saveSessionData(sessions);
         
-        // Update Adaptive learning patterns
-        this.updateAdaptiveLearningPatterns(session);
-        
-
     }
 
-    updateAdaptiveLearningPatterns(session) {
-        // Get or create user learning profile
-        let profile = JSON.parse(localStorage.getItem('generated-learning-profile') || '{}');
-        
-        // Initialize profile if new
-        if (!profile.preferences) {
-            profile = {
-                preferences: {
-                    favoriteSubjects: {},
-                    difficultyPreference: {},
-                    studyTimePatterns: {},
-                    accuracyTrends: []
-                },
-                weaknesses: {},
-                strengths: {},
-                studyHabits: {
-                    preferredSessionLength: 0,
-                    bestPerformanceTime: 'unknown',
-                    consistencyScore: 0
-                },
-                lastUpdated: Date.now()
-            };
-        }
 
-        // Update favorite subjects
-        if (!profile.preferences.favoriteSubjects[session.subject]) {
-            profile.preferences.favoriteSubjects[session.subject] = 0;
-        }
-        profile.preferences.favoriteSubjects[session.subject]++;
-
-        // Update difficulty preferences based on accuracy
-        if (!profile.preferences.difficultyPreference[session.difficulty]) {
-            profile.preferences.difficultyPreference[session.difficulty] = { attempts: 0, totalAccuracy: 0 };
-        }
-        const diffPref = profile.preferences.difficultyPreference[session.difficulty];
-        diffPref.attempts++;
-        diffPref.totalAccuracy += session.accuracy;
-        diffPref.averageAccuracy = Math.round(diffPref.totalAccuracy / diffPref.attempts);
-
-        // Track accuracy trends
-        profile.preferences.accuracyTrends.push({
-            timestamp: session.timestamp,
-            accuracy: session.accuracy,
-            subject: session.subject,
-            deckType: session.deckType
-        });
-        
-        // Keep only last 50 accuracy records
-        if (profile.preferences.accuracyTrends.length > 50) {
-            profile.preferences.accuracyTrends = profile.preferences.accuracyTrends.slice(-50);
-        }
-
-        // Identify strengths and weaknesses
-        if (session.accuracy >= 80) {
-            if (!profile.strengths[session.subject]) profile.strengths[session.subject] = 0;
-            profile.strengths[session.subject]++;
-        } else if (session.accuracy < 60) {
-            if (!profile.weaknesses[session.subject]) profile.weaknesses[session.subject] = 0;
-            profile.weaknesses[session.subject]++;
-        }
-
-        // Update study habits
-        profile.studyHabits.preferredSessionLength = Math.round(
-            (profile.studyHabits.preferredSessionLength + session.totalTime) / 2
-        );
-
-        profile.lastUpdated = Date.now();
-        localStorage.setItem('generated-learning-profile', JSON.stringify(profile));
-        
-        console.log('Adaptive Learning Profile updated:', profile);
-        
-        // Trigger background Adaptive deck generation
-        this.triggerBackgroundAdaptive(profile);
-    }
-
-    // =================== ADVANCED GCSE Adaptive LEARNING SYSTEM ===================
-    
-    triggerBackgroundAdaptive(profile) {
-        // Intelligent frequency control based on user activity
-        const lastAdaptiveGeneration = localStorage.getItem('last-generated-generation') || 0;
-        const timeSinceLastGeneration = Date.now() - parseInt(lastAdaptiveGeneration);
-        const minInterval = this.calculateOptimalGenerationInterval(profile);
-        
-        if (timeSinceLastGeneration < minInterval) {
-            console.log(`🧠 Adaptive cooling down... Next generation in ${Math.round((minInterval - timeSinceLastGeneration) / (1000 * 60))} minutes`);
-            return;
-        }
-        
-        // Dynamic data requirements based on user progression
-        const requiredSessions = this.getRequiredSessionsForAdaptive(profile);
-        if (profile.preferences.accuracyTrends.length < requiredSessions) {
-            console.log(`📊 Insufficient data for Adaptive generation. Need ${requiredSessions - profile.preferences.accuracyTrends.length} more sessions`);
-            return;
-        }
-        
-        console.log('🤖 GCSE Adaptive Engine: Analyzing learning patterns...');
-        this.showAdaptiveAnalysisStatus();
-        
-        // Non-blocking Adaptive processing with progress updates
-        setTimeout(() => {
-            this.runAdvancedGCSEAnalysis(profile);
-        }, 1500);
-    }
-    
-    calculateOptimalGenerationInterval(profile) {
-        // Base interval of 20 minutes
-        let interval = 20 * 60 * 1000;
-        
-        // Reduce interval for highly active users
-        if (profile.preferences.accuracyTrends.length > 20) {
-            interval *= 0.7; // 14 minutes
-        }
-        
-        // Increase interval for struggling users (need more time to practice)
-        const avgAccuracy = profile.preferences.accuracyTrends.slice(-5)
-            .reduce((sum, t) => sum + t.accuracy, 0) / 5;
-        if (avgAccuracy < 60) {
-            interval *= 1.5; // 30 minutes
-        }
-        
-        return interval;
-    }
-    
-    getRequiredSessionsForAdaptive(profile) {
-        // Fewer sessions needed for returning users
-        const totalSessions = profile.preferences.accuracyTrends.length;
-        if (totalSessions === 0) return 3;
-        if (totalSessions < 10) return 2;
-        return 1; // Frequent users need less data for new generation
-    }
-    
-    showAdaptiveAnalysisStatus() {
-        const statusElement = document.getElementById('generation-status');
-        if (statusElement) {
-            statusElement.style.display = 'flex';
-            const statusText = statusElement.querySelector('.status-title');
-            const statusDesc = statusElement.querySelector('.status-description');
-            
-            const analysisSteps = [
-                { title: '🧠 Analyzing your learning patterns...', desc: 'Processing study session data and performance metrics' },
-                { title: '📊 Identifying knowledge gaps...', desc: 'Finding areas where you need extra practice' },
-                { title: '🎯 Matching GCSE curriculum...', desc: 'Aligning content with exam specifications' },
-                { title: '✨ Generating personalized content...', desc: 'Creating cards tailored to your needs' }
-            ];
-            
-            let stepIndex = 0;
-            const updateStatus = () => {
-                if (stepIndex < analysisSteps.length) {
-                    statusText.textContent = analysisSteps[stepIndex].title;
-                    statusDesc.textContent = analysisSteps[stepIndex].desc;
-                    stepIndex++;
-                    setTimeout(updateStatus, 1200);
-                } else {
-                    setTimeout(() => {
-                        statusElement.style.display = 'none';
-                    }, 1000);
-                }
-            };
-            updateStatus();
-        }
-    }
-    
-    runAdvancedGCSEAnalysis(profile) {
-        try {
-            console.log('🎓 Starting Advanced GCSE Adaptive Analysis...');
-            
-            // 1. Deep learning pattern analysis
-            const patterns = this.analyzeGCSELearningPatterns(profile);
-            console.log('🧠 GCSE Learning patterns identified:', patterns);
-            
-            // 2. Curriculum gap analysis
-            const curriculumGaps = this.identifyGCSECurriculumGaps(profile, patterns);
-            console.log('📚 Curriculum gaps identified:', curriculumGaps);
-            
-            // 3. Exam preparation optimization
-            const examReadiness = this.assessGCSEExamReadiness(profile, patterns);
-            console.log('🎯 Exam readiness assessment:', examReadiness);
-            
-            // 4. Intelligent content generation decision
-            const generationPlan = this.createGCSEGenerationPlan(patterns, curriculumGaps, examReadiness);
-            
-            if (generationPlan.shouldGenerate) {
-                console.log('✨ Adaptive generating GCSE content:', generationPlan.reason);
-                this.generateAdvancedGCSEDeck(patterns, generationPlan);
-            } else {
-                console.log('📊 Adaptive analysis complete - optimal learning state detected');
-                // Optionally show encouragement message to user
-                this.showLearningProgressFeedback(patterns, examReadiness);
-            }
-            
-        } catch (error) {
-            console.error('🚨 Advanced GCSE Adaptive Analysis error:', error);
-            // Fallback to basic generation
-            this.fallbackGeneration(profile);
-        }
-    }
-    
-    analyzeGCSELearningPatterns(profile) {
-        const trends = profile.preferences.accuracyTrends;
-        const recentTrends = trends.slice(-10);
-        
-        // Advanced pattern recognition
-        const patterns = {
-            // Performance analytics
-            currentPerformance: this.calculateCurrentPerformance(recentTrends),
-            learningVelocity: this.calculateLearningVelocity(trends),
-            consistencyIndex: this.calculateConsistencyIndex(trends),
-            
-            // Subject-specific analysis
-            subjectStrengths: this.analyzeSubjectPerformance(trends, 'strengths'),
-            subjectWeaknesses: this.analyzeSubjectPerformance(trends, 'weaknesses'),
-            
-            // GCSE-specific metrics
-            examReadinessScore: this.calculateExamReadinessScore(trends),
-            foundationVsHigherSuitability: this.assessTierSuitability(trends),
-            
-            // Learning behavior analysis
-            studyPatterns: this.analyzeStudyPatterns(trends),
-            motivationLevel: this.assessMotivationLevel(trends),
-            retentionRate: this.calculateRetentionRate(profile),
-            
-            // Personalization factors
-            preferredDifficulty: this.identifyPreferredDifficulty(trends),
-            optimalCardCount: this.calculateOptimalCardCount(trends),
-            bestTopics: this.identifyBestTopics(trends)
-        };
-        
-        return patterns;
-    }
-    
-    calculateCurrentPerformance(recentTrends) {
-        if (recentTrends.length === 0) return { accuracy: 0, trend: 'insufficient_data' };
-        
-        const recent5 = recentTrends.slice(-5);
-        const avgAccuracy = recent5.reduce((sum, t) => sum + t.accuracy, 0) / recent5.length;
-        
-        let trend = 'stable';
-        if (recent5.length > 2) {
-            const first = recent5.slice(0, Math.floor(recent5.length / 2));
-            const second = recent5.slice(Math.floor(recent5.length / 2));
-            const firstAvg = first.reduce((sum, t) => sum + t.accuracy, 0) / first.length;
-            const secondAvg = second.reduce((sum, t) => sum + t.accuracy, 0) / second.length;
-            const change = secondAvg - firstAvg;
-            
-            if (change > 10) trend = 'improving_fast';
-            else if (change > 5) trend = 'improving';
-            else if (change < -10) trend = 'declining_fast';
-            else if (change < -5) trend = 'declining';
-        }
-        
-        return { accuracy: Math.round(avgAccuracy), trend, confidence: recent5.length / 5 };
-    }
-    
-    calculateLearningVelocity(trends) {
-        if (trends.length < 6) return { velocity: 0, acceleration: 0 };
-        
-        const velocities = [];
-        for (let i = 1; i < trends.length; i++) {
-            const timeDiff = trends[i].timestamp - trends[i-1].timestamp;
-            const accuracyDiff = trends[i].accuracy - trends[i-1].accuracy;
-            velocities.push(accuracyDiff / (timeDiff / (1000 * 60 * 60))); // accuracy change per hour
-        }
-        
-        const avgVelocity = velocities.reduce((sum, v) => sum + v, 0) / velocities.length;
-        
-        // Calculate acceleration (change in velocity)
-        let acceleration = 0;
-        if (velocities.length > 3) {
-            const firstHalf = velocities.slice(0, Math.floor(velocities.length / 2));
-            const secondHalf = velocities.slice(Math.floor(velocities.length / 2));
-            const firstAvg = firstHalf.reduce((sum, v) => sum + v, 0) / firstHalf.length;
-            const secondAvg = secondHalf.reduce((sum, v) => sum + v, 0) / secondHalf.length;
-            acceleration = secondAvg - firstAvg;
-        }
-        
-        return {
-            velocity: avgVelocity,
-            acceleration: acceleration,
-            classification: this.classifyLearningSpeed(avgVelocity, acceleration)
-        };
-    }
-    
-    classifyLearningSpeed(velocity, acceleration) {
-        if (velocity > 2 && acceleration > 0) return 'accelerating_learner';
-        if (velocity > 1) return 'fast_learner';
-        if (velocity > 0 && acceleration > 0) return 'steady_improver';
-        if (velocity < -1) return 'struggling_learner';
-        if (acceleration < -0.5) return 'losing_momentum';
-        return 'stable_learner';
-    }
-    
-    analyzeSubjectPerformance(trends, type) {
-        const subjectPerformance = {};
-        
-        trends.forEach(trend => {
-            if (!subjectPerformance[trend.subject]) {
-                subjectPerformance[trend.subject] = {
-                    sessions: 0,
-                    totalAccuracy: 0,
-                    recentAccuracy: [],
-                    improvement: 0
-                };
-            }
-            
-            const subj = subjectPerformance[trend.subject];
-            subj.sessions++;
-            subj.totalAccuracy += trend.accuracy;
-            subj.recentAccuracy.push(trend.accuracy);
-            
-            // Keep only recent 5 sessions for subject
-            if (subj.recentAccuracy.length > 5) {
-                subj.recentAccuracy.shift();
-            }
-        });
-        
-        // Calculate metrics for each subject
-        Object.keys(subjectPerformance).forEach(subject => {
-            const subj = subjectPerformance[subject];
-            subj.averageAccuracy = subj.totalAccuracy / subj.sessions;
-            
-            if (subj.recentAccuracy.length > 2) {
-                const first = subj.recentAccuracy.slice(0, Math.floor(subj.recentAccuracy.length / 2));
-                const second = subj.recentAccuracy.slice(Math.floor(subj.recentAccuracy.length / 2));
-                const firstAvg = first.reduce((sum, acc) => sum + acc, 0) / first.length;
-                const secondAvg = second.reduce((sum, acc) => sum + acc, 0) / second.length;
-                subj.improvement = secondAvg - firstAvg;
-            }
-        });
-        
-        // Return top subjects based on type
-        const sortedSubjects = Object.entries(subjectPerformance)
-            .filter(([_, data]) => data.sessions >= 2) // Minimum sessions for meaningful data
-            .sort(([_, a], [__, b]) => {
-                if (type === 'strengths') {
-                    return (b.averageAccuracy + b.improvement) - (a.averageAccuracy + a.improvement);
-                } else {
-                    return (a.averageAccuracy - a.improvement) - (b.averageAccuracy - b.improvement);
-                }
-            })
-            .slice(0, 3) // Top 3
-            .map(([subject, data]) => ({
-                subject,
-                ...data,
-                score: type === 'strengths' ? 
-                    data.averageAccuracy + data.improvement : 
-                    100 - data.averageAccuracy + Math.abs(data.improvement)
-            }));
-        
-        return sortedSubjects;
-    }
-    
-    identifyGCSECurriculumGaps(profile, patterns) {
-        // Map user subjects to GCSE curriculum requirements
-        const gcseRequirements = {
-            'GCSE Mathematics': {
-                foundationTopics: ['Number', 'Algebra', 'Ratio & Proportion', 'Geometry', 'Statistics'],
-                higherTopics: ['Advanced Algebra', 'Trigonometry', 'Calculus Intro', 'Complex Geometry'],
-                examWeight: { high: ['Algebra', 'Number'], medium: ['Geometry', 'Statistics'], low: ['Probability'] }
-            },
-            'GCSE Biology': {
-                foundationTopics: ['Cell Biology', 'Organisation', 'Infection & Response', 'Bioenergetics'],
-                higherTopics: ['Homeostasis', 'Inheritance', 'Evolution', 'Ecology'],
-                examWeight: { high: ['Cell Biology', 'Bioenergetics'], medium: ['Organisation'], low: ['Evolution'] }
-            },
-            'GCSE Chemistry': {
-                foundationTopics: ['Atomic Structure', 'Bonding', 'Quantitative Chemistry', 'Chemical Changes'],
-                higherTopics: ['Energy Changes', 'Rate of Reaction', 'Organic Chemistry', 'Chemical Analysis'],
-                examWeight: { high: ['Atomic Structure', 'Bonding'], medium: ['Quantitative Chemistry'], low: ['Organic Chemistry'] }
-            },
-            'GCSE Physics': {
-                foundationTopics: ['Energy', 'Electricity', 'Particle Model', 'Atomic Structure'],
-                higherTopics: ['Forces', 'Waves', 'Magnetism', 'Space Physics'],
-                examWeight: { high: ['Energy', 'Electricity'], medium: ['Forces', 'Waves'], low: ['Space Physics'] }
-            },
-            'GCSE English Language': {
-                foundationTopics: ['Reading Comprehension', 'Creative Writing', 'Language Analysis'],
-                higherTopics: ['Advanced Analysis', 'Comparative Writing', 'Critical Evaluation'],
-                examWeight: { high: ['Reading Comprehension', 'Creative Writing'], medium: ['Language Analysis'], low: [] }
-            }
-        };
-        
-        const gaps = [];
-        const userSubjects = new Set(patterns.subjectWeaknesses.map(s => s.subject));
-        
-        // Identify gaps in user's weak subjects
-        userSubjects.forEach(subject => {
-            const curriculum = gcseRequirements[subject];
-            if (curriculum) {
-                const subjectWeakness = patterns.subjectWeaknesses.find(s => s.subject === subject);
-                
-                // Determine if foundation or higher tier needed
-                const avgAccuracy = subjectWeakness.averageAccuracy;
-                const recommendedTier = avgAccuracy < 70 ? 'foundation' : 'higher';
-                const topics = recommendedTier === 'foundation' ? 
-                    curriculum.foundationTopics : curriculum.higherTopics;
-                
-                gaps.push({
-                    subject,
-                    tier: recommendedTier,
-                    priority: this.calculateGapPriority(subjectWeakness, curriculum),
-                    recommendedTopics: topics.slice(0, 3), // Top 3 topics
-                    urgency: avgAccuracy < 50 ? 'high' : avgAccuracy < 70 ? 'medium' : 'low'
-                });
-            }
-        });
-        
-        return gaps.sort((a, b) => b.priority - a.priority);
-    }
-    
-    calculateGapPriority(weakness, curriculum) {
-        let priority = 50; // Base priority
-        
-        // Higher priority for worse performance
-        priority += (100 - weakness.averageAccuracy) * 0.5;
-        
-        // Higher priority for declining performance
-        if (weakness.improvement < -5) priority += 20;
-        
-        // Higher priority for more sessions (more data points)
-        priority += Math.min(weakness.sessions * 2, 20);
-        
-        return Math.round(priority);
-    }
-    
-    assessGCSEExamReadiness(profile, patterns) {
-        return { overall: 0, bySubject: {}, recommendations: [], timeToExam: { days: 0, weeks: 0, phase: 'unknown' }, criticalAreas: [], strengths: [], examStrategies: [] };
-    }
-    
-    createGCSEGenerationPlan(patterns, curriculumGaps, examReadiness) {
-        return { shouldGenerate: false, reason: '', targetSubject: null, difficulty: 'intermediate', cardCount: 8 };
-    }
-    
-    generateAdvancedGCSEDeck(patterns, generationPlan) {
-        console.log('🎨 Generating Advanced GCSE Deck:', generationPlan);
-        
-        // Mark generation timestamp
-        localStorage.setItem('last-generated-generation', Date.now().toString());
-        
-        const deckConfig = this.createAdvancedDeckConfig(patterns, generationPlan);
-        const cards = this.generateAdvancedGCSECards(deckConfig, patterns, generationPlan);
-        
-        if (cards.length === 0) {
-            console.log('No suitable cards generated');
-            return;
-        }
-        
-        const newDeck = {
-            id: 'gcse_generated_' + Date.now(),
-            name: deckConfig.name,
-            subject: deckConfig.subject,
-            yearGroup: deckConfig.yearGroup,
-            difficulty: deckConfig.difficulty,
-            isGenerated: true,
-            generatedAt: Date.now(),
-            generationType: generationPlan.contentType,
-            confidence: deckConfig.confidence,
-            examFocused: generationPlan.examFocus,
-            reason: {
-                title: deckConfig.reasonTitle,
-                description: deckConfig.reasonDescription
-            },
-            cards: cards,
-            titleCards: [{
-                title: deckConfig.name,
-                description: deckConfig.description
-            }],
-            generatedMetadata: {
-                generationPlan: generationPlan,
-                userPatterns: {
-                    currentAccuracy: patterns.currentPerformance.accuracy,
-                    learningVelocity: patterns.learningVelocity.classification,
-                    consistency: patterns.consistencyIndex
-                },
-                curriculumAlignment: deckConfig.curriculumAlignment,
-                examBoard: deckConfig.examBoard,
-                assessmentObjectives: deckConfig.assessmentObjectives
-            }
-        };
-        
-        // Save to generated decks
-        this.saveNewGeneratedDeck(newDeck);
-        
-        console.log('✨ Generated Advanced GCSE deck:', newDeck.name);
-        
-        // Show smart notification
-        this.showAdvancedAdaptiveNotification(newDeck, generationPlan);
-    }
-    
-    createAdvancedDeckConfig(patterns, generationPlan) {
-        const subject = generationPlan.targetSubject || 'GCSE Mathematics';
-        const difficulty = generationPlan.difficulty || 'intermediate';
-        
-        const configs = {
-            'exam_focused': {
-                name: `${subject.replace('GCSE ', '')} - Exam Focus`,
-                reasonTitle: 'Exam Preparation Critical',
-                reasonDescription: 'Adaptive detected approaching exams. These cards focus on high-yield exam topics.',
-                description: 'Exam-focused practice targeting the most important topics for your upcoming GCSEs.',
-                cardTypes: ['exam-style', 'high-yield', 'past-paper'],
-                examBoard: 'AQA',
-                yearGroup: 'Year 11'
-            },
-            'gap_filling': {
-                name: `${subject.replace('GCSE ', '')} - Knowledge Gaps`,
-                reasonTitle: 'Learning Gaps Identified',
-                reasonDescription: `Adaptive found knowledge gaps in ${subject}. These cards address fundamental concepts you need to master.`,
-                description: 'Targeted practice to fill identified knowledge gaps and build solid foundations.',
-                cardTypes: ['foundational', 'step-by-step', 'concept-building'],
-                examBoard: 'AQA',
-                yearGroup: this.inferYearGroup(patterns)
-            },
-            'advancement': {
-                name: `${subject.replace('GCSE ', '')} - Advanced Challenge`,
-                reasonTitle: 'Ready for Advanced Content',
-                reasonDescription: 'Your excellent progress deserves more challenging material!',
-                description: 'Advanced concepts and challenging questions to push your understanding further.',
-                cardTypes: ['advanced', 'synthesis', 'challenge'],
-                examBoard: 'AQA',
-                yearGroup: 'Year 11'
-            },
-            'reinforcement': {
-                name: `${subject.replace('GCSE ', '')} - Foundation Builder`,
-                reasonTitle: 'Building Strong Foundations',
-                reasonDescription: 'Adaptive providing targeted support to strengthen your understanding.',
-                description: 'Carefully scaffolded practice to build confidence and understanding.',
-                cardTypes: ['foundation', 'reinforcement', 'confidence-building'],
-                examBoard: 'AQA',
-                yearGroup: this.inferYearGroup(patterns)
-            },
-            'variety': {
-                name: `${subject.replace('GCSE ', '')} - Fresh Practice`,
-                reasonTitle: 'Maintaining Engagement',
-                reasonDescription: 'Your consistent effort deserves fresh, engaging content!',
-                description: 'Varied and interesting practice to keep your learning momentum going.',
-                cardTypes: ['varied', 'engaging', 'comprehensive'],
-                examBoard: 'AQA',
-                yearGroup: this.inferYearGroup(patterns)
-            }
-        };
-        
-        const baseConfig = configs[generationPlan.contentType] || configs['reinforcement'];
-        
-        return {
-            ...baseConfig,
-            subject: subject,
-            difficulty: difficulty,
-            confidence: generationPlan.confidence || 0.8,
-            curriculumAlignment: this.getCurriculumAlignment(subject),
-            assessmentObjectives: this.getAssessmentObjectives(subject)
-        };
-    }
-    
-    inferYearGroup(patterns) {
-        // Infer year group based on performance and subjects
-        const avgAccuracy = patterns.currentPerformance.accuracy;
-        const hasAdvancedSubjects = patterns.subjectStrengths.some(s => 
-            s.subject.includes('Higher') || s.averageAccuracy > 80
-        );
-        
-        if (avgAccuracy > 75 && hasAdvancedSubjects) return 'Year 11';
-        if (avgAccuracy > 60) return 'Year 10';
-        return 'Year 9';
-    }
-    
-    getCurriculumAlignment(subject) {
-        const alignments = {
-            'GCSE Mathematics': 'AQA GCSE Mathematics (8300) Specification',
-            'GCSE Biology': 'AQA GCSE Biology (8461) Specification',
-            'GCSE Chemistry': 'AQA GCSE Chemistry (8462) Specification',
-            'GCSE Physics': 'AQA GCSE Physics (8463) Specification',
-            'GCSE English Language': 'AQA GCSE English Language (8700) Specification'
-        };
-        return alignments[subject] || 'GCSE National Curriculum';
-    }
-    
-    getAssessmentObjectives(subject) {
-        return {};
-    }
-    
-    generateAdvancedGCSECards(deckConfig, patterns, generationPlan) {
-        const templateLibrary = this.getCardTemplateLibrary();
-        const subjectTemplates = templateLibrary[deckConfig.subject.toLowerCase()] || 
-                                templateLibrary['general'];
-        
-        const generatedCards = [];
-        const targetCardCount = generationPlan.cardCount || 8;
-        
-        // Select templates based on generation plan
-        const selectedTemplates = this.selectOptimalTemplates(
-            subjectTemplates, 
-            deckConfig.cardTypes, 
-            patterns,
-            generationPlan
-        );
-        
-        // Generate cards with advanced personalization
-        for (let i = 0; i < targetCardCount && selectedTemplates.length > 0; i++) {
-            const template = selectedTemplates[i % selectedTemplates.length];
-            const advancedCard = this.generateAdvancedPersonalizedCard(
-                template, 
-                patterns, 
-                generationPlan,
-                deckConfig
-            );
-            
-            if (advancedCard) {
-                generatedCards.push({
-                    ...advancedCard,
-                    type: 'standard',
-                    aiGenerated: true,
-                    confidence: template.confidence * deckConfig.confidence,
-                    examRelevance: this.calculateExamRelevance(advancedCard, deckConfig.subject),
-                    difficultyLevel: this.calibrateDifficulty(advancedCard, patterns),
-                    personalizedFor: {
-                        accuracy: patterns.currentPerformance.accuracy,
-                        learningStyle: patterns.learningVelocity.classification,
-                        weaknessTarget: generationPlan.focusAreas
-                    }
-                });
-            }
-        }
-        
-        // Ensure cards are optimally ordered for learning
-        return this.optimizeCardOrder(generatedCards, patterns);
-    }
-    
-    selectOptimalTemplates(templates, cardTypes, patterns, generationPlan) {
-        // Filter templates by required card types
-        let selectedTemplates = templates.filter(template => 
-            template.types.some(type => cardTypes.includes(type))
-        );
-        
-        // If no specific types found, use all templates
-        if (selectedTemplates.length === 0) {
-            selectedTemplates = templates;
-        }
-        
-        // Sort by suitability for user's current state
-        selectedTemplates.sort((a, b) => {
-            const suitabilityA = this.calculateTemplateSuitability(a, patterns, generationPlan);
-            const suitabilityB = this.calculateTemplateSuitability(b, patterns, generationPlan);
-            return suitabilityB - suitabilityA;
-        });
-        
-        return selectedTemplates;
-    }
-    
-    calculateTemplateSuitability(template, patterns, generationPlan) {
-        let suitability = template.confidence || 0.5;
-        
-        // Boost suitability for templates matching user's level
-        const userAccuracy = patterns.currentPerformance.accuracy;
-        if (userAccuracy < 50 && template.types.includes('foundational')) {
-            suitability += 0.3;
-        } else if (userAccuracy > 80 && template.types.includes('advanced')) {19
-            suitability += 0.3;
-        }
-        
-        // Boost for exam-focused content if needed
-        if (generationPlan.examFocus && template.types.includes('exam-style')) {
-            suitability += 0.4;
-        }
-        
-        return suitability;
-    }
-    
-    generateAdvancedPersonalizedCard(template, patterns, generationPlan, deckConfig) {
-        const variants = template.variants;
-        if (!variants || variants.length === 0) return null;
-        
-        // Advanced variant selection using Adaptive
-        const optimalVariant = this.selectOptimalVariant(variants, patterns, generationPlan);
-        
-        // Generate card content
-        let front = template.template;
-        let back = template.backTemplate;
-        
-        // Replace template placeholders
-        Object.entries(optimalVariant).forEach(([key, value]) => {
-            const placeholder = new RegExp(`\\{${key}\\}`, 'g');
-            front = front.replace(placeholder, value);
-            back = back.replace(placeholder, value);
-        });
-        
-        // Add advanced personalization
-        back = this.addAdvancedPersonalization(back, patterns, generationPlan, deckConfig);
-        
-        return { front, back };
-    }
-    
-    selectOptimalVariant(variants, patterns, generationPlan) {
-        // Use advanced selection algorithm
-        const userAccuracy = patterns.currentPerformance.accuracy;
-        const learningVelocity = patterns.learningVelocity.classification;
-        
-        let optimalIndex = 0;
-        
-        if (generationPlan.contentType === 'advancement' && userAccuracy > 80) {
-            // High performers get challenging variants
-            optimalIndex = Math.min(variants.length - 1, Math.floor(variants.length * 0.8));
-        } else if (generationPlan.contentType === 'reinforcement' && userAccuracy < 60) {
-            // Struggling learners get foundational variants
-            optimalIndex = 0;
-        } else if (learningVelocity === 'accelerating_learner') {
-            // Accelerating learners get slightly advanced content
-            optimalIndex = Math.min(variants.length - 1, Math.floor(variants.length * 0.6));
-        } else {
-            // Balanced selection for most users
-            optimalIndex = Math.floor(variants.length * 0.4);
-        }
-        
-        return variants[optimalIndex];
-    }
-    
-    addAdvancedPersonalization(backContent, patterns, generationPlan, deckConfig) {
-        let personalizedBack = backContent;
-        
-        // Add motivational elements based on user state
-        if (patterns.currentPerformance.trend === 'improving_fast') {
-            personalizedBack += '<br>🚀 <em>You\'re on fire! Keep up this amazing progress!</em>';
-        } else if (patterns.learningVelocity.classification === 'struggling_learner') {
-            personalizedBack += '<br>💪 <em>Don\'t give up! Every expert was once a beginner.</em>';
-        } else if (patterns.consistencyIndex > 0.8) {
-            personalizedBack += '<br>⭐ <em>Your consistency is paying off - well done!</em>';
-        }
-        
-        // Add exam-specific tips if relevant
-        if (generationPlan.examFocus) {
-            personalizedBack += `<br>📅 <em>This topic is high-yield for your exam!</em>`;
-        }
-        
-        // Add subject-specific encouragement
-        if (deckConfig.subject.includes('Mathematics')) {
-            personalizedBack += '<br>🧮 <em>Math is logical - practice makes it click!</em>';
-        } else if (deckConfig.subject.includes('Science')) {
-            personalizedBack += '<br>🔬 <em>Science is everywhere - understanding it is powerful!</em>';
-        }
-        
-        return personalizedBack;
-    }
-    
-    calculateExamRelevance(card, subject) {
-        // Calculate how relevant this card is to actual GCSE exams
-        let relevance = 0.5; // Base relevance
-        
-        // Higher relevance for cards with specific GCSE keywords
-        const gcseKeywords = ['calculate', 'explain', 'describe', 'compare', 'evaluate', 'analyse'];
-        const hasGCSEKeywords = gcseKeywords.some(keyword => 
-            card.front.toLowerCase().includes(keyword) || 
-            card.back.toLowerCase().includes(keyword)
-        );
-        
-        if (hasGCSEKeywords) relevance += 0.3;
-        
-        // Subject-specific relevance boosts
-        if (subject.includes('Mathematics') && card.front.includes('equation')) relevance += 0.2;
-        if (subject.includes('Science') && card.front.includes('practical')) relevance += 0.2;
-        
-        return Math.min(relevance, 1.0);
-    }
-    
-    calibrateDifficulty(card, patterns) {
-        const userAccuracy = patterns.currentPerformance.accuracy;
-        
-        // Calibrate difficulty based on content complexity and user ability
-        let difficulty = 'intermediate';
-        
-        if (userAccuracy < 50) {
-            difficulty = 'foundation';
-        } else if (userAccuracy > 80 && patterns.learningVelocity.velocity > 0) {
-            difficulty = 'higher';
-        }
-        
-        return difficulty;
-    }
-    
-    optimizeCardOrder(cards, patterns) {
-        // Optimize card order for learning effectiveness
-        const learningStyle = patterns.learningVelocity.classification;
-        
-        if (learningStyle === 'struggling_learner') {
-            // Start with easier cards for struggling learners
-            return cards.sort((a, b) => a.confidence - b.confidence);
-        } else if (learningStyle === 'accelerating_learner') {
-            // Mix difficulties for accelerating learners
-            return this.interleaveDifficulties(cards);
-        } else {
-            // Progressive difficulty for most learners
-            return cards.sort((a, b) => a.examRelevance - b.examRelevance);
-        }
-    }
-    
-    interleaveDifficulties(cards) {
-        // Interleave different difficulty levels for optimal challenge
-        const easy = cards.filter(c => c.confidence > 0.8);
-        const medium = cards.filter(c => c.confidence >= 0.5 && c.confidence <= 0.8);
-        const hard = cards.filter(c => c.confidence < 0.5);
-        
-        const interleaved = [];
-        const maxLength = Math.max(easy.length, medium.length, hard.length);
-        
-        for (let i = 0; i < maxLength; i++) {
-            if (easy[i]) interleaved.push(easy[i]);
-            if (medium[i]) interleaved.push(medium[i]);
-            if (hard[i]) interleaved.push(hard[i]);
-        }
-        
-        return interleaved;
-    }
-    
-    showAdvancedAdaptiveNotification(deck, generationPlan) {
-        // Create sophisticated notification with plan details
-        const notification = document.createElement('div');
-        notification.className = 'advanced-generated-notification';
-        
-        const urgencyClass = generationPlan.urgency === 'high' ? 'urgent' : 'normal';
-        const examFocusIcon = generationPlan.examFocus ? '🎯' : '🤖';
-        
-        notification.innerHTML = `
-            <div class="advanced-generated-notification-content ${urgencyClass}">
-                <div class="generated-notification-header">
-                    <span class="advanced-generated-badge">${examFocusIcon} Advanced Adaptive</span>
-                    <div class="confidence-meter">
-                        <div class="confidence-fill" style="width: ${generationPlan.confidence * 100}%"></div>
-                        <span class="confidence-text">${Math.round(generationPlan.confidence * 100)}% match</span>
-                    </div>
-                    <button class="generated-notification-close" onclick="this.parentElement.parentElement.parentElement.remove()">✕</button>
-                </div>
-                <h4>${deck.name}</h4>
-                <div class="generation-details">
-                    <div class="generation-reason">${deck.reason.description}</div>
-                    <div class="generation-metadata">
-                        📊 ${deck.cards.length} cards • ${deck.generatedMetadata.curriculumAlignment}
-                        ${generationPlan.examFocus ? '<br>🎯 Exam-focused content' : ''}
-                    </div>
-                </div>
-                <div class="generated-notification-actions">
-                    <button class="btn btn-generated btn-small ${urgencyClass}" onclick="viewGeneratedDeck('${deck.id}'); this.parentElement.parentElement.parentElement.remove();">
-                        📖 Study Now
-                    </button>
-                    <button class="btn btn-secondary btn-small" onclick="this.parentElement.parentElement.parentElement.remove();">
-                        Later
-                    </button>
-                </div>
-            </div>
-        `;
-        
-        // Advanced styling
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-            color: white;
-            padding: 24px;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            z-index: 10000;
-            max-width: 400px;
-            min-width: 350px;
-            animation: slideInAdvanced 0.5s ease-out;
-            border: 2px solid rgba(255,255,255,0.2);
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // Auto-remove after 12 seconds (longer for important notifications)
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.style.animation = 'slideOutAdvanced 0.3s ease-in';
-                setTimeout(() => notification.remove(), 300);
-            }
-        }, generationPlan.urgency === 'high' ? 15000 : 12000);
-    }
-    
-    showLearningProgressFeedback(patterns, examReadiness) {
-        // Show encouraging feedback when no generation is needed
-        console.log('📈 Showing learning progress feedback');
-        
-        const feedback = document.createElement('div');
-        feedback.className = 'learning-feedback';
-        feedback.innerHTML = `
-            <div class="feedback-content">
-                <h4>🎉 Great Progress!</h4>
-                <p>You're in an optimal learning state. Current accuracy: ${patterns.currentPerformance.accuracy}%</p>
-                <div class="progress-highlights">
-                    <div>🎯 Exam readiness: ${Math.round(examReadiness.overall)}%</div>
-                    <div>⚡ Learning velocity: ${patterns.learningVelocity.classification.replace('_', ' ')}</div>
-                </div>
-            </div>
-        `;
-        
-        feedback.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-            z-index: 10000;
-            max-width: 350px;
-            animation: slideInAdvanced 0.5s ease-out;
-        `;
-        
-        document.body.appendChild(feedback);
-        
-        setTimeout(() => {
-            feedback.style.animation = 'slideOutAdvanced 0.3s ease-in';
-            setTimeout(() => feedback.remove(), 300);
-        }, 8000);
-    }
-    
-    fallbackGeneration(profile) {
-        // Fallback generation if advanced Adaptive fails
-        console.log('🔄 Using fallback generation');
-        const basicDeck = {
-            id: 'fallback_' + Date.now(),
-            name: 'Study Session - Mixed Review',
-            subject: 'General Review',
-            yearGroup: 'Year 10',
-            difficulty: 'Intermediate',
-            isGenerated: true,
-            generatedAt: Date.now(),
-            cards: [
-                {
-                    front: 'Quick Review: What have you learned recently?',
-                    back: 'Take a moment to reflect on your recent learning. Active recall helps strengthen memory pathways.',
-                    type: 'standard'
-                }
-            ],
-            titleCards: [{ title: 'Quick Review', description: 'A moment to consolidate your recent learning.' }]
-        };
-        
-        this.saveNewGeneratedDeck(basicDeck);
-    }
-    
-    analyzeUserPatterns(profile) {
-        const trends = profile.preferences.accuracyTrends;
-        const recent = trends.slice(-10); // Last 10 sessions
-        
-        // Calculate learning velocity
-        let improvementTrend = 0;
-        if (recent.length > 3) {
-            const firstHalf = recent.slice(0, Math.floor(recent.length / 2));
-            const secondHalf = recent.slice(Math.floor(recent.length / 2));
-            const firstAvg = firstHalf.reduce((sum, t) => sum + t.accuracy, 0) / firstHalf.length;
-            const secondAvg = secondHalf.reduce((sum, t) => sum + t.accuracy, 0) / secondHalf.length;
-            improvementTrend = secondAvg - firstAvg;
-        }
-        
-        // Identify knowledge gaps
-        const subjectWeaknesses = Object.entries(profile.weaknesses)
-            .map(([subject, count]) => ({
-                subject,
-                weakness: count,
-                strength: profile.strengths[subject] || 0,
-                ratio: count / (profile.strengths[subject] || 1)
-            }))
-            .filter(item => item.ratio > 1.5) // Significantly more weaknesses than strengths
-            .sort((a, b) => b.ratio - a.ratio);
-        
-        // Find preferred learning style
-        const difficultyPrefs = profile.preferences.difficultyPreference;
-        const bestDifficulty = Object.entries(difficultyPrefs)
-            .map(([diff, data]) => ({
-                difficulty: diff,
-                accuracy: data.averageAccuracy || 0,
-                attempts: data.attempts || 0
-            }))
-            .filter(item => item.attempts > 2)
-            .sort((a, b) => b.accuracy - a.accuracy)[0];
-        
-        // Analyze study timing
-        const studyTimes = trends.map(t => new Date(t.timestamp).getHours());
-        const timePreference = this.findMostFrequentHour(studyTimes);
-        
-        return {
-            improvementTrend,
-            currentAccuracy: recent.length > 0 ? recent[recent.length - 1].accuracy : 0,
-            averageAccuracy: trends.reduce((sum, t) => sum + t.accuracy, 0) / trends.length,
-            knowledgeGaps: subjectWeaknesses,
-            preferredDifficulty: bestDifficulty?.difficulty || 'Intermediate',
-            optimalStudyHour: timePreference,
-            sessionCount: trends.length,
-            consistencyScore: this.calculateConsistencyScore(trends)
-        };
-    }
-    
-    shouldGenerateNewContent(patterns, profile) {
-        const reasons = [];
-        
-        // 1. Knowledge gap detection
-        if (patterns.knowledgeGaps.length > 0) {
-            const topGap = patterns.knowledgeGaps[0];
-            reasons.push({
-                type: 'weakness-reinforcement',
-                priority: 90,
-                reason: `Struggling with ${topGap.subject} (${topGap.weakness} weak sessions vs ${topGap.strength} strong)`,
-                subject: topGap.subject,
-                focus: 'remedial'
-            });
-        }
-        
-        // 2. Plateau detection
-        if (patterns.improvementTrend < -5) {
-            reasons.push({
-                type: 'plateau-breaker',
-                priority: 85,
-                reason: `Performance declining by ${Math.abs(patterns.improvementTrend).toFixed(1)}% - need variety`,
-                focus: 'challenge'
-            });
-        }
-        
-        // 3. Mastery advancement
-        if (patterns.currentAccuracy > 85 && patterns.improvementTrend > 5) {
-            const strongSubjects = Object.entries(profile.strengths)
-                .sort(([,a], [,b]) => b - a)
-                .slice(0, 3);
-                
-            if (strongSubjects.length > 0) {
-                reasons.push({
-                    type: 'advancement',
-                    priority: 75,
-                    reason: `Excelling in ${strongSubjects[0][0]} (${strongSubjects[0][1]} strong sessions) - ready for advanced content`,
-                    subject: strongSubjects[0][0],
-                    focus: 'advanced'
-                });
-            }
-        }
-        
-        // 4. Consistency reward
-        if (patterns.consistencyScore > 0.8 && patterns.sessionCount > 10) {
-            reasons.push({
-                type: 'consistency-reward',
-                priority: 60,
-                reason: `High consistency score (${(patterns.consistencyScore * 100).toFixed(0)}%) - deserve specialized content`,
-                focus: 'specialized'
-            });
-        }
-        
-        // Select highest priority reason
-        const topReason = reasons.sort((a, b) => b.priority - a.priority)[0];
-        
-        return {
-            recommend: !!topReason,
-            reason: topReason?.reason || 'No generation needed',
-            type: topReason?.type || null,
-            subject: topReason?.subject || null,
-            focus: topReason?.focus || 'general'
-        };
-    }
-    
-    findMostFrequentHour(hours) {
-        const hourCounts = {};
-        hours.forEach(hour => {
-            hourCounts[hour] = (hourCounts[hour] || 0) + 1;
-        });
-        
-        return Object.entries(hourCounts)
-            .sort(([,a], [,b]) => b - a)[0]?.[0] || 12;
-    }
-    
-    calculateConsistencyScore(trends) {
-        if (trends.length < 3) return 0;
-        
-        // Calculate variance in accuracy
-        const accuracies = trends.map(t => t.accuracy);
-        const mean = accuracies.reduce((sum, acc) => sum + acc, 0) / accuracies.length;
-        const variance = accuracies.reduce((sum, acc) => sum + Math.pow(acc - mean, 2), 0) / accuracies.length;
-        const standardDeviation = Math.sqrt(variance);
-        
-        // Lower standard deviation = higher consistency
-        // Convert to 0-1 scale where 1 = very consistent
-        return Math.max(0, 1 - (standardDeviation / 50));
-    }
-    
-    generatePersonalizedDeck(patterns, profile, generationType) {
-        console.log('🎨 Generating personalized deck:', generationType);
-        
-        // Mark generation timestamp
-        localStorage.setItem('last-generated-generation', Date.now().toString());
-        
-        const deckConfig = this.createDeckConfig(patterns, profile, generationType);
-        const cards = this.generateSmartCards(deckConfig, patterns, profile);
-        
-        if (cards.length === 0) {
-            console.log('No suitable cards generated');
-            return;
-        }
-        
-        const newDeck = {
-            id: 'generated_generated_' + Date.now(),
-            name: deckConfig.name,
-            subject: deckConfig.subject,
-            difficulty: deckConfig.difficulty,
-            isGenerated: true,
-            generatedAt: Date.now(),
-            generationType: generationType,
-            confidence: deckConfig.confidence,
-            reason: {
-                title: deckConfig.reasonTitle,
-                description: deckConfig.reasonDescription
-            },
-            cards: cards,
-            titleCards: [{
-                title: deckConfig.name,
-                description: deckConfig.description
-            }],
-            generatedMetadata: {
-                targetWeakness: patterns.knowledgeGaps[0]?.subject || null,
-                userAccuracy: patterns.currentAccuracy,
-                improvementTrend: patterns.improvementTrend,
-                generatedFor: generationType,
-                profileSnapshot: {
-                    sessionCount: patterns.sessionCount,
-                    consistency: patterns.consistencyScore,
-                    preferredDifficulty: patterns.preferredDifficulty
-                }
-            }
-        };
-        
-        // Save to generated decks
-        this.saveNewGeneratedDeck(newDeck);
-        
-        console.log('✨ Generated new personalized deck:', newDeck.name);
-        
-        // Show notification to user
-        this.showAdaptiveGenerationNotification(newDeck);
-    }
-    
-    createDeckConfig(patterns, profile, generationType) {
-        const configs = {
-            'weakness-reinforcement': {
-                name: `${patterns.knowledgeGaps[0]?.subject || 'Focus'} - Targeted Practice`,
-                subject: patterns.knowledgeGaps[0]?.subject || 'General',
-                difficulty: 'Beginner', // Start easier for weak areas
-                confidence: 0.95,
-                reasonTitle: 'Weakness Detected',
-                reasonDescription: `Adaptive identified struggles in ${patterns.knowledgeGaps[0]?.subject}. These cards focus on foundational concepts.`,
-                description: 'Personalized practice targeting your challenging areas.',
-                cardTypes: ['foundational', 'step-by-step', 'reinforcement']
-            },
-            'plateau-breaker': {
-                name: 'Challenge Booster - Break Through!',
-                subject: Object.keys(profile.preferences.favoriteSubjects)[0] || 'Mixed',
-                difficulty: 'Advanced',
-                confidence: 0.88,
-                reasonTitle: 'Performance Plateau',
-                reasonDescription: 'Adaptive detected stagnation. These varied challenges will reignite your learning momentum.',
-                description: 'Diverse, engaging content to overcome learning plateaus.',
-                cardTypes: ['challenge', 'creative', 'application']
-            },
-            'advancement': {
-                name: `Advanced ${patterns.knowledgeGaps.length > 0 ? Object.keys(profile.strengths)[0] : 'Concepts'}`,
-                subject: Object.keys(profile.strengths)[0] || 'General',
-                difficulty: 'Advanced',
-                confidence: 0.92,
-                reasonTitle: 'Ready to Advance',
-                reasonDescription: `Excellent progress in ${Object.keys(profile.strengths)[0]}! Time for more sophisticated challenges.`,
-                description: 'Advanced concepts building on your demonstrated strengths.',
-                cardTypes: ['advanced', 'synthesis', 'expert-level']
-            },
-            'consistency-reward': {
-                name: 'Consistency Champion - Special Edition',
-                subject: 'Mixed',
-                difficulty: patterns.preferredDifficulty,
-                confidence: 0.90,
-                reasonTitle: 'Consistency Rewarded',
-                reasonDescription: `Your ${(patterns.consistencyScore * 100).toFixed(0)}% consistency deserves special content!`,
-                description: 'Curated premium content celebrating your dedication.',
-                cardTypes: ['premium', 'comprehensive', 'achievement']
-            },
-            'onboarding-welcome': {
-                name: `Welcome to ${patterns.knowledgeGaps[0]?.subject || 'Learning'}!`,
-                subject: Object.keys(profile.preferences.favoriteSubjects)[0] || 'General',
-                difficulty: patterns.preferredDifficulty,
-                confidence: 0.95,
-                reasonTitle: 'Welcome Gift',
-                reasonDescription: 'A personalized starter deck created just for you based on your preferences!',
-                description: 'Your first Adaptive-generated deck, tailored to your interests and confidence level.',
-                cardTypes: ['foundational', 'welcome', 'comprehensive']
-            }
-        };
-        
-        return configs[generationType] || configs['consistency-reward'];
-    }
-    
-    generateSmartCards(deckConfig, patterns, profile) {
-        const cardTemplates = this.getCardTemplateLibrary();
-        const subjectTemplates = cardTemplates[deckConfig.subject.toLowerCase()] || cardTemplates['general'];
-        const difficultyLevel = this.getDifficultyMultiplier(deckConfig.difficulty);
-        
-        const generatedCards = [];
-        const targetCardCount = Math.min(12, Math.max(6, Math.floor(patterns.sessionCount / 2)));
-        
-        // Select appropriate templates based on card types
-        const selectedTemplates = deckConfig.cardTypes.flatMap(type => 
-            subjectTemplates.filter(template => template.types.includes(type))
-        );
-        
-        // Generate cards with personalization
-        for (let i = 0; i < targetCardCount && i < selectedTemplates.length * 2; i++) {
-            const template = selectedTemplates[i % selectedTemplates.length];
-            const personalizedCard = this.personalizeCard(template, patterns, profile, difficultyLevel);
-            
-            if (personalizedCard) {
-                generatedCards.push({
-                    ...personalizedCard,
-                    type: 'standard',
-                    aiGenerated: true,
-                    confidence: template.confidence * deckConfig.confidence,
-                    personalizedFor: {
-                        accuracy: patterns.currentAccuracy,
-                        weakness: patterns.knowledgeGaps[0]?.subject || null
-                    }
-                });
-            }
-        }
-        
-        return generatedCards;
-    }
-    
-    getCardTemplateLibrary() {
-        return {
-            // ============== GCSE MATHEMATICS ==============
-            'gcse mathematics': [
-                {
-                    types: ['foundational', 'reinforcement'],
-                    template: 'Solve: <strong>{equation}</strong><br><small>📊 {tier} Tier • {topic}</small>',
-                    backTemplate: '<strong>{answer}</strong><br><em>Step-by-step method:</em><br>{method}<br>✅ <strong>Check:</strong> {check}<br>🎯 <strong>GCSE Tip:</strong> {gcseTip}',
-                    confidence: 0.92,
-                    variants: [
-                        { 
-                            equation: '3x + 7 = 22', answer: 'x = 5',
-                            method: '1) 3x + 7 = 22<br>2) 3x = 22 - 7 = 15<br>3) x = 15 ÷ 3 = 5',
-                            check: '3(5) + 7 = 15 + 7 = 22 ✓',
-                            gcseTip: 'Always show your working and check your answer!',
-                            tier: 'Foundation', topic: 'Linear Equations'
-                        },
-                        { 
-                            equation: '2(x - 4) = 10', answer: 'x = 9',
-                            method: '1) 2(x - 4) = 10<br>2) 2x - 8 = 10<br>3) 2x = 18<br>4) x = 9',
-                            check: '2(9 - 4) = 2(5) = 10 ✓',
-                            gcseTip: 'Expand brackets first, then solve step by step',
-                            tier: 'Foundation', topic: 'Linear Equations'
-                        },
-                        { 
-                            equation: 'x² - 9 = 0', answer: 'x = ±3',
-                            method: '1) x² = 9<br>2) x = ±√9<br>3) x = ±3',
-                            check: '(3)² - 9 = 0 and (-3)² - 9 = 0 ✓',
-                            gcseTip: 'Square roots always have positive AND negative solutions',
-                            tier: 'Higher', topic: 'Quadratic Equations'
-                        }
-                    ]
-                },
-                {
-                    types: ['practical', 'calculation'],
-                    template: 'Calculate <strong>{calculation}</strong><br><small>💰 {tier} Tier • {topic}</small>',
-                    backTemplate: '<strong>{answer}</strong><br><em>Method:</em><br>{method}<br>💡 <strong>Alternative:</strong> {alternative}<br>🎯 <strong>GCSE Tip:</strong> {gcseTip}',
-                    confidence: 0.89,
-                    variants: [
-                        { 
-                            calculation: '25% of £80', answer: '£20',
-                            method: '25% = 0.25<br>0.25 × £80 = £20',
-                            alternative: '25% = ¼<br>£80 ÷ 4 = £20',
-                            gcseTip: 'Use whichever method you find easier in exams!',
-                            tier: 'Foundation', topic: 'Percentages'
-                        },
-                        { 
-                            calculation: 'the compound interest on £500 at 3% for 2 years', answer: '£30.45',
-                            method: 'Year 1: £500 × 1.03 = £515<br>Year 2: £515 × 1.03 = £530.45<br>Interest = £530.45 - £500 = £30.45',
-                            alternative: 'Final amount = £500 × (1.03)² = £530.45<br>Interest = £530.45 - £500 = £30.45',
-                            gcseTip: 'Compound interest uses multiplier method',
-                            tier: 'Higher', topic: 'Compound Interest'
-                        }
-                    ]
-                }
-            ],
-            // ============== GCSE BIOLOGY ==============
-            'gcse biology': [
-                {
-                    types: ['foundational', 'reinforcement'],
-                    template: 'What is <strong>{concept}</strong>?<br><small>🔬 {tier} • {topic}</small>',
-                    backTemplate: '<strong>{definition}</strong><br><em>Key points:</em><br>• {point1}<br>• {point2}<br>🧬 <strong>Example:</strong> {example}<br>🎯 <strong>GCSE Tip:</strong> {gcseTip}',
-                    confidence: 0.90,
-                    variants: [
-                        {
-                            concept: 'mitosis', definition: 'Cell division producing two identical diploid cells',
-                            point1: 'Used for growth and repair in organisms',
-                            point2: 'Each daughter cell has the full set of chromosomes',
-                            example: 'Skin cells dividing to heal a cut',
-                            gcseTip: 'Don\'t confuse with meiosis (produces gametes)!',
-                            tier: 'Foundation/Higher', topic: 'Cell Division'
-                        },
-                        {
-                            concept: 'photosynthesis', definition: 'Process where plants make glucose using light energy',
-                            point1: 'Occurs in chloroplasts containing chlorophyll',
-                            point2: 'Equation: 6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂',
-                            example: 'Green leaves producing oxygen during daylight',
-                            gcseTip: 'This equation is worth 3-4 marks - learn it perfectly!',
-                            tier: 'Foundation/Higher', topic: 'Bioenergetics'
-                        },
-                        {
-                            concept: 'an enzyme', definition: 'Biological catalyst that speeds up chemical reactions',
-                            point1: 'Have specific active sites for substrates (lock & key model)',
-                            point2: 'Can be denatured by high temperature or wrong pH',
-                            example: 'Pepsin breaking down proteins in the stomach',
-                            gcseTip: '"Denatured" means permanently damaged - shape changes!',
-                            tier: 'Foundation/Higher', topic: 'Enzymes'
-                        }
-                    ]
-                },
-                {
-                    types: ['practical', 'required'],
-                    template: 'In the <strong>{practical}</strong> practical, what would you observe?<br><small>🧪 Required Practical • {topic}</small>',
-                    backTemplate: '<strong>Observations:</strong><br>{observations}<br><em>Explanation:</em><br>{explanation}<br>⚗️ <strong>Safety note:</strong> {safety}<br>🎯 <strong>Exam Tip:</strong> {examTip}',
-                    confidence: 0.87,
-                    variants: [
-                        {
-                            practical: 'food tests', topic: 'Required Practical',
-                            observations: '• Benedict\'s test: blue → brick red (reducing sugars)<br>• Iodine test: brown → blue-black (starch)<br>• Biuret test: blue → purple (protein)',
-                            explanation: 'Each test uses specific reagents that change colour when the nutrient is present',
-                            safety: 'Benedict\'s reagent is heated - handle carefully',
-                            examTip: 'Learn the colour changes - they\'re tested every year!'
-                        }
-                    ]
-                }
-            ],
-            // ============== GCSE CHEMISTRY ==============
-            'gcse chemistry': [
-                {
-                    types: ['foundational', 'calculation'],
-                    template: 'Calculate the relative formula mass (Mr) of <strong>{compound}</strong><br><small>🧮 {tier} • Quantitative Chemistry</small>',
-                    backTemplate: '<strong>Mr = {answer}</strong><br><em>Calculation:</em><br>{calculation}<br>📚 <strong>Method:</strong> {method}<br>🎯 <strong>GCSE Tip:</strong> {gcseTip}',
-                    confidence: 0.88,
-                    variants: [
-                        {
-                            compound: 'CaCO₃', answer: '100',
-                            calculation: 'Ca: 40 × 1 = 40<br>C: 12 × 1 = 12<br>O: 16 × 3 = 48<br>Total: 40 + 12 + 48 = 100',
-                            method: '1) Find atomic masses from periodic table<br>2) Multiply by number of atoms<br>3) Add them all together',
-                            gcseTip: 'Use the periodic table given in exams - don\'t memorise atomic masses!',
-                            tier: 'Foundation/Higher'
-                        },
-                        {
-                            compound: 'H₂SO₄', answer: '98',
-                            calculation: 'H: 1 × 2 = 2<br>S: 32 × 1 = 32<br>O: 16 × 4 = 64<br>Total: 2 + 32 + 64 = 98',
-                            method: '1) Count each type of atom<br>2) Multiply by atomic mass<br>3) Add all values',
-                            gcseTip: 'Be careful with subscripts - H₂SO₄ has 2 H atoms and 4 O atoms!',
-                            tier: 'Foundation/Higher'
-                        }
-                    ]
-                },
-                {
-                    types: ['practical', 'observation'],
-                    template: 'What happens when <strong>{reactant1}</strong> reacts with <strong>{reactant2}</strong>?<br><small>⚗️ {tier} • {topic}</small>',
-                    backTemplate: '<strong>Equation:</strong> {equation}<br><em>Observations:</em><br>{observations}<br>🧪 <strong>Test:</strong> {test}<br>🎯 <strong>GCSE Tip:</strong> {gcseTip}',
-                    confidence: 0.91,
-                    variants: [
-                        {
-                            reactant1: 'magnesium', reactant2: 'hydrochloric acid',
-                            equation: 'Mg + 2HCl → MgCl₂ + H₂',
-                            observations: '• Fizzing/bubbling (hydrogen gas)<br>• Metal dissolves<br>• Solution gets warm (exothermic)',
-                            test: 'Squeaky pop test confirms hydrogen gas',
-                            gcseTip: 'This is a classic Required Practical - know the observations!',
-                            tier: 'Foundation/Higher', topic: 'Metal Reactions'
-                        },
-                        {
-                            reactant1: 'calcium carbonate', reactant2: 'hydrochloric acid',
-                            equation: 'CaCO₃ + 2HCl → CaCl₂ + H₂O + CO₂',
-                            observations: '• Fizzing (CO₂ gas produced)<br>• Solid dissolves<br>• Effervescence',
-                            test: 'Limewater turns milky with CO₂',
-                            gcseTip: 'Test for carbonates - they all react with acids to give CO₂',
-                            tier: 'Foundation/Higher', topic: 'Chemical Changes'
-                        }
-                    ]
-                }
-            ],
-            // ============== GCSE PHYSICS ==============
-            'gcse physics': [
-                {
-                    types: ['foundational', 'equations'],
-                    template: 'State the equation for <strong>{concept}</strong><br><small>⚡ {tier} • {topic}</small>',
-                    backTemplate: '<strong>{equation}</strong><br><em>Where:</em><br>{variables}<br>📐 <strong>Units:</strong> {units}<br>📏 <strong>Example:</strong> {example}<br>🎯 <strong>GCSE Tip:</strong> {gcseTip}',
-                    confidence: 0.91,
-                    variants: [
-                        {
-                            concept: 'speed', equation: 'speed = distance ÷ time',
-                            variables: 's = speed<br>d = distance<br>t = time',
-                            units: 'speed: m/s, distance: m, time: s',
-                            example: 'Car travels 100m in 10s: speed = 100÷10 = 10 m/s',
-                            gcseTip: 'This is the most tested equation in GCSE Physics!',
-                            tier: 'Foundation/Higher', topic: 'Motion'
-                        },
-                        {
-                            concept: 'electrical power', equation: 'power = voltage × current',
-                            variables: 'P = power (W)<br>V = voltage (V)<br>I = current (A)',
-                            units: 'power: W (watts), voltage: V (volts), current: A (amps)',
-                            example: '12V bulb with 2A current: P = 12×2 = 24W',
-                            gcseTip: 'Remember P = VI for electrical power calculations',
-                            tier: 'Foundation/Higher', topic: 'Electricity'
-                        }
-                    ]
-                }
-            ],
-            // ============== GCSE ENGLISH LANGUAGE ==============
-            'gcse english language': [
-                {
-                    types: ['foundational', 'techniques'],
-                    template: 'What is the effect of using <strong>{technique}</strong> in writing?<br><small>✍️ {paper} • Language Analysis</small>',
-                    backTemplate: '<strong>Effect:</strong> {effect}<br><em>Purpose:</em> {purpose}<br>📝 <strong>Example:</strong> {example}<br>✏️ <strong>Analysis Tip:</strong> {tip}<br>🎯 <strong>GCSE Tip:</strong> {gcseTip}',
-                    confidence: 0.87,
-                    variants: [
-                        {
-                            technique: 'short sentences', 
-                            effect: 'Creates tension, emphasis, and dramatic impact',
-                            purpose: 'Controls pace and draws attention to key information',
-                            example: '"The door creaked open. Silence. Nothing but darkness ahead."',
-                            tip: 'Always explain the effect on the reader, not just identify the technique',
-                            gcseTip: 'Use short sentences at key moments in creative writing!',
-                            paper: 'Paper 1 & 2'
-                        },
-                        {
-                            technique: 'metaphor', 
-                            effect: 'Creates vivid imagery by directly comparing unrelated things',
-                            purpose: 'Helps readers understand complex ideas through familiar comparisons',
-                            example: '"Her voice was music to his ears" - suggests beauty and pleasure',
-                            tip: 'Explain HOW the metaphor creates meaning, not just what it compares',
-                            gcseTip: 'Better than similes for creating powerful imagery',
-                            paper: 'Paper 1 & 2'
-                        }
-                    ]
-                },
-                {
-                    types: ['creative', 'structure'],
-                    template: 'How do you create a strong <strong>{element}</strong> in creative writing?<br><small>🚀 Paper 2 Section B • Creative Writing</small>',
-                    backTemplate: '<strong>Techniques:</strong><br>{techniques}<br><em>Examples:</em><br>{examples}<br>✍️ <strong>Why it works:</strong> {why}<br>🎯 <strong>GCSE Tip:</strong> {gcseTip}',
-                    confidence: 0.85,
-                    variants: [
-                        {
-                            element: 'opening',
-                            techniques: '• Start in the middle of action (in media res)<br>• Use dialogue to immediately engage<br>• Create mystery or ask questions<br>• Establish atmosphere quickly',
-                            examples: '"The scream pierced the night air."<br>"I should never have opened that door."',
-                            why: 'Hooks the reader immediately and makes them want to continue',
-                            gcseTip: 'Your first sentence is crucial - make it count!'
-                        }
-                    ]
-                }
-            ],
-            // ============== GCSE ENGLISH LITERATURE ==============
-            'gcse english literature': [
-                {
-                    types: ['analysis', 'quotes'],
-                    template: 'Analyse this quote from <strong>{text}</strong>: <em>"{quote}"</em><br><small>📖 Paper {paper} • {text}</small>',
-                    backTemplate: '<strong>Analysis:</strong> {analysis}<br><em>Context:</em> {context}<br>📚 <strong>Themes:</strong> {themes}<br>🎭 <strong>Language features:</strong> {language}<br>🎯 <strong>Exam Tip:</strong> {examTip}',
-                    confidence: 0.83,
-                    variants: [
-                        {
-                            text: 'Macbeth', quote: 'Is this a dagger which I see before me, The handle toward my hand?',
-                            analysis: 'The rhetorical question shows Macbeth\'s psychological turmoil and uncertainty. The dagger symbolizes his murderous intentions and the supernatural influence corrupting him.',
-                            context: 'Spoken just before Duncan\'s murder, showing Macbeth\'s hesitation and horror at what he\'s about to do',
-                            themes: 'Ambition, guilt, supernatural, appearance vs reality',
-                            language: 'Rhetorical question, symbolism, dramatic soliloquy',
-                            examTip: 'Always link language choices to character development and themes',
-                            paper: '1'
-                        }
-                    ]
-                }
-            ],
-            // ============== GCSE HISTORY ==============
-            'gcse history': [
-                {
-                    types: ['chronology', 'causation'],
-                    template: 'What were the main causes of <strong>{event}</strong>?<br><small>🏛️ {paper} • {topic}</small>',
-                    backTemplate: '<strong>Short-term causes:</strong><br>{shortTerm}<br><strong>Long-term causes:</strong><br>{longTerm}<br>🎯 <strong>Most important:</strong> {most}<br>📚 <strong>Exam Tip:</strong> {examTip}',
-                    confidence: 0.86,
-                    variants: [
-                        {
-                            event: 'World War One',
-                            shortTerm: '• Assassination of Archduke Franz Ferdinand<br>• July Crisis and ultimatums<br>• Alliance system activated',
-                            longTerm: '• Imperialism creating tensions<br>• Naval arms race<br>• Balkan nationalism<br>• Alliance system dividing Europe',
-                            most: 'Alliance system - turned a regional conflict into world war',
-                            examTip: 'Always explain how causes link together - don\'t just list them!',
-                            paper: 'Paper 1', topic: 'Conflict & Tension'
-                        }
-                    ]
-                }
-            ],
-            // ============== GCSE GEOGRAPHY ==============
-            'gcse geography': [
-                {
-                    types: ['physical', 'processes'],
-                    template: 'Explain the process of <strong>{process}</strong><br><small>🌍 {paper} • {topic}</small>',
-                    backTemplate: '<strong>Process:</strong><br>{steps}<br><em>Key factors:</em><br>{factors}<br>🌎 <strong>Example:</strong> {example}<br>🎯 <strong>GCSE Tip:</strong> {gcseTip}',
-                    confidence: 0.88,
-                    variants: [
-                        {
-                            process: 'coastal erosion',
-                            steps: '1) Waves hit cliff face<br>2) Hydraulic action and abrasion<br>3) Cracks widen (freeze-thaw)<br>4) Rock falls create wave-cut platform',
-                            factors: '• Wave energy and fetch<br>• Rock type and structure<br>• Weather conditions',
-                            example: 'Flamborough Head, Yorkshire - chalk cliffs retreating',
-                            gcseTip: 'Learn case studies - they\'re worth lots of marks!',
-                            paper: 'Paper 1', topic: 'Coastal Landscapes'
-                        }
-                    ]
-                }
-            ],
-            // ============== GCSE MODERN FOREIGN LANGUAGES ==============
-            'gcse french': [
-                {
-                    types: ['vocabulary', 'foundation'],
-                    template: 'How do you say <strong>"{english}"</strong> in French?<br><small>🇫🇷 Foundation/Higher • {topic}</small>',
-                    backTemplate: '<strong>{french}</strong><br><em>Pronunciation:</em> {pronunciation}<br>📝 <strong>Grammar note:</strong> {grammar}<br>💡 <strong>Example sentence:</strong> {example}<br>🎯 <strong>GCSE Tip:</strong> {gcseTip}',
-                    confidence: 0.90,
-                    variants: [
-                        {
-                            english: 'I would like', french: 'Je voudrais',
-                            pronunciation: 'zhuh voo-dray',
-                            grammar: 'Conditional tense - more polite than "je veux"',
-                            example: 'Je voudrais un café, s\'il vous plaît',
-                            gcseTip: 'Essential for role-plays and speaking assessments!',
-                            topic: 'Daily Routines'
-                        }
-                    ]
-                }
-            ],
-            'gcse spanish': [
-                {
-                    types: ['vocabulary', 'foundation'],
-                    template: 'How do you say <strong>"{english}"</strong> in Spanish?<br><small>🇪🇸 Foundation/Higher • {topic}</small>',
-                    backTemplate: '<strong>{spanish}</strong><br><em>Pronunciation:</em> {pronunciation}<br>📝 <strong>Grammar note:</strong> {grammar}<br>💡 <strong>Example:</strong> {example}<br>🎯 <strong>GCSE Tip:</strong> {gcseTip}',
-                    confidence: 0.90,
-                    variants: [
-                        {
-                            english: 'I live in', spanish: 'Vivo en',
-                            pronunciation: 'VEE-voh en',
-                            grammar: 'Present tense of "vivir" (to live)',
-                            example: 'Vivo en Manchester - I live in Manchester',
-                            gcseTip: 'Key phrase for personal information topics!',
-                            topic: 'Personal Information'
-                        }
-                    ]
-                }
-            ],
-            // ============== FALLBACK TEMPLATES ==============
-            'mathematics': [
-                {
-                    types: ['foundational', 'reinforcement'],
-                    template: 'Calculate: <strong>{operation}</strong>',
-                    backTemplate: '<strong>{answer}</strong><br><em>Method: {method}</em><br>💡 <strong>Tip:</strong> {tip}',
-                    confidence: 0.9,
-                    variants: [
-                        { operation: '15% of 60', answer: '9', method: '15% = 0.15, so 0.15 × 60 = 9', tip: 'Convert percentages to decimals for easy calculation' }
-                    ]
-                }
-            ],
-            'general': [
-                {
-                    types: ['study-skills', 'meta'],
-                    template: 'GCSE Study Tip: <strong>{tip}</strong>',
-                    backTemplate: '<strong>Why it works:</strong> {explanation}<br><em>How to apply:</em><br>{application}<br>🎓 <strong>Subjects this helps:</strong> {subjects}',
-                    confidence: 0.85,
-                    variants: [
-                        {
-                            tip: 'Use the Pomodoro Technique',
-                            explanation: 'Breaks study into focused 25-minute chunks with breaks',
-                            application: '1) Study for 25 minutes<br>2) Take 5-minute break<br>3) Repeat 4 times<br>4) Take longer 30-minute break',
-                            subjects: 'All GCSE subjects - especially Maths, Sciences, English'
-                        }
-                    ]
-                }
-            ]
-        };
-    }
-    
-    personalizeCard(template, patterns, profile, difficultyLevel) {
-        const variants = template.variants;
-        if (!variants || variants.length === 0) return null;
-        
-        // Select variant based on user's current performance level
-        let variantIndex = 0;
-        if (patterns.currentAccuracy > 80) {
-            // High performers get more challenging variants
-            variantIndex = Math.min(variants.length - 1, Math.floor(variants.length * 0.7));
-        } else if (patterns.currentAccuracy < 60) {
-            // Struggling users get foundational variants
-            variantIndex = 0;
-        } else {
-            // Mid-level performers get random selection
-            variantIndex = Math.floor(Math.random() * variants.length);
-        }
-        
-        const selectedVariant = variants[variantIndex];
-        
-        // Replace template placeholders with variant data
-        let front = template.template;
-        let back = template.backTemplate;
-        
-        Object.entries(selectedVariant).forEach(([key, value]) => {
-            const placeholder = `{${key}}`;
-            front = front.replace(new RegExp(placeholder, 'g'), value);
-            back = back.replace(new RegExp(placeholder, 'g'), value);
-        });
-        
-        // Add personalization based on user patterns
-        if (patterns.consistencyScore > 0.8) {
-            back += '<br>🌟 <em>Great consistency! Keep it up!</em>';
-        } else if (patterns.improvementTrend > 10) {
-            back += '<br>📈 <em>You\'re improving fast!</em>';
-        }
-        
-        return { front, back };
-    }
-    
     getDifficultyMultiplier(difficulty) {
         const multipliers = {
             'Beginner': 0.7,
@@ -3956,637 +2137,9 @@ Please tailor the hint complexity to match the student's performance level and y
         return multipliers[difficulty] || 1.0;
     }
     
-    saveNewGeneratedDeck(newDeck) {
-        const existingDecks = this.loadGeneratedDecks();
-        
-        // Limit to 10 generated decks to prevent storage overflow
-        if (existingDecks.length >= 10) {
-            // Remove oldest deck
-            existingDecks.sort((a, b) => a.generatedAt - b.generatedAt);
-            existingDecks.shift();
-        }
-        
-        existingDecks.push(newDeck);
-        this.saveGeneratedDecks(existingDecks);
-        
-        // Update display
-        this.renderGeneratedDecks(existingDecks);
-        
-        console.log('💾 Saved new Adaptive-generated deck:', newDeck.name);
-    }
     
-    showAdaptiveGenerationNotification(deck) {
-        // Create notification element
-        const notification = document.createElement('div');
-        notification.className = 'generated-notification';
-        notification.innerHTML = `
-            <div class="generated-notification-content">
-                <div class="generated-notification-header">
-                    <span class="generated-badge">🤖 Generated</span>
-                    <button class="generated-notification-close" onclick="this.parentElement.parentElement.parentElement.remove()">✕</button>
-                </div>
-                <h4>${deck.name}</h4>
-                <p>${deck.reason.description}</p>
-                <div class="generated-notification-actions">
-                    <button class="btn btn-generated btn-small" onclick="viewGeneratedDeck('${deck.id}'); this.parentElement.parentElement.parentElement.remove();">
-                        📖 Study Now
-                    </button>
-                    <button class="btn btn-secondary btn-small" onclick="this.parentElement.parentElement.parentElement.remove();">
-                        Later
-                    </button>
-                </div>
-            </div>
-        `;
-        
-        // Add styles
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            z-index: 10000;
-            max-width: 350px;
-            animation: slideIn 0.5s ease-out;
-        `;
-        
-        // Add animation keyframe if not exists
-        if (!document.getElementById('generated-notification-styles')) {
-            const style = document.createElement('style');
-            style.id = 'generated-notification-styles';
-            style.textContent = `
-                @keyframes slideIn {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-                .generated-notification-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 10px;
-                }
-                .generated-badge {
-                    background: rgba(255,255,255,0.2);
-                    padding: 4px 8px;
-                    border-radius: 12px;
-                    font-size: 0.8em;
-                    font-weight: bold;
-                }
-                .generated-notification-close {
-                    background: none;
-                    border: none;
-                    color: white;
-                    font-size: 18px;
-                    cursor: pointer;
-                    padding: 0;
-                    width: 24px;
-                    height: 24px;
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-                .generated-notification-close:hover {
-                    background: rgba(255,255,255,0.2);
-                }
-                .generated-notification-content h4 {
-                    margin: 10px 0;
-                    font-size: 1.1em;
-                }
-                .generated-notification-content p {
-                    margin: 10px 0;
-                    opacity: 0.9;
-                    line-height: 1.4;
-                }
-                .generated-notification-actions {
-                    display: flex;
-                    gap: 10px;
-                    margin-top: 15px;
-                }
-                .generated-notification-actions .btn {
-                    flex: 1;
-                    padding: 8px 12px;
-                    font-size: 0.85em;
-                }
-            `;
-            document.head.appendChild(style);
-        }
-        
-        document.body.appendChild(notification);
-        
-        // Auto-remove after 8 seconds
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.style.animation = 'slideIn 0.5s ease-out reverse';
-                setTimeout(() => notification.remove(), 500);
-            }
-        }, 8000);
-    }
     
-    startBackgroundAdaptiveMonitoring() {
-        this.trackUserActivity();
-    }
-    
-    trackUserActivity() {
-        const updateActivity = () => {
-            localStorage.setItem('last-user-activity', Date.now().toString());
-        };
-        
-        // Track various user interactions
-        ['click', 'keypress', 'scroll', 'mousemove'].forEach(event => {
-            document.addEventListener(event, updateActivity, { passive: true });
-        });
-        
-        updateActivity(); // Initial activity
-    }
-    
-    checkForAdaptiveOpportunities(profile) {
-        const patterns = this.analyzeUserPatterns(profile);
-        
-        // Check if user would benefit from new content
-        const recommendation = this.shouldGenerateNewContent(patterns, profile);
-        
-        if (recommendation.recommend && recommendation.type !== 'consistency-reward') {
-            console.log('🎯 Background Adaptive detected opportunity:', recommendation.reason);
-            
-            // Generate content in background (no immediate notification)
-            setTimeout(() => {
-                this.generatePersonalizedDeck(patterns, profile, recommendation.type);
-            }, 1000);
-        }
-    }
-    
-    // =================== END Adaptive LEARNING SYSTEM ===================
-    
-    // =================== ONBOARDING SYSTEM ===================
-    
-    isFirstTimeUser() {
-        const hasVisited = localStorage.getItem('flashcards-first-visit');
-        const hasProfile = localStorage.getItem('generated-learning-profile');
-        return !hasVisited || !hasProfile;
-    }
-    
-    showOnboarding() {
-        const modal = document.getElementById('onboarding-modal');
-        if (modal) {
-            modal.style.display = 'flex';
-            this.initializeOnboarding();
-        }
-    }
-    
-    initializeOnboarding() {
-        this.onboardingData = {
-            subjects: [],
-            confidence: {},
-            preferences: {
-                sessionLength: 15,
-                studyTime: null,
-                learningStyle: null,
-                goal: null
-            }
-        };
-        
-        this.currentStep = 1;
-        this.totalSteps = 5;
-        
-        this.setupOnboardingListeners();
-        this.updateStepIndicators();
-    }
-    
-    setupOnboardingListeners() {
-        // Subject selection
-        document.querySelectorAll('.subject-card').forEach(card => {
-            card.addEventListener('click', () => {
-                const subject = card.dataset.subject;
-                this.toggleSubjectSelection(card, subject);
-            });
-        });
-        
-        // Session length selection
-        document.querySelectorAll('.session-option').forEach(option => {
-            option.addEventListener('click', () => {
-                document.querySelectorAll('.session-option').forEach(o => o.classList.remove('active'));
-                option.classList.add('active');
-                this.onboardingData.preferences.sessionLength = parseInt(option.dataset.minutes);
-            });
-        });
-        
-        // Study time selection
-        document.querySelectorAll('.time-option').forEach(option => {
-            option.addEventListener('click', () => {
-                document.querySelectorAll('.time-option').forEach(o => o.classList.remove('active'));
-                option.classList.add('active');
-                this.onboardingData.preferences.studyTime = option.dataset.time;
-            });
-        });
-        
-        // Learning style selection
-        document.querySelectorAll('.style-option').forEach(option => {
-            option.addEventListener('click', () => {
-                document.querySelectorAll('.style-option').forEach(o => o.classList.remove('active'));
-                option.classList.add('active');
-                this.onboardingData.preferences.learningStyle = option.dataset.style;
-            });
-        });
-        
-        // Goal selection
-        document.querySelectorAll('.goal-option').forEach(option => {
-            option.addEventListener('click', () => {
-                document.querySelectorAll('.goal-option').forEach(o => o.classList.remove('selected'));
-                option.classList.add('selected');
-                this.onboardingData.preferences.goal = option.dataset.goal;
-            });
-        });
-        
-        // Navigation buttons
-        const nextBtn = document.getElementById('next-step');
-        const prevBtn = document.getElementById('prev-step');
-        const finishBtn = document.getElementById('finish-onboarding');
-        
-        if (nextBtn) {
-            nextBtn.addEventListener('click', () => this.nextStep());
-        }
-        
-        if (prevBtn) {
-            prevBtn.addEventListener('click', () => this.prevStep());
-        }
-        
-        if (finishBtn) {
-            finishBtn.addEventListener('click', () => this.completeOnboarding());
-        }
-    }
-    
-    toggleSubjectSelection(card, subject) {
-        if (card.classList.contains('selected')) {
-            card.classList.remove('selected');
-            this.onboardingData.subjects = this.onboardingData.subjects.filter(s => s !== subject);
-        } else {
-            card.classList.add('selected');
-            this.onboardingData.subjects.push(subject);
-        }
-    }
-    
-    nextStep() {
-        if (!this.validateCurrentStep()) {
-            return;
-        }
-        
-        if (this.currentStep === 1) {
-            this.generateConfidenceStep();
-        } else if (this.currentStep === 4) {
-            this.generateAdaptivePreview();
-        }
-        
-        if (this.currentStep < this.totalSteps) {
-            this.showStep(this.currentStep + 1);
-        }
-    }
-    
-    prevStep() {
-        if (this.currentStep > 1) {
-            this.showStep(this.currentStep - 1);
-        }
-    }
-    
-    showStep(stepNumber) {
-        // Hide current step
-        const currentStepEl = document.getElementById(`step-${this.currentStep}`);
-        if (currentStepEl) currentStepEl.style.display = 'none';
-        
-        // Show new step
-        const newStepEl = document.getElementById(stepNumber === 5 ? 'step-final' : `step-${stepNumber}`);
-        if (newStepEl) newStepEl.style.display = 'block';
-        
-        this.currentStep = stepNumber;
-        this.updateStepIndicators();
-        this.updateNavigationButtons();
-    }
-    
-    updateStepIndicators() {
-        const indicators = document.querySelectorAll('.step-dot');
-        indicators.forEach((dot, index) => {
-            dot.classList.remove('active', 'completed');
-            if (index + 1 < this.currentStep) {
-                dot.classList.add('completed');
-            } else if (index + 1 === this.currentStep) {
-                dot.classList.add('active');
-            }
-        });
-    }
-    
-    updateNavigationButtons() {
-        const nextBtn = document.getElementById('next-step');
-        const prevBtn = document.getElementById('prev-step');
-        const finishBtn = document.getElementById('finish-onboarding');
-        
-        if (prevBtn) {
-            prevBtn.style.display = this.currentStep > 1 ? 'inline-block' : 'none';
-        }
-        
-        if (nextBtn && finishBtn) {
-            if (this.currentStep === this.totalSteps) {
-                nextBtn.style.display = 'none';
-                finishBtn.style.display = 'inline-block';
-            } else {
-                nextBtn.style.display = 'inline-block';
-                finishBtn.style.display = 'none';
-            }
-        }
-    }
-    
-    validateCurrentStep() {
-        switch (this.currentStep) {
-            case 1:
-                if (this.onboardingData.subjects.length === 0) {
-                    alert('Please select at least one subject that interests you.');
-                    return false;
-                }
-                return true;
-            case 2:
-                const hasAllConfidence = this.onboardingData.subjects.every(
-                    subject => this.onboardingData.confidence[subject] !== undefined
-                );
-                if (!hasAllConfidence) {
-                    alert('Please set your confidence level for all selected subjects.');
-                    return false;
-                }
-                return true;
-            case 3:
-                if (!this.onboardingData.preferences.studyTime || !this.onboardingData.preferences.learningStyle) {
-                    alert('Please complete all preference selections.');
-                    return false;
-                }
-                return true;
-            case 4:
-                if (!this.onboardingData.preferences.goal) {
-                    alert('Please select your main learning goal.');
-                    return false;
-                }
-                return true;
-            default:
-                return true;
-        }
-    }
-    
-    generateConfidenceStep() {
-        const container = document.getElementById('confidence-subjects');
-        if (!container) return;
-        
-        container.innerHTML = this.onboardingData.subjects.map(subject => `
-            <div class="confidence-subject">
-                <h4>
-                    ${this.getSubjectIcon(subject)} ${subject}
-                </h4>
-                <div class="confidence-levels">
-                    <button type="button" class="confidence-level" data-subject="${subject}" data-level="1">
-                        😰 Beginner<br><small>Just starting out</small>
-                    </button>
-                    <button type="button" class="confidence-level" data-subject="${subject}" data-level="2">
-                        🤔 Some Knowledge<br><small>Know the basics</small>
-                    </button>
-                    <button type="button" class="confidence-level" data-subject="${subject}" data-level="3">
-                        😊 Confident<br><small>Pretty comfortable</small>
-                    </button>
-                    <button type="button" class="confidence-level" data-subject="${subject}" data-level="4">
-                        🎓 Advanced<br><small>Very knowledgeable</small>
-                    </button>
-                </div>
-            </div>
-        `).join('');
-        
-        // Add event listeners for confidence levels
-        container.querySelectorAll('.confidence-level').forEach(level => {
-            level.addEventListener('click', () => {
-                const subject = level.dataset.subject;
-                const confidence = parseInt(level.dataset.level);
-                
-                // Remove selection from siblings
-                const siblings = container.querySelectorAll(`[data-subject="${subject}"]`);
-                siblings.forEach(s => s.classList.remove('selected'));
-                
-                // Select this level
-                level.classList.add('selected');
-                this.onboardingData.confidence[subject] = confidence;
-            });
-        });
-    }
-    
-    getSubjectIcon(subject) {
-        const icons = {
-            'Mathematics': '🔢',
-            'Science': '🔬',
-            'Languages': '🗣️',
-            'History': '📜',
-            'Literature': '📖',
-            'Computer Science': '💻',
-            'Art': '🎨',
-            'Music': '🎵'
-        };
-        return icons[subject] || '📚';
-    }
-    
-    generateAdaptivePreview() {
-        const container = document.getElementById('generated-preview');
-        if (!container) return;
-        
-        const insights = this.generatePersonalizedInsights();
-        
-        container.innerHTML = `
-            <h4>🤖 Your Personalized Study Profile</h4>
-            ${insights.map(insight => `
-                <div class="generated-preview-item">
-                    <span>${insight.icon}</span>
-                    <span>${insight.text}</span>
-                </div>
-            `).join('')}
-        `;
-    }
-    
-    generatePersonalizedInsights() {
-        const insights = [];
-        
-        // Subject focus
-        if (this.onboardingData.subjects.length > 0) {
-            insights.push({
-                icon: '🎯',
-                text: `Will focus on ${this.onboardingData.subjects.slice(0, 2).join(' and ')}${this.onboardingData.subjects.length > 2 ? ' and more' : ''}`
-            });
-        }
-        
-        // Difficulty adaptation
-        const avgConfidence = Object.values(this.onboardingData.confidence).reduce((a, b) => a + b, 0) / Object.values(this.onboardingData.confidence).length;
-        const difficultyLevel = avgConfidence <= 2 ? 'beginner-friendly' : avgConfidence >= 3.5 ? 'advanced' : 'intermediate';
-        insights.push({
-            icon: '📊',
-            text: `Starting with ${difficultyLevel} content based on your confidence levels`
-        });
-        
-        // Session timing
-        insights.push({
-            icon: '⏰',
-            text: `Optimized for ${this.onboardingData.preferences.sessionLength}-minute study sessions`
-        });
-        
-        // Learning style
-        if (this.onboardingData.preferences.learningStyle) {
-            const styleDescriptions = {
-                visual: 'rich visual content with diagrams and images',
-                auditory: 'content with pronunciation guides and audio cues',
-                kinesthetic: 'interactive and hands-on learning materials',
-                reading: 'comprehensive text-based explanations'
-            };
-            insights.push({
-                icon: '🧠',
-                text: `Tailored for ${styleDescriptions[this.onboardingData.preferences.learningStyle]}`
-            });
-        }
-        
-        // Goal-based approach
-        if (this.onboardingData.preferences.goal) {
-            const goalDescriptions = {
-                'exam-prep': 'Structured practice with test-taking strategies',
-                'skill-building': 'Progressive skill development with real-world applications',
-                'review': 'Spaced repetition for knowledge retention',
-                'curiosity': 'Diverse, engaging content to satisfy your curiosity'
-            };
-            insights.push({
-                icon: '🚀',
-                text: goalDescriptions[this.onboardingData.preferences.goal]
-            });
-        }
-        
-        return insights;
-    }
-    
-    completeOnboarding() {
-        // Create Adaptive learning profile from onboarding data
-        const aiProfile = this.createInitialAdaptiveProfile();
-        
-        // Save profile and mark as visited
-        localStorage.setItem('generated-learning-profile', JSON.stringify(aiProfile));
-        localStorage.setItem('flashcards-first-visit', Date.now().toString());
-        localStorage.setItem('onboarding-completed', JSON.stringify(this.onboardingData));
-        
-        // Generate initial personalized decks based on preferences
-        this.generateInitialPersonalizedDecks(aiProfile);
-        
-        // Close modal
-        const modal = document.getElementById('onboarding-modal');
-        if (modal) {
-            modal.style.display = 'none';
-        }
-        
-        // Load and render generated decks
-        const generatedDecks = this.loadGeneratedDecks();
-        this.renderGeneratedDecks(generatedDecks);
-        
-        // Show success message
-        this.showWelcomeMessage();
-        
-        console.log('🎉 Onboarding completed!', this.onboardingData);
-    }
-    
-    createInitialAdaptiveProfile() {
-        return {
-            preferences: {
-                favoriteSubjects: this.onboardingData.subjects.reduce((acc, subject) => {
-                    acc[subject] = 1; // Initial interest
-                    return acc;
-                }, {}),
-                difficultyPreference: {},
-                studyTimePatterns: {
-                    preferredTime: this.onboardingData.preferences.studyTime,
-                    sessionLength: this.onboardingData.preferences.sessionLength
-                },
-                accuracyTrends: [],
-                learningStyle: this.onboardingData.preferences.learningStyle,
-                goal: this.onboardingData.preferences.goal
-            },
-            confidence: this.onboardingData.confidence,
-            weaknesses: {},
-            strengths: {},
-            studyHabits: {
-                preferredSessionLength: this.onboardingData.preferences.sessionLength,
-                bestPerformanceTime: this.mapStudyTimeToHour(this.onboardingData.preferences.studyTime),
-                consistencyScore: 0
-            },
-            lastUpdated: Date.now(),
-            onboardingCompleted: true
-        };
-    }
-    
-    mapStudyTimeToHour(timePreference) {
-        const mapping = {
-            'morning': 9,
-            'afternoon': 15,
-            'evening': 19,
-            'night': 22
-        };
-        return mapping[timePreference] || 12;
-    }
-    
-    generateInitialPersonalizedDecks(profile) {
-        // Generate a starter deck for the user's most confident subject
-        const mostConfidentSubject = Object.entries(this.onboardingData.confidence)
-            .sort(([,a], [,b]) => b - a)[0];
-        
-        if (mostConfidentSubject) {
-            const [subject, confidence] = mostConfidentSubject;
-            const patterns = {
-                currentAccuracy: confidence * 20 + 20, // Convert 1-4 to 40-100 range
-                knowledgeGaps: [],
-                preferredDifficulty: confidence >= 3 ? 'Advanced' : confidence >= 2 ? 'Intermediate' : 'Beginner',
-                sessionCount: 1,
-                consistencyScore: 1.0,
-                improvementTrend: 0
-            };
-            
-            setTimeout(() => {
-                this.generatePersonalizedDeck(patterns, profile, 'onboarding-welcome');
-            }, 2000);
-        }
-    }
-    
-    showWelcomeMessage() {
-        const notification = document.createElement('div');
-        notification.className = 'welcome-notification';
-        notification.innerHTML = `
-            <div class="welcome-content">
-                <h3>🎉 Welcome to FlashCards!!!!</h3>
-                <p>Your personalized learning journey begins now. I'm already creating your first custom deck!</p>
-                <button onclick="this.parentElement.parentElement.remove()" class="btn btn-generated">Get Started!</button>
-            </div>
-        `;
-        
-        notification.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-            z-index: 10001;
-            text-align: center;
-            max-width: 400px;
-            animation: bounceIn 0.6s ease-out;
-        `;
-        
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.remove();
-            }
-        }, 5000);
-    }
-    
-    // =================== END ONBOARDING SYSTEM ===================
+
 
     getCardLearningData(deckId, cardIndex) {
         const cardId = `${deckId}-${cardIndex}`;
@@ -4942,7 +2495,7 @@ Please tailor the hint complexity to match the student's performance level and y
         this.decks = this.decks.filter(deck => deck.id !== this.deckToDelete.id);
         this.saveDecks();
         this.renderDecks();
-        this.updateAdaptiveLockStatus();
+        
         
         // Show notification
         this.showNotification(`"${this.deckToDelete.name}" deleted successfully`, 'info');
@@ -5879,597 +3432,6 @@ Please tailor the hint complexity to match the student's performance level and y
         `).join('');
     }
 
-    // Adaptive Deck Generation System
-    analyzeUserPatterns() {
-        const sessions = this.loadSessionData();
-        const learningData = this.learningData;
-        
-        if (sessions.length < 3) {
-            return null; // Not enough data for analysis
-        }
-        
-        const analysis = {
-            preferredSubjects: {},
-            difficultyPreference: 0,
-            studyFrequency: 0,
-            accuracyTrend: 0,
-            responseTimePattern: 0,
-            challengeLevel: 'balanced',
-            studyTimePreference: 'short', // short, medium, long
-            improvementAreas: [],
-            strengths: [],
-            learningStyle: 'visual' // visual, analytical, mixed
-        };
-        
-        // Analyze preferred subjects
-        sessions.forEach(session => {
-            const deck = this.decks.find(d => d.id === session.deckId);
-            if (deck) {
-                analysis.preferredSubjects[deck.subject] = (analysis.preferredSubjects[deck.subject] || 0) + 1;
-            }
-        });
-        
-        // Calculate difficulty preference based on performance patterns
-        let totalDifficultyScore = 0;
-        let cardCount = 0;
-        
-        Object.keys(learningData).forEach(cardKey => {
-            const cardData = learningData[cardKey];
-            if (cardData.attempts > 0) {
-                totalDifficultyScore += cardData.difficultyScore;
-                cardCount++;
-            }
-        });
-        
-        analysis.difficultyPreference = cardCount > 0 ? totalDifficultyScore / cardCount : 1.0;
-        
-        // Determine challenge level preference
-        if (analysis.difficultyPreference > 1.3) {
-            analysis.challengeLevel = 'challenging';
-        } else if (analysis.difficultyPreference < 0.8) {
-            analysis.challengeLevel = 'easier';
-        }
-        
-        // Calculate study frequency (sessions per week)
-        const weeklyActivity = this.calculateWeeklyActivity(sessions);
-        analysis.studyFrequency = weeklyActivity;
-        
-        // Calculate accuracy trend
-        const recentSessions = sessions.slice(-10);
-        const olderSessions = sessions.slice(0, -10);
-        
-        if (recentSessions.length > 0 && olderSessions.length > 0) {
-            const recentAccuracy = recentSessions.reduce((sum, s) => sum + s.accuracy, 0) / recentSessions.length;
-            const olderAccuracy = olderSessions.reduce((sum, s) => sum + s.accuracy, 0) / olderSessions.length;
-            analysis.accuracyTrend = recentAccuracy - olderAccuracy;
-        }
-        
-        // Identify improvement areas and strengths
-        this.identifyLearningAreas(analysis);
-        
-        return analysis;
-    }
-    
-    calculateWeeklyActivity(sessions) {
-        if (sessions.length === 0) return 0;
-        
-        const firstSession = new Date(sessions[0].timestamp);
-        const lastSession = new Date(sessions[sessions.length - 1].timestamp);
-        const daysDiff = Math.max(1, (lastSession - firstSession) / (1000 * 60 * 60 * 24));
-        const weeksDiff = daysDiff / 7;
-        
-        return Math.round(sessions.length / weeksDiff * 10) / 10;
-    }
-    
-    identifyLearningAreas(analysis) {
-        const subjects = Object.keys(analysis.preferredSubjects);
-        
-        // Find strongest and weakest subjects based on accuracy
-        subjects.forEach(subject => {
-            const subjectSessions = this.loadSessionData().filter(session => {
-                const deck = this.decks.find(d => d.id === session.deckId);
-                return deck && deck.subject === subject;
-            });
-            
-            if (subjectSessions.length > 0) {
-                const avgAccuracy = subjectSessions.reduce((sum, s) => sum + s.accuracy, 0) / subjectSessions.length;
-                
-                if (avgAccuracy < 70) {
-                    analysis.improvementAreas.push(subject);
-                } else if (avgAccuracy > 85) {
-                    analysis.strengths.push(subject);
-                }
-            }
-        });
-    }
-
-    async generateAdaptiveDecks() {
-        const analysis = this.analyzeUserPatterns();
-        
-        if (!analysis) {
-            return []; // Not enough data
-        }
-        
-        return [];
-    }
-    
-    generateImprovementDeck(analysis) {
-        const improvementSubject = analysis.improvementAreas[0];
-        
-        return {
-            id: `generated-improvement-${Date.now()}`,
-            name: `${improvementSubject} - Focus Practice`,
-            subject: improvementSubject,
-            type: 'generated-generated',
-            generatedAt: Date.now(),
-            reason: {
-                title: 'Improvement Focus',
-                description: `Based on your recent performance, this deck focuses on ${improvementSubject} to help boost your confidence in this area.`
-            },
-            confidence: 0.85,
-            cards: this.generateCards('improvement', improvementSubject, analysis),
-            titleCards: [{
-                title: `${improvementSubject} Practice Session`,
-                content: `This deck is specifically designed to help you improve in ${improvementSubject}. Take your time and focus on understanding each concept.`
-            }],
-            style: this.getUserPreferredStyle(),
-            color: 'red' // Red for improvement areas
-        };
-    }
-    
-    generateChallengeDeck(analysis) {
-        const preferredSubjects = Object.keys(analysis.preferredSubjects);
-        const subject = preferredSubjects[Math.floor(Math.random() * preferredSubjects.length)];
-        
-        return {
-            id: `generated-challenge-${Date.now()}`,
-            name: `${subject} - Challenge Mode`,
-            subject: subject,
-            type: 'generated-generated',
-            generatedAt: Date.now(),
-            reason: {
-                title: 'Level Up Challenge',
-                description: `You're doing well! This advanced deck will push your ${subject} knowledge to the next level.`
-            },
-            confidence: 0.75,
-            cards: this.generateCards('challenge', subject, analysis),
-            titleCards: [{
-                title: `${subject} Challenge`,
-                content: `Ready for a challenge? These advanced questions will test your mastery of ${subject} concepts.`
-            }],
-            style: this.getUserPreferredStyle(),
-            color: 'orange' // Orange for challenges
-        };
-    }
-    
-    generateReviewDeck(analysis) {
-        const strengthSubject = analysis.strengths[0];
-        
-        return {
-            id: `generated-review-${Date.now()}`,
-            name: `${strengthSubject} - Mastery Review`,
-            subject: strengthSubject,
-            type: 'generated-generated',
-            generatedAt: Date.now(),
-            reason: {
-                title: 'Reinforce Mastery',
-                description: `Keep your ${strengthSubject} skills sharp with this review deck of key concepts you've already mastered.`
-            },
-            confidence: 0.92,
-            cards: this.generateCards('review', strengthSubject, analysis),
-            titleCards: [{
-                title: `${strengthSubject} Mastery Review`,
-                content: `Excellent work in ${strengthSubject}! This review will help maintain your high performance level.`
-            }],
-            style: this.getUserPreferredStyle(),
-            color: 'green' // Green for mastery
-        };
-    }
-    
-    generateMixedDeck(analysis) {
-        const subjects = Object.keys(analysis.preferredSubjects).slice(0, 3);
-        const subjectNames = subjects.join(', ');
-        
-        return {
-            id: `generated-mixed-${Date.now()}`,
-            name: `Mixed Practice: ${subjectNames}`,
-            subject: 'Mixed Topics',
-            type: 'generated-generated',
-            generatedAt: Date.now(),
-            reason: {
-                title: 'Cross-Subject Practice',
-                description: `Combine your favorite subjects (${subjectNames}) for varied practice that strengthens connections between topics.`
-            },
-            confidence: 0.80,
-            cards: this.generateCards('mixed', subjects, analysis),
-            titleCards: [{
-                title: 'Mixed Subject Practice',
-                content: `This deck combines questions from multiple subjects to help you make connections across different areas of knowledge.`
-            }],
-            style: this.getUserPreferredStyle(),
-            color: 'purple' // Purple for mixed content
-        };
-    }
-    
-    generateQuickPracticeDeck(analysis) {
-        const preferredSubjects = Object.keys(analysis.preferredSubjects);
-        const subject = preferredSubjects[0] || 'General Knowledge';
-        
-        return {
-            id: `generated-quick-${Date.now()}`,
-            name: `${subject} - Quick Session`,
-            subject: subject,
-            type: 'generated-generated',
-            generatedAt: Date.now(),
-            reason: {
-                title: 'Perfect for Short Sessions',
-                description: `A focused 5-10 minute practice session in ${subject}, perfect for your study schedule.`
-            },
-            confidence: 0.88,
-            cards: this.generateCards('quick', subject, analysis).slice(0, 8), // Shorter deck
-            titleCards: [{
-                title: `Quick ${subject} Practice`,
-                content: `A short but effective practice session. Perfect for when you have just a few minutes to study!`
-            }],
-            style: this.getUserPreferredStyle(),
-            color: 'teal' // Teal for quick sessions
-        };
-    }
-    
-    generateCards(type, subject, analysis) {
-        // This is a sophisticated card generation system
-        // In a real app, this could connect to educational APIs or use ML models
-        // For now, I'll create contextually appropriate cards based on user patterns
-        
-        const cardTemplates = this.getCardTemplates(type, subject, analysis);
-        const generatedCards = [];
-        
-        // Select appropriate number of cards based on type
-        const cardCount = type === 'quick' ? 8 : 12;
-        
-        for (let i = 0; i < cardCount && i < cardTemplates.length; i++) {
-            const template = cardTemplates[i];
-            generatedCards.push({
-                question: template.question,
-                answer: template.answer,
-                answerText: template.answer, // For comparison
-                generated: true
-            });
-        }
-        
-        return generatedCards;
-    }
-    
-    getCardTemplates(type, subject, analysis) {
-        // This would ideally use Adaptive/ML to generate contextual questions
-        // For demo purposes, I'll create adaptive templates based on user patterns
-        
-        // Intelligent template generation based on deck name and subject
-        let templates = this.generateIntelligentTemplates(deckName, subject, count);
-        
-        // Modify difficulty based on user analysis
-        if (type === 'challenge' && analysis.challengeLevel !== 'challenging') {
-            // Add more complex variations for challenge decks
-            templates = templates.map(template => ({
-                ...template,
-                question: `Advanced: ${template.question} (Explain your reasoning)`
-            }));
-        } else if (type === 'improvement' && analysis.difficultyPreference > 1.2) {
-            // Simplify questions for improvement areas
-            templates = templates.map(template => ({
-                ...template,
-                question: `Review: ${template.question}`
-            }));
-        }
-        
-        // Shuffle and return
-        return templates.sort(() => Math.random() - 0.5);
-    }
-    
-    getUserPreferredStyle() {
-        // Analyze user's most used style from their decks
-        const styles = this.decks.map(deck => deck.style).filter(Boolean);
-        const styleCounts = {};
-        
-        styles.forEach(style => {
-            styleCounts[style] = (styleCounts[style] || 0) + 1;
-        });
-        
-        const mostUsedStyle = Object.keys(styleCounts).reduce((a, b) => 
-            styleCounts[a] > styleCounts[b] ? a : b, 'modern');
-            
-        return mostUsedStyle;
-    }
-    
-    // UI Management for Generated Decks
-    updateGeneratedDecksDisplay() {
-        const generatedSection = document.getElementById('generated-decks-section');
-        const statusElement = document.getElementById('generation-status');
-        const gridElement = document.getElementById('generated-decks-grid');
-        const lockOverlay = document.getElementById('generated-lock-overlay');
-        
-        // Always show the section and content - no more restrictions
-        if (generatedSection) generatedSection.style.display = 'block';
-        if (lockOverlay) lockOverlay.style.display = 'none';
-        if (statusElement) statusElement.style.display = 'block';
-        if (gridElement) gridElement.style.display = 'block';
-        statusElement.style.display = 'block';
-        
-        // Show generation process
-        setTimeout(async () => {
-            const generatedDecks = await this.generateAdaptiveDecks();
-            
-            if (generatedDecks.length > 0) {
-                statusElement.style.display = 'none';
-                this.renderGeneratedDecks(generatedDecks);
-            } else {
-                statusElement.innerHTML = `
-                    <div class="status-content">
-                        <div class="status-title">Learning more about you...</div>
-                        <div class="status-description">Keep studying! We need a bit more data to create perfect decks for you.</div>
-                    </div>
-                `;
-            }
-        }, 1500); // Simulate Adaptive processing time
-    }
-    
-    renderGeneratedDecks(generatedDecks) {
-        const grid = document.getElementById('generated-decks-grid');
-        if (!grid) {
-            console.error('Generated decks grid not found');
-            return;
-        }
-        
-        grid.innerHTML = generatedDecks.map(deck => `
-            <div class="generated-deck-card">
-                <div class="generated-deck-header">
-                    <div class="generated-deck-name">
-                        ${this.escapeHtml(deck.name)}
-                        <span class="generation-badge">Adaptive</span>
-                    </div>
-                    <div class="generated-deck-subject">${this.escapeHtml(deck.subject)}</div>
-                </div>
-                
-                ${deck.reason ? `
-                <div class="generation-reason">
-                    <div class="reason-title">${deck.reason.title}</div>
-                    <div class="reason-description">${deck.reason.description}</div>
-                </div>
-                ` : ''}
-                
-                <div class="generated-deck-info">
-                    <span>${deck.cards.length} cards</span>
-                    <span class="difficulty-badge ${deck.difficulty.toLowerCase()}">${deck.difficulty}</span>
-                    ${deck.confidence ? `
-                    <div class="confidence-score">
-                        <span>Match: ${Math.round(deck.confidence * 100)}%</span>
-                        <div class="confidence-bar">
-                            <div class="confidence-fill" style="width: ${deck.confidence * 100}%"></div>
-                        </div>
-                    </div>
-                    ` : ''}
-                </div>
-                
-                <div class="generated-deck-buttons">
-                    <button class="btn btn-generated btn-small" onclick="event.stopPropagation(); viewGeneratedDeck('${deck.id}')" title="Study this generated deck">
-                        ▶️ Study
-                    </button>
-                    <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); adoptDeck('${deck.id}')" title="Add to your personal decks">
-                        💾 Adopt
-                    </button>
-                    <button class="btn btn-danger btn-small" onclick="event.stopPropagation(); deleteGeneratedDeck('${deck.id}')" title="Remove this deck">
-                        �️ Delete
-                    </button>
-                </div>
-            </div>
-        `).join('');
-        
-        // Store generated decks temporarily
-        this.generatedDecks = generatedDecks;
-    }
-    
-    saveGeneratedDeck(deckId) {
-        const generatedDeck = this.generatedDecks?.find(d => d.id === deckId);
-        if (!generatedDeck) return;
-        
-        // Convert to regular deck
-        const newDeck = {
-            id: Date.now().toString(),
-            name: generatedDeck.name + ' (Generated)',
-            subject: generatedDeck.subject,
-            cards: generatedDeck.cards,
-            titleCards: generatedDeck.titleCards,
-            style: generatedDeck.style,
-            color: generatedDeck.color,
-            createdAt: new Date().toISOString(),
-            originallyGenerated: true
-        };
-        
-        this.decks.push(newDeck);
-        this.saveDecks();
-        this.renderDecks();
-        
-        this.showNotification(`"${newDeck.name}" saved to your decks!`, 'success');
-    }
-    
-    // Make Adaptive-generated decks fully functional for studying
-    viewGeneratedDeck(deckId) {
-        const generatedDecks = this.loadGeneratedDecks();
-        const deck = generatedDecks.find(d => d.id === deckId);
-        
-        if (!deck) {
-            console.error('Generated deck not found:', deckId);
-            return;
-        }
-        
-        // Start study session with the generated deck
-        this.startStudy(deckId, true); // true indicates it's a generated deck
-    }
-    
-    adoptDeck(deckId) {
-        const generatedDecks = this.loadGeneratedDecks();
-        const deck = generatedDecks.find(d => d.id === deckId);
-        
-        if (!deck) {
-            console.error('Generated deck not found for adoption:', deckId);
-            return;
-        }
-        
-        // Create a new regular deck from the generated deck
-        const adoptedDeck = {
-            id: 'adopted_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-            name: deck.name, // Keep original name, user can edit it
-            subject: deck.subject,
-            yearGroup: deck.yearGroup || 'Year 10', // Ensure yearGroup is present
-            difficulty: deck.difficulty,
-            cards: deck.cards.map(card => ({
-                question: card.front || card.question,
-                answer: card.back || card.answer,
-                type: card.type || 'standard'
-            })),
-            titleCards: (deck.titleCards || []).map(titleCard => ({
-                title: titleCard.title,
-                content: titleCard.content || titleCard.description
-            })),
-            style: 'modern',
-            color: 'purple', // Special color for adopted decks
-            createdAt: Date.now(),
-            adoptedFrom: {
-                originalId: deck.id,
-                generationType: deck.generationType,
-                adoptedAt: Date.now(),
-                generatedMetadata: deck.generatedMetadata
-            }
-        };
-        
-        // Add to user's personal decks
-        this.decks.push(adoptedDeck);
-        this.saveDecks();
-        this.renderDecks();
-        
-        // Mark the original generated deck as adopted (optional)
-        this.markGeneratedDeckAsAdopted(deckId);
-        
-        // Show success message
-        this.showAdoptionSuccessMessage(adoptedDeck);
-        
-        console.log('✅ Adopted Adaptive-generated deck:', adoptedDeck.name);
-    }
-    
-    markGeneratedDeckAsAdopted(deckId) {
-        const generatedDecks = this.loadGeneratedDecks();
-        const deckIndex = generatedDecks.findIndex(d => d.id === deckId);
-        
-        if (deckIndex !== -1) {
-            // Mark as adopted instead of removing completely
-            generatedDecks[deckIndex].adoptedAt = Date.now();
-            generatedDecks[deckIndex].isAdopted = true;
-            this.saveGeneratedDecks(generatedDecks);
-            
-            // Update the generated decks display to show the adopted status
-            this.renderGeneratedDecks(generatedDecks);
-        }
-    }
-    
-    showAdoptionSuccessMessage(adoptedDeck) {
-        const notification = document.createElement('div');
-        notification.className = 'adoption-notification';
-        notification.innerHTML = `
-            <div class="adoption-content">
-                <div class="adoption-icon">📚</div>
-                <h4>Deck Adopted Successfully! 🎉</h4>
-                <p><strong>"${adoptedDeck.name}"</strong> has been added to your personal collection.</p>
-                <p><small>✨ You can now edit, study, and customize this deck like any other!</small></p>
-                <button onclick="this.parentElement.parentElement.remove()" class="btn btn-generated btn-small">Awesome!</button>
-            </div>
-        `;
-        
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
-            z-index: 10000;
-            max-width: 350px;
-            animation: slideIn 0.5s ease-out;
-            text-align: center;
-        `;
-        
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.style.animation = 'slideIn 0.5s ease-out reverse';
-                setTimeout(() => notification.remove(), 500);
-            }
-        }, 4000);
-    }
-    
-    deleteGeneratedDeck(deckId) {
-        const generatedDecks = this.loadGeneratedDecks();
-        const filteredDecks = generatedDecks.filter(d => d.id !== deckId);
-        
-        this.saveGeneratedDecks(filteredDecks);
-        this.renderGeneratedDecks(filteredDecks);
-        
-        console.log('🗑️ Deleted generated deck:', deckId);
-    }
-    
-    previewGeneratedDeck(deckId) {
-        const generatedDecks = this.loadGeneratedDecks();
-        const deck = generatedDecks.find(d => d.id === deckId);
-        if (!deck) return;
-        
-        // Show preview in the individual deck stats modal (reuse existing modal)
-        document.getElementById('stats-deck-name').textContent = `Preview: ${deck.name}`;
-        
-        // Show cards preview
-        const cardsStatsContainer = document.getElementById('cards-stats');
-        cardsStatsContainer.innerHTML = deck.cards.map((card, index) => `
-            <div class="card-stat-item">
-                <div class="card-question">${this.escapeHtml(card.question)}</div>
-                <div class="card-stats-data">
-                    <span style="color: #a855f7; font-weight: 500;">Generated</span>
-                </div>
-            </div>
-        `).join('');
-        
-        // Hide other sections and show preview info
-        document.querySelector('.stats-summary').style.display = 'none';
-        document.getElementById('learning-insights').innerHTML = `
-            <h4>🤖 Generated Deck Info</h4>
-            <div class="insight-item">${deck.reason.description}</div>
-            <div class="insight-item"><strong>Confidence Match:</strong> ${Math.round(deck.confidence * 100)}%</div>
-            <div class="insight-item"><strong>Generated:</strong> ${new Date(deck.generatedAt).toLocaleString()}</div>
-        `;
-        
-        document.getElementById('stats-modal').style.display = 'flex';
-    }
-    
-    regenerateDecks() {
-        document.getElementById('generation-status').style.display = 'block';
-        document.getElementById('generated-decks-grid').innerHTML = '';
-        
-        // Regenerate after a delay
-        setTimeout(() => {
-            this.updateGeneratedDecksDisplay();
-        }, 500);
-        
-        this.showNotification('Regenerating decks based on latest patterns...', 'info');
-    }
-    
-    showGenerationInsights() {
-        document.getElementById('generation-insights-modal').style.display = 'flex';
-    }
-    
-    closeGenerationInsights() {
-        document.getElementById('generation-insights-modal').style.display = 'none';
-    }
-
     editDeck(deckId) {
         const deck = this.decks.find(d => d.id === deckId);
         if (!deck) {
@@ -6979,25 +3941,8 @@ Please tailor the hint complexity to match the student's performance level and y
     }
 
     // Study Mode
-    startStudy(deckId, isGenerated = false) {
-        let deck = null;
-        
-        if (isGenerated) {
-            // Load generated decks from localStorage
-            const generatedDecks = this.loadGeneratedDecks();
-            deck = generatedDecks.find(d => d.id === deckId);
-            
-            // Normalize Adaptive-generated card properties to match expected format
-            if (deck && deck.cards) {
-                deck.cards = deck.cards.map(card => ({
-                    ...card,
-                    question: card.question || card.front || card.question,
-                    answer: card.answer || card.back || card.answer
-                }));
-            }
-        } else {
-            deck = this.decks.find(d => d.id === deckId);
-        }
+    startStudy(deckId) {
+        let deck = this.decks.find(d => d.id === deckId);
         
         if (!deck || deck.cards.length === 0) {
             alert('This deck has no cards to study');
@@ -9193,7 +6138,7 @@ Please tailor the hint complexity to match the student's performance level and y
                 sessionDuration
             );
             // Update Adaptive lock status in case user just unlocked it
-            this.updateAdaptiveLockStatus();
+            
         }
     }
 
@@ -9424,1016 +6369,5067 @@ Please tailor the hint complexity to match the student's performance level and y
         return div.innerHTML;
     }
 
-    // =================== Adaptive DECK GENERATION BASED ON USER STATISTICS ===================
-    
-    async generateAdaptiveDeck(options = {}) {
-        console.log('🤖 Starting Adaptive deck generation with 20 cards and full deck creator features...');
+
+
+
+    createGeneratedDeckCard(deck) {
+        const card = document.createElement('div');
+        card.className = `deck-card generated-deck ${deck.isAdopted ? 'adopted' : ''}`;
         
-        try {
-            // Set default options for comprehensive deck generation
-            const deckOptions = {
-                cardCount: options.cardCount || 20, // Always generate 20 cards
-                subject: options.subject || 'Mathematics', // Default subject
-                difficulty: options.difficulty || 'intermediate',
-                includeExplanations: true,
-                includeMultipleAnswers: true,
-                includeTitleCards: true,
-                ...options
-            };
-            
-            console.log('📚 Generating deck with options:', deckOptions);
-            
-            // Load user learning profile or use defaults
-            const profile = JSON.parse(localStorage.getItem('generated-learning-profile') || '{}');
-            
-            // Create comprehensive Adaptive prompt for full deck generation
-            const fullDeckPrompt = this.buildComprehensiveDeckPrompt(deckOptions, profile);
-            console.log('📊 Generated comprehensive deck prompt');
-            
-            // Deck generation requires real flash card data
-            let cards = [];
-            
-            // No external generation available - return null
-            if (cards.length === 0) {
-                return null;
+        // Determine button content based on adoption status
+        const adoptButton = deck.isAdopted ? 
+            `<button class="btn btn-accent btn-small adopted-indicator" disabled title="Already adopted">
+                ✅ Adopted
+            </button>` :
+            `<button class="btn btn-accent btn-small" onclick="event.stopPropagation(); adoptDeck('${deck.id}')" title="Add to your personal collection">
+                📥 Adopt
+            </button>`;
+        
+        card.innerHTML = `
+            <div class="deck-header">
+                <div class="deck-info">
+                    <h4>${deck.name} ${deck.isAdopted ? '<span class="adopted-indicator">✅</span>' : ''}</h4>
+                    <div class="deck-meta">
+                        <span class="subject-badge">${deck.subject}</span>
+                        <span class="difficulty-badge ${deck.difficulty.toLowerCase()}">${deck.difficulty}</span>
+                        <span class="generated-badge">🤖 Generated</span>
+                        ${deck.isAdopted ? '<span class="adopted-badge">📚 In Collection</span>' : ''}
+                    </div>
+                    <p class="deck-description">${deck.cards.length} cards • Generated ${new Date(deck.generatedAt).toLocaleDateString()}${deck.isAdopted ? ` • Adopted ${new Date(deck.adoptedAt).toLocaleDateString()}` : ''}</p>
+                </div>
+            </div>
+            <div class="deck-buttons">
+                <button class="btn btn-primary btn-small" onclick="event.stopPropagation(); startStudy('${deck.id}')" title="Study this deck">
+                    ▶️ Study
+                </button>
+                <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); viewGeneratedDeck('${deck.id}')" title="View deck contents">
+                    👁️ View
+                </button>
+                ${adoptButton}
+                <button class="deck-delete" onclick="event.stopPropagation(); deleteGeneratedDeck('${deck.id}')" title="Remove generated deck">
+                    🗑️
+                </button>
+            </div>
+        `;
+        return card;
+    }
+
+    setupCustomizationListeners() {
+        // Style options
+        document.querySelectorAll('.style-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                document.querySelectorAll('.style-option').forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                this.selectedStyle = option.dataset.style;
+            });
+        });
+
+        // Color options
+        document.querySelectorAll('.color-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                this.selectedColor = option.dataset.color;
+            });
+        });
+
+        // Set default selections
+        document.querySelector('.style-option[data-style="classic"]')?.classList.add('selected');
+        document.querySelector('.color-option[data-color="blue"]')?.classList.add('selected');
+    }
+
+    showView(viewName) {
+        // Update navigation
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.view === viewName) {
+                btn.classList.add('active');
             }
-            
-            // Ensure we have the requested number of cards (only from Adaptive)
-            cards = cards.slice(0, deckOptions.cardCount);
-            
-            // Generate title cards for the deck
-            const titleCards = this.generateDeckTitleCards(deckOptions);
-            
-            // Create comprehensive deck structure (like user would with deck creator)
-            const deckId = 'generated_comprehensive_' + Date.now();
-            const aiDeck = {
-                id: deckId,
-                name: this.generateComprehensiveDeckTitle(deckOptions),
-                subject: deckOptions.subject,
-                difficulty: deckOptions.difficulty,
-                cards: cards,
-                titleCards: titleCards, // Include title cards
-                dateCreated: Date.now(),
-                lastStudied: null,
-                stats: {
-                    totalStudied: 0,
-                    correctAnswers: 0,
-                    averageTime: 0
-                },
-                style: 'classic', // Default style
-                color: 'blue', // Default color
-                generationType: 'generated-comprehensive',
-                isAdaptiveGenerated: true,
-                generatedMetadata: {
-                    cardCount: cards.length,
-                    subject: deckOptions.subject,
-                    difficulty: deckOptions.difficulty,
-                    generationDate: new Date().toISOString(),
-                    includesExplanations: true,
-                    includesMultipleAnswers: true
-                }
-            };
-            
-            console.log('Generated comprehensive Adaptive deck with', cards.length, 'cards:', aiDeck);
-            
-            // Save the generated deck to the generated decks list
-            this.saveGeneratedDeck(aiDeck);
-            
-            // Also add to user's personal collection immediately
-            this.decks.push(aiDeck);
-            this.saveDecks();
-            
-            // Show success notification
-            this.showNotification(`Generated "${aiDeck.name}" with ${cards.length} cards!`, 'success');
-            
-            // Update deck display
+        });
+
+        // Show view
+        document.querySelectorAll('.view').forEach(view => {
+            view.classList.remove('active');
+        });
+        document.getElementById(`${viewName}-view`).classList.add('active');
+
+        // Special handling for views
+        if (viewName === 'home') {
             this.renderDecks();
-            this.updateGeneratedDecksDisplay();
-            
-            // Show success notification
-            this.showNotification(
-                'Deck Generated!', 
-                `Created "${aiDeck.title}" with ${cards.length} personalized cards based on your study patterns`,
-                'success'
-            );
-            
-            // Update last generation timestamp
-            localStorage.setItem('last-generated-generation', Date.now().toString());
-            
-            return aiDeck;
-            
-        } catch (error) {
-            console.error('❌ Adaptive deck generation failed:', error);
-            this.showNotification(
-                'Deck Generation Failed', 
-                error.message || 'Unable to generate deck. Please try again later.',
-                'error'
-            );
-            throw error;
+        } else if (viewName === 'create') {
+            if (!this.isEditMode) {
+                // Reset to create mode if not already in edit mode
+                this.updateUIForEditMode(false);
+            }
+        } else if (viewName === 'stats') {
+            // Initialize stats page with a small delay to ensure DOM is ready
+            setTimeout(() => {
+                this.initializeStatsPage();
+            }, 100);
         }
+        
+        // Add smooth transition class
+        document.querySelectorAll('.view').forEach(view => {
+            view.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        });
+    }
+
+    // Deck Management
+    loadDecks() {
+        const saved = localStorage.getItem('flashcards-decks');
+        const decks = saved ? JSON.parse(saved) : [];
+        
+        // Ensure all decks have style and color properties (for backward compatibility)
+        return decks.map(deck => ({
+            ...deck,
+            style: deck.style || 'classic',
+            color: deck.color || 'blue'
+        }));
+    }
+
+    saveDecks() {
+        localStorage.setItem('flashcards-decks', JSON.stringify(this.decks));
+    }
+
+    // Adaptive Learning System
+    loadLearningData() {
+        const saved = localStorage.getItem('flashcards-learning-data');
+        return saved ? JSON.parse(saved) : {};
+    }
+
+    saveLearningData() {
+        localStorage.setItem('flashcards-learning-data', JSON.stringify(this.learningData));
+    }
+
+    // Study Session Tracking
+    loadSessionData() {
+        const saved = localStorage.getItem('flashcards-sessions');
+        return saved ? JSON.parse(saved) : [];
+    }
+
+    saveSessionData(sessions) {
+        localStorage.setItem('flashcards-sessions', JSON.stringify(sessions));
+    }
+
+    // 🪙 Gamification System - Coin Management
+    loadCoins() {
+        const saved = localStorage.getItem('flashcards-coins');
+        return saved ? parseInt(saved) : 100; // Start with 100 coins
+    }
+
+    saveCoins() {
+        localStorage.setItem('flashcards-coins', this.coins.toString());
+    }
+
+    initializeCoinSystem() {
+        console.log('💰 Coin system initialized with', this.coins, 'coins');
+        this.updateCoinDisplay();
+        
+        // Initialize coin transaction history
+        this.coinHistory = this.loadCoinHistory();
+    }
+
+    loadCoinHistory() {
+        const saved = localStorage.getItem('flashcards-coin-history');
+        return saved ? JSON.parse(saved) : [];
+    }
+
+    saveCoinHistory() {
+        // Keep only last 50 transactions to prevent storage bloat
+        if (this.coinHistory.length > 50) {
+            this.coinHistory = this.coinHistory.slice(-50);
+        }
+        localStorage.setItem('flashcards-coin-history', JSON.stringify(this.coinHistory));
+    }
+
+    addCoinTransaction(amount, type, reason) {
+        const transaction = {
+            amount: amount,
+            type: type, // 'earn' or 'lose'
+            reason: reason,
+            timestamp: Date.now(),
+            balance: this.coins
+        };
+        
+        this.coinHistory.unshift(transaction); // Add to beginning
+        this.saveCoinHistory();
+    }
+
+    // 🚀 Power-ups and Shop System
+    loadPowerUps() {
+        const saved = localStorage.getItem('flashcards-powerups');
+        return saved ? JSON.parse(saved) : {
+            hints: 0,
+            skipCards: 0,
+            doubleCoins: 0,
+            streakShields: 0,
+            activePowerUps: {
+                doubleCoinsActive: false,
+                streakShieldActive: false
+            }
+        };
+    }
+
+    savePowerUps() {
+        localStorage.setItem('flashcards-powerups', JSON.stringify(this.powerUps));
+    }
+
+    initializePowerUpSystem() {
+        console.log('🚀 Power-up system initialized:', this.powerUps);
+        this.updatePowerUpDisplay();
+    }
+
+    updatePowerUpDisplay() {
+        // Update power-up counts in UI
+        const hintCount = document.querySelector('.hint-count');
+        const skipCount = document.querySelector('.skip-count');
+        const doubleCount = document.querySelector('.double-count');
+        const shieldCount = document.querySelector('.shield-count');
+        
+        if (hintCount) hintCount.textContent = this.powerUps.hints;
+        if (skipCount) skipCount.textContent = this.powerUps.skipCards;
+        if (doubleCount) doubleCount.textContent = this.powerUps.doubleCoins;
+        if (shieldCount) shieldCount.textContent = this.powerUps.streakShields;
+    }
+
+    purchasePowerUp(type, cost) {
+        if (this.coins < cost) {
+            this.showNotification('Not enough coins! 💸', 'error');
+            return false;
+        }
+
+        this.coins -= cost;
+        this.saveCoins();
+        this.updateCoinDisplay();
+        this.addCoinTransaction(cost, 'lose', `Purchased ${type}`);
+
+        // Award power-up
+        this.powerUps[type]++;
+        this.savePowerUps();
+        this.updatePowerUpDisplay();
+
+        this.showNotification(`Purchased ${type}! 🚀`, 'success');
+        return true;
+    }
+
+    usePowerUp(type) {
+        if (this.powerUps[type] <= 0) {
+            this.showNotification(`No ${type} available! Buy more in the shop.`, 'error');
+            return false;
+        }
+
+        this.powerUps[type]--;
+        this.savePowerUps();
+        this.updatePowerUpDisplay();
+        
+        // Track power-up usage for statistics
+        this.trackPowerUpUsage(type);
+        
+        console.log(`🚀 Used ${type} power-up`);
+        return true;
     }
     
-    buildUserStatsPrompt(profile, options = {}) {
-        const trends = profile.preferences.accuracyTrends;
-        const recentTrends = trends.slice(-10);
+    trackPowerUpUsage(type) {
+        // Initialize power-up usage tracking if not exists
+        if (!this.powerUpUsageStats) {
+            this.powerUpUsageStats = this.loadPowerUpUsageStats();
+        }
         
-        // Advanced user performance analysis
-        const performanceAnalysis = this.analyzeUserPerformance(profile);
-        const learningPatterns = this.identifyLearningPatterns(profile);
-        const adaptiveDifficulty = this.calculateAdaptiveDifficulty(profile);
+        // Update usage count
+        if (!this.powerUpUsageStats[type]) {
+            this.powerUpUsageStats[type] = 0;
+        }
+        this.powerUpUsageStats[type]++;
         
-        // Dynamic card count based on performance
-        const dynamicCardCount = this.calculateOptimalCardCount(profile, options);
+        // Track usage in current session
+        if (this.currentSession) {
+            if (!this.currentSession.powerUpsUsed) {
+                this.currentSession.powerUpsUsed = {};
+            }
+            if (!this.currentSession.powerUpsUsed[type]) {
+                this.currentSession.powerUpsUsed[type] = 0;
+            }
+            this.currentSession.powerUpsUsed[type]++;
+        }
         
-        // Build intelligent, personalized prompt
-        let prompt = '';
+        // Save to localStorage
+        this.savePowerUpUsageStats();
         
-        if (performanceAnalysis.strugglingAreas.length > 0) {
-            // Focus on remedial content
-            prompt = `Create targeted remedial flashcards for a student who needs help with:
-${performanceAnalysis.strugglingAreas.map(area => `- ${area.subject}: ${area.accuracy}% accuracy (needs improvement)`).join('\n')}
+        console.log(`📊 Tracked ${type} usage - Total: ${this.powerUpUsageStats[type]}`);
+    }
+    
+    loadPowerUpUsageStats() {
+        const saved = localStorage.getItem('flashcards-powerup-usage');
+        return saved ? JSON.parse(saved) : {
+            hints: 0,
+            skipCards: 0,
+            doubleCoins: 0,
+            streakShields: 0
+        };
+    }
+    
+    savePowerUpUsageStats() {
+        localStorage.setItem('flashcards-powerup-usage', JSON.stringify(this.powerUpUsageStats));
+    }
 
-LEARNING PROFILE:
-- Overall accuracy: ${performanceAnalysis.overallAccuracy}%
-- Study pattern: ${learningPatterns.studyPattern}
-- Attention span: ${learningPatterns.optimalSessionLength} minutes
-- Best performance time: ${learningPatterns.bestTimeOfDay}
+    activateDoubleCoins() {
+        if (!this.usePowerUp('doubleCoins')) return false;
+        
+        this.powerUps.activePowerUps.doubleCoinsActive = true;
+        this.savePowerUps();
+        this.showNotification('Double Coins activated for this session! 💰✨', 'success');
+        
+        // Visual indicator
+        const coinDisplay = document.querySelector('.coin-display');
+        if (coinDisplay) {
+            coinDisplay.classList.add('double-coins-active');
+        }
+        
+        return true;
+    }
 
-CREATE ${dynamicCardCount} cards that:
-1. Address the weakest areas first (${performanceAnalysis.strugglingAreas[0]?.subject})
-2. Use ${adaptiveDifficulty.recommendedLevel} difficulty level
-3. Include step-by-step explanations for complex concepts
-4. Focus on fundamental understanding before advanced topics`;
+    activateStreakShield() {
+        if (!this.usePowerUp('streakShields')) return false;
+        
+        this.powerUps.activePowerUps.streakShieldActive = true;
+        this.savePowerUps();
+        this.showNotification('Streak Shield activated! Next wrong answer won\'t break your streak! 🛡️', 'success');
+        
+        return true;
+    }
 
-        } else if (performanceAnalysis.overallAccuracy > 85) {
-            // Create advanced/challenge content
-            prompt = `Create advanced challenge flashcards for a high-performing student:
+    updateCoinDisplay() {
+        // Update coin display in header
+        const coinElement = document.querySelector('.coin-balance');
+        if (coinElement) {
+            coinElement.textContent = this.coins.toLocaleString();
+        }
+    }
 
-STRENGTHS TO BUILD ON:
-${performanceAnalysis.strongAreas.map(area => `- ${area.subject}: ${area.accuracy}% accuracy`).join('\n')}
+    earnCoins(amount, reason = 'Correct answer!') {
+        const previousCoins = this.coins;
+        let finalAmount = amount;
+        
+        // Apply double coins power-up
+        if (this.powerUps.activePowerUps.doubleCoinsActive) {
+            finalAmount = amount * 2;
+            reason += ' (2x boost!)';
+        }
+        
+        this.coins += finalAmount;
+        this.saveCoins();
+        this.updateCoinDisplay();
+        this.showCoinAnimation(finalAmount, 'earn', reason);
+        this.addCoinTransaction(finalAmount, 'earn', reason);
+        console.log(`💰 Earned ${finalAmount} coins! Total: ${this.coins} (${reason})`);
+        
+        // Check for coin milestones
+        this.checkCoinMilestones(previousCoins, this.coins);
+        
 
-PERFORMANCE PROFILE:
-- Mastery level: ${performanceAnalysis.overallAccuracy}%
-- Ready for: ${adaptiveDifficulty.recommendedLevel} content
-- Learning style: ${learningPatterns.preferredStyle}
+        
+        // Check coin achievements
+        if (typeof checkAchievements === 'function') {
+            checkAchievements('coinsEarned', { totalCoins: this.coins });
+        }
+    }
 
-CREATE ${dynamicCardCount} advanced cards that:
-1. Challenge existing knowledge with complex scenarios
-2. Connect concepts across different subjects
-3. Include real-world applications and case studies
-4. Prepare for higher-level examinations`;
+    loseCoins(amount, reason = 'Incorrect answer') {
+        const actualLoss = Math.min(amount, this.coins); // Don't go below 0
+        this.coins -= actualLoss;
+        this.saveCoins();
+        this.updateCoinDisplay();
+        this.showCoinAnimation(actualLoss, 'lose', reason);
+        this.addCoinTransaction(actualLoss, 'lose', reason);
+        console.log(`💸 Lost ${actualLoss} coins! Total: ${this.coins} (${reason})`);
+        return actualLoss;
+    }
 
+    showCoinAnimation(amount, type, reason) {
+        // Create floating coin animation
+        const animation = document.createElement('div');
+        animation.className = `coin-animation ${type}`;
+        animation.innerHTML = `
+            <div class="coin-popup">
+                <div class="coin-icon">${type === 'earn' ? '💰' : '💸'}</div>
+                <div class="coin-amount">${type === 'earn' ? '+' : '-'}${amount}</div>
+                <div class="coin-reason">${reason}</div>
+            </div>
+        `;
+        
+        document.body.appendChild(animation);
+        
+        // Remove animation after it completes
+        setTimeout(() => {
+            if (animation.parentNode) {
+                animation.parentNode.removeChild(animation);
+            }
+        }, 3000);
+    }
+
+    calculateCoinReward(difficulty, streakCount = 0, responseTime = 0) {
+        let baseReward = 10;
+        
+        // Difficulty multiplier
+        const difficultyMultipliers = {
+            'Beginner': 1.0,
+            'Intermediate': 1.5,
+            'Advanced': 2.0,
+            'Expert': 2.5
+        };
+        
+        const multiplier = difficultyMultipliers[difficulty] || 1.0;
+        let reward = Math.floor(baseReward * multiplier);
+        
+        // Streak bonus (up to 50% extra)
+        if (streakCount > 0) {
+            const streakBonus = Math.min(streakCount * 2, 15);
+            reward += streakBonus;
+        }
+        
+        // Speed bonus (if answered quickly)
+        if (responseTime > 0 && responseTime < 5000) { // Less than 5 seconds
+            reward += 5;
+        }
+        
+        return reward;
+    }
+
+    calculateCoinPenalty(difficulty) {
+        const basePenalty = 5;
+        const difficultyMultipliers = {
+            'Beginner': 0.5,
+            'Intermediate': 1.0,
+            'Advanced': 1.5,
+            'Expert': 2.0
+        };
+        
+        const multiplier = difficultyMultipliers[difficulty] || 1.0;
+        return Math.floor(basePenalty * multiplier);
+    }
+
+    getCorrectStreakCount() {
+        // Track correct answers in current session for streak bonus
+        if (!this.currentSessionStreak) {
+            this.currentSessionStreak = 0;
+        }
+        return this.currentSessionStreak;
+    }
+
+    incrementStreak() {
+        if (!this.currentSessionStreak) {
+            this.currentSessionStreak = 0;
+        }
+        this.currentSessionStreak++;
+    }
+
+    resetStreak() {
+        // Check if streak shield is active
+        if (this.powerUps.activePowerUps.streakShieldActive) {
+            this.powerUps.activePowerUps.streakShieldActive = false;
+            this.savePowerUps();
+            this.showNotification('Streak Shield protected your streak! 🛡️✨', 'success');
+            return; // Don't reset streak
+        }
+        
+        this.currentSessionStreak = 0;
+    }
+
+    checkCoinMilestones(previousCoins, currentCoins) {
+        const milestones = [
+            { coins: 100, title: 'The First Taste of Victory', message: 'You earned your first 100 coins! 🎉', emoji: '💯' },
+            { coins: 250, title: 'Coin Collector', message: 'A Quarter of The Way to 1000! (That\'s a math reference)', emoji: '🏆' },
+            { coins: 500, title: 'Halfway Theeerrrrree', message: 'Livin\' on a prayerrr!', emoji: '🌟' },
+            { coins: 1000, title: 'Expanding The Collection', message: 'Awesome!', emoji: '👑' },
+            { coins: 2500, title: 'WOOO!!!!', message: 'WOOOOOOOOOOOOOOO!!', emoji: '💎' },
+            { coins: 5000, title: '????', message: 'Do You Have a Life? (Blink Twice if You Need Help)', emoji: '🎖️' },
+            { coins: 10000, title: 'woah.', message: 'Just... Woah.', emoji: '🤯' },
+            { coins: 1000000, title: 'Developer', message: 'Either you\'re cheating or you\'re... me?', emoji: '👨‍💻' }
+        ];
+
+        for (const milestone of milestones) {
+            if (previousCoins < milestone.coins && currentCoins >= milestone.coins) {
+                this.showMilestoneAchievement(milestone);
+                break; // Only show one milestone at a time
+            }
+        }
+    }
+
+    showMilestoneAchievement(milestone) {
+        // Create achievement popup
+        const achievement = document.createElement('div');
+        achievement.className = 'achievement-popup';
+        achievement.innerHTML = `
+            <div class="achievement-content">
+                <div class="achievement-emoji">${milestone.emoji}</div>
+                <div class="achievement-title">${milestone.title}</div>
+                <div class="achievement-message">${milestone.message}</div>
+                <div class="achievement-coins">💰 ${milestone.coins.toLocaleString()} Coins Reached!</div>
+            </div>
+        `;
+        
+        document.body.appendChild(achievement);
+        
+        // Trigger animation
+        setTimeout(() => achievement.classList.add('show'), 100);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            achievement.classList.remove('show');
+            setTimeout(() => {
+                if (achievement.parentNode) {
+                    achievement.parentNode.removeChild(achievement);
+                }
+            }, 500);
+        }, 5000);
+        
+        console.log(`🏆 Achievement unlocked: ${milestone.title} - ${milestone.message}`);
+    }
+
+    // Initialize level system
+    initializeLevelSystem() {
+        // Call the global XP system initialization
+        if (typeof window.initializeXPSystem === 'function') {
+            window.initializeXPSystem();
         } else {
-            // Balanced improvement approach
-            prompt = `Create balanced flashcards for steady improvement:
-
-CURRENT PERFORMANCE:
-- Overall accuracy: ${performanceAnalysis.overallAccuracy}%
-- Improving areas: ${performanceAnalysis.improvingAreas.map(a => a.subject).join(', ')}
-- Areas needing attention: ${performanceAnalysis.strugglingAreas.map(a => a.subject).join(', ')}
-
-LEARNING INSIGHTS:
-- Study consistency: ${learningPatterns.consistencyScore}/10
-- Preferred difficulty: ${adaptiveDifficulty.recommendedLevel}
-- Response time: ${learningPatterns.averageResponseTime}s
-
-CREATE ${dynamicCardCount} cards that:
-1. 60% focus on improvement areas (${performanceAnalysis.strugglingAreas.map(a => a.subject).join(', ')})
-2. 40% reinforcement of strong areas (${performanceAnalysis.strongAreas.map(a => a.subject).slice(0, 2).join(', ')})
-3. Match ${adaptiveDifficulty.recommendedLevel} difficulty level
-4. Include variety to maintain engagement`;
-        }
-        
-        // Add subject-specific focus if requested
-        if (options.subject) {
-            prompt += `\n\nSPECIFIC SUBJECT FOCUS: ${options.subject}
-- Tailor all cards to this subject area
-- Use appropriate terminology and concepts
-- Consider GCSE curriculum requirements`;
-        }
-        
-        prompt += `\n\nYou are a helpful school tutor that is helping to create a deck of flash cards using these fields: QUESTION FIELD, ANSWER FIELD, only put simple answers in ANSWER FIELD and other acceptable answers related to the question in MULTIPLE ANSWER FIELD(S), for detailed explanations, use this field: EXPLANATION FIELD, you can format questions and explanations using these options: **bold text**, __underline text__, ~~strikethrough text~~, subscript₂, superscript², <span style="color: #FF0000">colored text</span>, and <span style="background-color: #FFFF00">highlighted text</span>.
-
-FORMAT REQUIREMENTS:
-Q: [Clear, specific question with formatting if helpful]
-A: [Primary simple answer - keep it short and direct]
-ALT: [Alternative acceptable answer 1] (if applicable)
-ALT: [Alternative acceptable answer 2] (if applicable)
-EXP: [Detailed explanation with formatting to enhance learning]
-
-FORMATTING EXAMPLES:
-- **Bold for emphasis**: **Important concept**
-- __Underline for key terms__: __mitochondria__
-- ~~Strikethrough for common mistakes~~: ~~incorrect assumption~~
-- Subscript for chemistry: H₂O, CO₂
-- Superscript for math: x², E=mc²
-- <span style="color: #FF0000">Red for warnings or critical info</span>
-- <span style="background-color: #FFFF00">Yellow highlight for key facts</span>
-
-SAMPLE CARDS:
-Q: What percentage of Earth's surface is covered by **water**?
-A: 71%
-ALT: 70%
-ALT: approximately 71%
-EXP: About __71% of Earth's surface__ is covered by water, with the vast majority being **ocean water**. This includes all oceans, seas, lakes, and other bodies of water. <span style="color: #0066CC">Fun fact</span>: Only about 3% of this water is freshwater!
-
-Q: What is the chemical symbol for **gold**?
-A: Au
-EXP: The symbol __Au__ comes from the Latin word **"aurum"** meaning gold. Gold is element **79** on the periodic table and is a <span style="background-color: #FFFF00">precious metal</span> known for its resistance to corrosion.
-
-Make cards educational, engaging, and perfectly matched to this student's learning level with appropriate formatting.`;
-
-        return prompt;
-    }
-    
-    analyzeUserPerformance(profile) {
-        const trends = profile.preferences?.accuracyTrends || [];
-        const recentTrends = trends.slice(-15); // Last 15 sessions
-        
-        const overallAccuracy = this.calculateAverageAccuracy(profile);
-        
-        // Identify struggling areas (below 70% accuracy)
-        const strugglingAreas = this.identifyTopWeaknesses(profile)
-            .filter(area => area.score < 70)
-            .map(area => ({ subject: area.subject, accuracy: area.score }));
-        
-        // Identify strong areas (above 80% accuracy)
-        const strongAreas = this.identifyTopStrengths(profile)
-            .filter(area => area.score > 80)
-            .map(area => ({ subject: area.subject, accuracy: area.score }));
-        
-        // Identify improving areas (positive trend)
-        const improvingAreas = [];
-        if (trends.length > 5) {
-            const recent = trends.slice(-5);
-            const earlier = trends.slice(-10, -5);
-            
-            const recentAvg = recent.reduce((sum, t) => sum + t.accuracy, 0) / recent.length;
-            const earlierAvg = earlier.reduce((sum, t) => sum + t.accuracy, 0) / earlier.length;
-            
-            if (recentAvg > earlierAvg + 5) {
-                improvingAreas.push({ subject: 'General', improvement: recentAvg - earlierAvg });
+            // Fallback: try direct calls
+            if (typeof loadUserXP === 'function') {
+                loadUserXP();
+            }
+            if (typeof updateLevelDisplay === 'function') {
+                updateLevelDisplay();
             }
         }
         
-        return {
-            overallAccuracy,
-            strugglingAreas,
-            strongAreas,
-            improvingAreas,
-            sessionCount: trends.length
-        };
+        // Force update the display after a short delay to ensure DOM is ready
+        setTimeout(() => {
+            this.forceUpdateLevelDisplay();
+        }, 100);
+        
+        console.log('💫 Level system initialized');
     }
-    
-    identifyLearningPatterns(profile) {
-        const trends = profile.preferences?.accuracyTrends || [];
+
+    // Force update the level display with current values
+    forceUpdateLevelDisplay() {
+        const levelElement = document.getElementById('user-level');
+        const xpElement = document.getElementById('user-xp');
+        const progressElement = document.getElementById('xp-progress');
         
-        // Calculate study consistency
-        let consistencyScore = 5; // Default
-        if (trends.length > 3) {
-            const intervals = [];
-            for (let i = 1; i < trends.length; i++) {
-                intervals.push(trends[i].timestamp - trends[i-1].timestamp);
-            }
-            const avgInterval = intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length;
-            const variance = intervals.reduce((sum, interval) => sum + Math.pow(interval - avgInterval, 2), 0) / intervals.length;
-            consistencyScore = Math.max(1, Math.min(10, 10 - (variance / avgInterval) * 5));
+        // Get current values from global variables or defaults
+        const currentLevel = window.userLevel || 1;
+        const currentXP = window.userXP || 0;
+        
+        // Update level number
+        if (levelElement) {
+            levelElement.textContent = currentLevel;
         }
         
-        // Determine optimal session length
-        const optimalSessionLength = profile.studyHabits?.preferredSessionLength || 15;
-        
-        // Calculate average response time (estimated)
-        const averageResponseTime = Math.round(optimalSessionLength / Math.max(1, trends.length) * 60);
-        
-        // Determine study pattern
-        let studyPattern = 'Regular';
-        if (consistencyScore > 7) studyPattern = 'Highly consistent';
-        else if (consistencyScore < 4) studyPattern = 'Irregular';
-        
-        // Determine preferred learning style based on accuracy patterns
-        const preferredStyle = profile.preferences?.accuracyTrends?.length > 10 ? 'Analytical' : 'Exploratory';
-        
-        return {
-            consistencyScore: Math.round(consistencyScore),
-            optimalSessionLength,
-            averageResponseTime,
-            studyPattern,
-            preferredStyle,
-            bestTimeOfDay: 'Variable' // Could be enhanced with timestamp analysis
-        };
-    }
-    
-    calculateAdaptiveDifficulty(profile) {
-        const avgAccuracy = this.calculateAverageAccuracy(profile);
-        const trends = profile.preferences?.accuracyTrends || [];
-        
-        let recommendedLevel = 'Intermediate';
-        let confidenceLevel = 'Medium';
-        
-        if (avgAccuracy < 50) {
-            recommendedLevel = 'Beginner';
-            confidenceLevel = 'Building';
-        } else if (avgAccuracy < 70) {
-            recommendedLevel = 'Intermediate';
-            confidenceLevel = 'Developing';
-        } else if (avgAccuracy < 85) {
-            recommendedLevel = 'Advanced';
-            confidenceLevel = 'Strong';
-        } else {
-            recommendedLevel = 'Expert';
-            confidenceLevel = 'Mastery';
-        }
-        
-        // Adjust based on recent performance trend
-        if (trends.length > 5) {
-            const recentAvg = trends.slice(-5).reduce((sum, t) => sum + t.accuracy, 0) / 5;
-            if (recentAvg > avgAccuracy + 10) {
-                // User is improving rapidly, can handle higher difficulty
-                if (recommendedLevel === 'Beginner') recommendedLevel = 'Intermediate';
-                else if (recommendedLevel === 'Intermediate') recommendedLevel = 'Advanced';
-            }
-        }
-        
-        return {
-            recommendedLevel,
-            confidenceLevel,
-            avgAccuracy
-        };
-    }
-    
-    calculateOptimalCardCount(profile, options) {
-        const baseCount = options.cardCount || 8;
-        const avgAccuracy = this.calculateAverageAccuracy(profile);
-        const sessionCount = profile.preferences?.accuracyTrends?.length || 0;
-        
-        // Adjust based on performance and experience
-        let multiplier = 1;
-        
-        if (avgAccuracy < 60) {
-            multiplier = 0.75; // Fewer cards for struggling students
-        } else if (avgAccuracy > 85) {
-            multiplier = 1.25; // More cards for advanced students
-        }
-        
-        // Adjust based on experience
-        if (sessionCount > 20) {
-            multiplier += 0.25; // More cards for experienced users
-        }
-        
-        return Math.round(baseCount * multiplier);
-    }
-    
-    parseAdaptiveCardResponse(aiResponse) {
-        const cards = [];
-        const lines = aiResponse.split('\n');
-        
-        let currentQuestion = '';
-        let currentAnswer = '';
-        let currentAlternatives = [];
-        let currentExplanation = '';
-        let currentSection = '';
-        
-        for (const line of lines) {
-            const trimmedLine = line.trim();
+        // Update XP display and progress bar
+        if (xpElement && progressElement) {
+            // Calculate progress for current level
+            const LEVEL_THRESHOLDS = window.LEVEL_THRESHOLDS || [0, 100, 250, 450, 700, 1000];
+            const nextLevelXP = LEVEL_THRESHOLDS[currentLevel] || (currentLevel * 100);
+            const currentLevelXP = currentLevel > 1 ? (LEVEL_THRESHOLDS[currentLevel - 1] || ((currentLevel - 1) * 100)) : 0;
+            const progressXP = currentXP - currentLevelXP;
+            const neededXP = nextLevelXP - currentLevelXP;
             
-            if (trimmedLine.startsWith('Q:')) {
-                // Save previous card if we have both question and answer
-                if (currentQuestion && currentAnswer) {
-                    const card = {
-                        id: Date.now() + Math.random(),
-                        question: currentQuestion.trim(),
-                        answer: currentAnswer.trim(),
-                        questionText: currentQuestion.trim(),
-                        answerText: currentAnswer.trim()
-                    };
-                    
-                    // Add alternatives if available
-                    if (currentAlternatives.length > 0) {
-                        card.alternativeAnswers = currentAlternatives;
-                    }
-                    
-                    // Add explanation if available
-                    if (currentExplanation) {
-                        card.explanation = currentExplanation.trim();
-                        card.explanationText = currentExplanation.trim();
-                    }
-                    
-                    cards.push(card);
+            // Update text display
+            xpElement.textContent = `${Math.max(0, progressXP)}/${neededXP}`;
+            
+            // Update progress bar
+            const percentage = Math.max(0, Math.min(100, (progressXP / neededXP) * 100));
+            progressElement.style.width = `${percentage}%`;
+            
+            console.log('Level display updated:', { currentLevel, currentXP, progressXP, neededXP, percentage });
+        }
+    }
+
+    // Show level info modal
+    showLevelInfo() {
+        // Access global level variables
+        const currentLevel = window.userLevel || 1;
+        const currentXP = window.userXP || 0;
+        const nextLevelXP = window.getXPForNextLevel ? window.getXPForNextLevel(currentLevel) : 100;
+        const currentLevelXP = currentLevel > 1 && window.LEVEL_THRESHOLDS ? window.LEVEL_THRESHOLDS[currentLevel - 1] : 0;
+        const progressXP = currentXP - currentLevelXP;
+        const neededXP = nextLevelXP - currentLevelXP;
+        const progressPercent = Math.round((progressXP / neededXP) * 100);
+
+        const modal = document.createElement('div');
+        modal.className = 'level-info-modal';
+        modal.innerHTML = `
+            <div class="level-info-content">
+                <div class="level-info-header">
+                    <h3>⭐ Level ${currentLevel}</h3>
+                    <button class="close-btn" onclick="this.parentElement.parentElement.parentElement.remove()">×</button>
+                </div>
+                <div class="level-info-body">
+                    <div class="level-progress-display">
+                        <div class="level-progress-bar">
+                            <div class="level-progress-fill" style="width: ${progressPercent}%"></div>
+                        </div>
+                        <div class="level-progress-text">${progressXP} / ${neededXP} XP (${progressPercent}%)</div>
+                    </div>
+                    <div class="level-info-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">Total XP</div>
+                            <div class="stat-value">${currentXP.toLocaleString()}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Next Level</div>
+                            <div class="stat-value">${neededXP - progressXP} XP to go</div>
+                        </div>
+                    </div>
+                    <div class="level-benefits">
+                        <h4>How to gain XP:</h4>
+                        <ul>
+                            <li>📚 Study cards: +10 XP per correct answer</li>
+                            <li>🎯 Perfect completion: +100 XP</li>
+                            <li>📝 Create decks: +25 XP</li>
+                            <li>🔥 Study streaks: +5 XP per streak level</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Auto-remove after 10 seconds
+        setTimeout(() => {
+            if (modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
+        }, 10000);
+    }
+
+    // 💡 Adaptive Hint System
+    async useHint() {
+        if (!this.usePowerUp('hints')) {
+            // Offer to buy hints
+            if (confirm('No hints available! Would you like to buy a hint for 100 coins?')) {
+                if (this.purchaseHint()) {
+                    return await this.useHint(); // Try again after purchase
                 }
-                
-                // Start new question
-                currentQuestion = trimmedLine.substring(2).trim();
-                currentAnswer = '';
-                currentAlternatives = [];
-                currentExplanation = '';
-                currentSection = 'question';
-                
-            } else if (trimmedLine.startsWith('A:')) {
-                currentAnswer = trimmedLine.substring(2).trim();
-                currentSection = 'answer';
-                
-            } else if (trimmedLine.startsWith('ALT:')) {
-                const altAnswer = trimmedLine.substring(4).trim();
-                if (altAnswer) {
-                    currentAlternatives.push(altAnswer);
-                }
-                currentSection = 'alternative';
-                
-            } else if (trimmedLine.startsWith('EXP:')) {
-                currentExplanation = trimmedLine.substring(4).trim();
-                currentSection = 'explanation';
-                
-            } else if (trimmedLine && currentSection === 'question') {
-                // Continue building question
-                currentQuestion += ' ' + trimmedLine;
-                
-            } else if (trimmedLine && currentSection === 'answer') {
-                // Continue building answer
-                currentAnswer += ' ' + trimmedLine;
-                
-            } else if (trimmedLine && currentSection === 'explanation') {
-                // Continue building explanation
-                currentExplanation += ' ' + trimmedLine;
             }
+            return false;
         }
-        
-        // Don't forget the last card
-        if (currentQuestion && currentAnswer) {
-            const card = {
-                id: Date.now() + Math.random(),
-                question: currentQuestion.trim(),
-                answer: currentAnswer.trim(),
-                questionText: currentQuestion.trim(),
-                answerText: currentAnswer.trim()
-            };
-            
-            // Add alternatives if available
-            if (currentAlternatives.length > 0) {
-                card.alternativeAnswers = currentAlternatives;
-            }
-            
-            // Add explanation if available
-            if (currentExplanation) {
-                card.explanation = currentExplanation.trim();
-                card.explanationText = currentExplanation.trim();
-            }
-            
-            cards.push(card);
-        }
-        
-        // Fallback parsing if the above didn't work
-        if (cards.length === 0) {
-            const fallbackCards = this.fallbackCardParsing(aiResponse);
-            cards.push(...fallbackCards);
-        }
-        
-        console.log(`📝 Parsed ${cards.length} cards from Adaptive response`);
-        return cards;
-    }
-    
-    fallbackCardParsing(aiResponse) {
-        // Try to extract question-answer pairs using different patterns
-        const cards = [];
-        
-        // Enhanced pattern to capture Q:, A:, ALT:, EXP: format
-        const enhancedPattern = /(?:Question|Q):\s*(.+?)(?:Answer|A):\s*(.+?)(?=(?:Question|Q):|$)/gis;
-        const matches = aiResponse.matchAll(enhancedPattern);
-        
-        for (const match of matches) {
-            if (match[1] && match[2]) {
-                const fullAnswer = match[2];
-                const card = {
-                    id: Date.now() + Math.random(),
-                    question: match[1].trim().replace(/^(Question|Q):\s*/i, ''),
-                    questionText: match[1].trim().replace(/^(Question|Q):\s*/i, ''),
-                    answer: '',
-                    answerText: '',
-                    alternativeAnswers: [],
-                    explanation: '',
-                    explanationText: ''
-                };
-                
-                // Parse the answer section for ALT and EXP
-                const answerLines = fullAnswer.split('\n');
-                let mainAnswer = '';
-                let explanation = '';
-                const alternatives = [];
-                
-                for (const line of answerLines) {
-                    const trimmedLine = line.trim();
-                    if (trimmedLine.startsWith('ALT:')) {
-                        alternatives.push(trimmedLine.substring(4).trim());
-                    } else if (trimmedLine.startsWith('EXP:')) {
-                        explanation = trimmedLine.substring(4).trim();
-                    } else if (!trimmedLine.startsWith('ALT:') && !trimmedLine.startsWith('EXP:') && trimmedLine) {
-                        if (!mainAnswer) {
-                            mainAnswer = trimmedLine;
-                        } else {
-                            mainAnswer += ' ' + trimmedLine;
-                        }
-                    }
-                }
-                
-                card.answer = mainAnswer.trim() || fullAnswer.trim();
-                card.answerText = card.answer;
-                
-                if (alternatives.length > 0) {
-                    card.alternativeAnswers = alternatives;
-                }
-                
-                if (explanation) {
-                    card.explanation = explanation;
-                    card.explanationText = explanation;
-                }
-                
-                cards.push(card);
-            }
-        }
-        
-        // If still no cards, try simpler patterns
-        if (cards.length === 0) {
-            const simplePatterns = [
-                /(\d+\.\s*.+?)\n(.+?)(?=\d+\.|$)/gis,
-                /(.+\?)\s*(.+?)(?=.+\?|$)/gis
-            ];
-            
-            for (const pattern of simplePatterns) {
-                const matches = aiResponse.matchAll(pattern);
-                for (const match of matches) {
-                    if (match[1] && match[2]) {
-                        cards.push({
-                            id: Date.now() + Math.random(),
-                            question: match[1].trim(),
-                            answer: match[2].trim(),
-                            questionText: match[1].trim(),
-                            answerText: match[2].trim()
-                        });
-                    }
-                }
-                if (cards.length > 0) break;
-            }
-        }
-        
-        return cards;
-    }
-    
-    generateAdaptiveDeckTitle(profile, options) {
-        const weaknesses = this.identifyTopWeaknesses(profile);
-        const avgAccuracy = this.calculateAverageAccuracy(profile);
-        
-        if (options.subject) {
-            if (avgAccuracy < 60) {
-                return `${options.subject} - Remedial Practice`;
-            } else if (avgAccuracy > 80) {
-                return `${options.subject} - Advanced Challenge`;
+
+        const currentCard = this.currentCards[this.currentCardIndex];
+        if (!currentCard) return false;
+
+        // Show loading state
+        this.showHintLoading();
+
+        try {
+            const hint = await this.generateHint(currentCard);
+            if (hint) {
+                this.showHint(hint);
+                return true;
             } else {
-                return `${options.subject} - Skill Building`;
+                // Adaptive failed - refund and show error
+                this.powerUps.hints++;
+                this.savePowerUps();
+                this.updatePowerUpDisplay();
+                return false;
             }
-        }
-        
-        if (weaknesses.length > 0) {
-            return `Focus on ${weaknesses[0].subject} - Personalized Practice`;
-        }
-        
-        const subject = this.determineSubjectFromProfile(profile);
-        return `${subject} - Personalized Deck`;
-    }
-    
-    determineSubjectFromProfile(profile) {
-        if (!profile.preferences || !profile.preferences.favoriteSubjects) {
-            return 'General Studies';
-        }
-        
-        const subjects = Object.entries(profile.preferences.favoriteSubjects);
-        if (subjects.length === 0) return 'General Studies';
-        
-        subjects.sort((a, b) => b[1] - a[1]); // Sort by frequency
-        return subjects[0][0];
-    }
-    
-    determineDifficultyFromProfile(profile) {
-        const avgAccuracy = this.calculateAverageAccuracy(profile);
-        
-        if (avgAccuracy < 50) return 'Beginner';
-        if (avgAccuracy < 70) return 'Intermediate';
-        if (avgAccuracy < 85) return 'Advanced';
-        return 'Expert';
-    }
-    
-    calculateAverageAccuracy(profile) {
-        if (!profile.preferences || !profile.preferences.accuracyTrends || profile.preferences.accuracyTrends.length === 0) {
-            return 0;
-        }
-        
-        const trends = profile.preferences.accuracyTrends;
-        const sum = trends.reduce((total, trend) => total + trend.accuracy, 0);
-        return Math.round(sum / trends.length);
-    }
-    
-    identifyTopWeaknesses(profile) {
-        if (!profile.weaknesses) return [];
-        
-        return Object.entries(profile.weaknesses)
-            .map(([subject, count]) => ({
-                subject,
-                count,
-                score: this.getSubjectAverageAccuracy(profile, subject)
-            }))
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 3);
-    }
-    
-    identifyTopStrengths(profile) {
-        if (!profile.strengths) return [];
-        
-        return Object.entries(profile.strengths)
-            .map(([subject, count]) => ({
-                subject,
-                count,
-                score: this.getSubjectAverageAccuracy(profile, subject)
-            }))
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 3);
-    }
-    
-    getSubjectAverageAccuracy(profile, subject) {
-        if (!profile.preferences || !profile.preferences.accuracyTrends) return 0;
-        
-        const subjectTrends = profile.preferences.accuracyTrends.filter(t => t.subject === subject);
-        if (subjectTrends.length === 0) return 0;
-        
-        const sum = subjectTrends.reduce((total, trend) => total + trend.accuracy, 0);
-        return Math.round(sum / subjectTrends.length);
-    }
-    
-    calculateAdaptiveConfidence(profile) {
-        const sessionCount = profile.preferences?.accuracyTrends?.length || 0;
-        
-        if (sessionCount < 3) return 'Low';
-        if (sessionCount < 8) return 'Medium';
-        if (sessionCount < 15) return 'High';
-        return 'Very High';
-    }
-    
-    saveGeneratedDeck(deck) {
-        const generatedDecks = this.loadGeneratedDecks();
-        generatedDecks.push(deck);
-        localStorage.setItem('generated-decks', JSON.stringify(generatedDecks));
-        
-        // Trigger UI refresh
-        if (this.currentView === 'decks') {
-            this.showDecks();
+        } catch (error) {
+            console.error('Hint generation failed:', error);
+            this.showNotification('Hints are only available for cards with a custom hint.', 'info');
+            // Refund the hint
+            this.powerUps.hints++;
+            this.savePowerUps();
+            this.updatePowerUpDisplay();
+            return false;
         }
     }
-    
-    // =================== COMPREHENSIVE DECK GENERATION ===================
-    
-    buildComprehensiveDeckPrompt(options, profile) {
-        const { subject, difficulty, cardCount } = options;
-        
-        // Get user statistics for personalized deck generation
+
+    purchaseHint() {
+        return this.purchasePowerUp('hints', 100);
+    }
+
+    async generateHint(card) {
+        // Check if card has a custom hint
+        if (card.customHint && card.customHint.trim()) {
+            return {
+                type: 'custom',
+                text: card.customHint,
+                source: 'Custom hint from deck creator'
+            };
+        }
+        return null;
+    }
+
+    async getHuggingFaceHint(question, answer) {
+        // Get user statistics for personalized hints
+        const profile = this.getUserProfile();
         const overallAccuracy = profile.preferences.accuracyTrends?.length > 0 
             ? profile.preferences.accuracyTrends.reduce((sum, acc) => sum + acc, 0) / profile.preferences.accuracyTrends.length 
             : 75;
         const yearGroup = profile.preferences?.yearGroup || 'General';
         const subjects = Object.keys(profile.deckStats || {}).join(', ') || 'Mixed subjects';
         const timeSpent = Math.round((profile.totalTimeSpent || 0) / 60); // Convert to minutes
+
+        // Improved hint prompt
+        const hintPrompt = `You are a helpful school tutor that likes to give hints to students based on questions, can you please create a helpful hint for this question: ${question} with this answer: ${answer}, that doesn't fully reveal the answer but it helps significantly towards the answer, an example would be a "Fill in the Blank" type hint or give the right equation to solve the question, just make a decent hint only based on the question and answer: ${question} and ${answer}.
+
+Student Statistics:
+- Overall Accuracy: ${overallAccuracy.toFixed(1)}%
+- Overall Time Spent: ${timeSpent} minutes
+- Year Group: ${yearGroup}  
+- Subjects Studied: ${subjects}
+
+Please tailor the hint complexity to match the student's performance level and year group.`;
+
+        // Try multiple Adaptive models with the improved prompt
+        const models = [
+            {
+                name: 'microsoft/DialoGPT-medium',
+                prompt: hintPrompt
+            },
+            {
+                name: 'facebook/blenderbot-400M-distill',  
+                prompt: hintPrompt
+            },
+            {
+                name: 'huggingface/CodeBERTa-small-v1',
+                prompt: hintPrompt
+            },
+            {
+                name: 'distilbert-base-uncased-distilled-squad',
+                prompt: hintPrompt
+            }
+        ];
+
+        // Try each model in sequence
+        for (const model of models) {
+            try {
+                console.log(`🤖 Trying Adaptive model: ${model.name}`);
+                
+                const response = await fetch(`https://api-inference.huggingface.co/models/${model.name}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        inputs: model.prompt,
+                        parameters: {
+                            max_new_tokens: 80,
+                            temperature: 0.6,
+                            do_sample: true,
+                            return_full_text: false,
+                            repetition_penalty: 1.2,
+                            top_p: 0.9
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    let hintText = '';
+                    
+                    // Handle different response formats
+                    if (Array.isArray(data) && data[0]?.generated_text) {
+                        hintText = data[0].generated_text.trim();
+                    } else if (data.generated_text) {
+                        hintText = data.generated_text.trim();
+                    } else if (typeof data === 'string') {
+                        hintText = data.trim();
+                    }
+                    
+                    // Clean up the hint more thoroughly
+                    hintText = hintText
+                        .replace(/^(hint:|answer:|response:|clue:|think about:|consider:|the hint is:?)/i, '')
+                        .replace(/^(a hint:?|here's a hint:?)/i, '')
+                        .replace(/\n.*/s, '') // Remove everything after first line break
+                        .trim();
+                    
+                    // Additional cleaning - remove common Adaptive artifacts
+                    if (hintText.startsWith('"') && hintText.endsWith('"')) {
+                        hintText = hintText.slice(1, -1);
+                    }
+                    
+                    // Validate hint quality
+                    if (this.isGoodHint(hintText, question, answer)) {
+                        console.log(`✅ Good hint from ${model.name}:`, hintText);
+                        return `💡 ${hintText}`;
+                    } else {
+                        console.log(`❌ Poor quality hint from ${model.name}:`, hintText);
+                    }
+                }
+            } catch (error) {
+                console.log(`❌ Model ${model.name} failed:`, error);
+                continue;
+            }
+        }
         
-        return `You are a helpful school tutor that is helping to create a deck of flash cards using these fields: QUESTION FIELD, ANSWER FIELD, only put simple answers in ANSWER FIELD and other acceptable answers related to the question in MULTIPLE ANSWER FIELD(S), for detailed explanations, use this field: EXPLANATION FIELD, you can format questions and explanations using these options: **bold text**, __underline text__, ~~strikethrough text~~, subscript₂, superscript², <span style="color: #FF0000">colored text</span>, and <span style="background-color: #FFFF00">highlighted text</span>, please can you create ${cardCount} cards using those fields, format options and user statistics: ${overallAccuracy.toFixed(1)}% accuracy, ${timeSpent} minutes study time, ${yearGroup} year group, studying ${subjects}.
+        // If all Adaptive models fail, try a simpler approach
+        return await this.getSimpleAdaptiveHint(question, answer);
+    }
 
-Subject: ${subject}
-Difficulty Level: ${difficulty}
-Number of Cards Required: ${cardCount}
+    isGoodHint(hintText, question, answer) {
+        if (!hintText || hintText.length < 15 || hintText.length > 250) {
+            return false;
+        }
+        
+        const hintLower = hintText.toLowerCase();
+        const answerLower = answer.toLowerCase();
+        const questionLower = question.toLowerCase();
+        
+        // Reject if hint contains the full answer (unless it's a very short common word)
+        if (answerLower.length > 4 && hintLower.includes(answerLower)) {
+            return false;
+        }
+        
+        // Reject hints that are completely irrelevant to the question context
+        const contextMismatches = [
+            // Mathematical hints for non-math questions
+            {
+                hint: ['calculation', 'mathematical', 'formula', 'operation', 'step by step', 'work through', 'mathematical process'],
+                question: ['what is', 'name', 'capital', 'country', 'city', 'equivalent', 'similar', 'like', 'called', 'known as', 'famous for'],
+                notQuestion: ['calculate', 'solve', 'equation', 'sum', 'multiply', 'divide', 'add', 'subtract', 'formula', 'compute']
+            },
+            // Mathematical hints specifically for "What is" questions that aren't math
+            {
+                hint: ['calculation', 'mathematical', 'step by step', 'work through', 'process applies'],
+                question: ['what is lagos', 'what is the', 'what is nigeria', 'equivalent to', 'similar to', 'like hollywood'],
+                notQuestion: ['what is 2+2', 'what is the result', 'what is the sum', 'what is the product']
+            },
+            // Statistical hints for factual questions
+            {
+                hint: ['percentage', 'statistical', 'statistics', 'rate', 'proportion'],
+                question: ['school', 'name', 'capital', 'author', 'wrote', 'invented', 'equivalent', 'similar', 'called'],
+                notQuestion: ['percent', '%', 'rate of', 'proportion of', 'percentage of']
+            },
+            // Calculation hints for cultural/geographic questions
+            {
+                hint: ['calculation', 'mathematical', 'work through', 'step by step'],
+                question: ['hollywood', 'entertainment', 'district', 'area', 'quarter', 'neighborhood', 'culture', 'film', 'movie'],
+                notQuestion: ['calculate', 'math', 'equation']
+            }
+        ];
+        
+        for (const mismatch of contextMismatches) {
+            const hasHintPattern = mismatch.hint.some(pattern => hintLower.includes(pattern));
+            const hasQuestionPattern = mismatch.question.some(pattern => questionLower.includes(pattern));
+            const hasNotQuestionPattern = mismatch.notQuestion.some(pattern => questionLower.includes(pattern));
+            
+            if (hasHintPattern && hasQuestionPattern && !hasNotQuestionPattern) {
+                console.log('❌ Rejecting contextually irrelevant hint:', hintText);
+                return false;
+            }
+        }
+        
+        // Reject hints that are too generic or unhelpful
+        const badPatterns = [
+            'i cannot', 'i can\'t', 'i don\'t know', 'i\'m sorry', 'i am not able',
+            'mathematical relationship', 'operation or formula', 'what operation',
+            'as an assistant', 'i\'m not sure', 'i apologize', 'sorry,',
+            'think about much', 'related to much', 'focus on much',
+            'the answer is', 'it is', 'this is', 'the correct answer'
+        ];
+        
+        if (badPatterns.some(pattern => hintLower.includes(pattern))) {
+            return false;
+        }
+        
+        // Reject hints that are just repetitions of the question
+        const questionWords = questionLower.split(' ').filter(w => w.length > 3);
+        const hintWords = hintLower.split(' ').filter(w => w.length > 3);
+        const overlap = questionWords.filter(word => hintWords.includes(word)).length;
+        
+        if (overlap > questionWords.length * 0.7 && questionWords.length > 3) {
+            return false; // Too much overlap with question
+        }
+        
+        // Reject very short or incomplete hints
+        if (hintText.split(' ').length < 4) {
+            return false;
+        }
+        
+        // Check if hint provides some context or guidance
+        const helpfulPatterns = [
+            'think about', 'consider', 'look for', 'focus on', 'remember',
+            'this relates to', 'associated with', 'connected to', 'involves',
+            'type of', 'kind of', 'form of', 'example of', 'used for'
+        ];
+        
+        const hasHelpfulPattern = helpfulPatterns.some(pattern => hintLower.includes(pattern));
+        
+        // Accept if it has helpful language or seems contextually relevant
+        return hasHelpfulPattern || hintText.length > 30;
+    }
 
-FORMAT REQUIREMENTS:
-Q: [Clear, specific question with formatting if helpful]
-A: [Primary simple answer - keep it short and direct]
-ALT: [Alternative acceptable answer 1] (if applicable)
-ALT: [Alternative acceptable answer 2] (if applicable)  
-EXP: [Detailed explanation with formatting to enhance learning - this should provide comprehensive understanding]
+    async getSimpleAdaptiveHint(question, answer) {
+        // Try one more simplified approach
+        try {
+            const response = await fetch('https://api-inference.huggingface.co/models/gpt2', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    inputs: `Study hint for "${question}": Think about`,
+                    parameters: {
+                        max_new_tokens: 30,
+                        temperature: 0.8,
+                        do_sample: true,
+                        return_full_text: false
+                    }
+                })
+            });
 
-FORMATTING EXAMPLES:
-- **Bold for emphasis**: **Important concept**
-- __Underline for key terms__: __mitochondria__
-- ~~Strikethrough for common mistakes~~: ~~incorrect assumption~~
-- Subscript for chemistry: H₂O, CO₂
-- Superscript for math: x², E=mc²
-- <span style="color: #FF0000">Red for warnings or critical info</span>
-- <span style="background-color: #FFFF00">Yellow highlight for key facts</span>
+            if (response.ok) {
+                const data = await response.json();
+                let hintText = '';
+                
+                if (Array.isArray(data) && data[0]?.generated_text) {
+                    hintText = data[0].generated_text.trim();
+                } else if (data.generated_text) {
+                    hintText = data.generated_text.trim();
+                }
+                
+                if (hintText && hintText.length > 5) {
+                    return `💡 Think about ${hintText}`;
+                }
+            }
+        } catch (error) {
+            console.log('Simple Adaptive hint failed:', error);
+        }
+        
+        // Final fallback - smart but minimal hint
+        return this.generateMinimalSmartHint(question, answer);
+    }
 
-SAMPLE CARDS:
-Q: What is the chemical formula for **water**?
-A: H₂O
-ALT: H2O
-EXP: Water consists of __two hydrogen atoms__ and __one oxygen atom__ bonded together. The subscript numbers show how many of each atom: H₂O means 2 hydrogen + 1 oxygen. This is a **covalent compound** essential for all life.
-
-Q: Solve: 3x + 5 = **14**
-A: x = 3
-ALT: 3
-EXP: To solve this equation: **Step 1**: Subtract 5 from both sides → 3x = 9. **Step 2**: Divide both sides by 3 → x = 3. Always <span style="color: #FF0000">check your answer</span>: 3(3) + 5 = 9 + 5 = 14 ✓
-
-Generate exactly ${cardCount} cards following this format, tailored to ${yearGroup} level students studying ${subject}.`;
+    generateMinimalSmartHint(question, answer) {
+        const questionLower = question.toLowerCase();
+        const answerLower = answer.toLowerCase();
+        
+        // Analyze the question for specific contexts and provide targeted hints
+        
+        // Lagos/Nigeria geography contexts
+        if (questionLower.includes('lagos') || (questionLower.includes('nigeria') && !questionLower.includes('percentage'))) {
+            if (questionLower.includes('equivalent') && questionLower.includes('hollywood')) {
+                return `💡 Think about Lagos' entertainment industry. What district or area is known for film production and entertainment, similar to Hollywood's role in America?`;
+            }
+            if (questionLower.includes('school') && questionLower.includes('number')) {
+                return `💡 Think about Lagos as a major African city. What would be a reasonable estimate for educational institutions in such a large urban area?`;
+            }
+            if (questionLower.includes('population') || questionLower.includes('people')) {
+                return `💡 Consider Lagos as one of Africa's largest cities. Think about major metropolitan population figures.`;
+            }
+            if (questionLower.includes('industry') || questionLower.includes('economy')) {
+                return `💡 Think about what Lagos is known for economically. What major industries drive this West African economic hub?`;
+            }
+            if (questionLower.includes('film') || questionLower.includes('movie') || questionLower.includes('entertainment')) {
+                return `💡 Consider Lagos' role in African entertainment and film industry. What area or district is famous for this?`;
+            }
+        }
+        
+        // Educational/Exam contexts
+        if (questionLower.includes('spag') || questionLower.includes('spelling') || questionLower.includes('grammar')) {
+            if (answer.match(/^\d+$/)) {
+                return `💡 Think about exam marking schemes. SPaG (Spelling, Punctuation and Grammar) has a specific point allocation in assessments.`;
+            }
+        }
+        
+        if (questionLower.includes('marks') && questionLower.includes('worth')) {
+            if (answer.match(/^\d+$/)) {
+                return `💡 Consider the scoring system. How many points are typically allocated for this component in the assessment?`;
+            }
+        }
+        
+        // GCSE/Educational assessment hints
+        if (questionLower.includes('gcse') || questionLower.includes('exam') || questionLower.includes('assessment')) {
+            if (answer.match(/^\d+$/)) {
+                return `💡 Think about standard exam marking criteria. What's the typical point value for this component?`;
+            }
+        }
+        
+        // Science contexts
+        if (questionLower.includes('element') || questionLower.includes('atomic') || questionLower.includes('periodic')) {
+            const firstLetter = answer.charAt(0).toUpperCase();
+            return `💡 Look at the periodic table. This element's symbol starts with "${firstLetter}".`;
+        }
+        
+        // Historical contexts
+        if (questionLower.includes('when') || questionLower.includes('year') || questionLower.includes('date')) {
+            if (answer.match(/^\d{4}$/)) {
+                const year = parseInt(answer);
+                const century = Math.ceil(year / 100);
+                return `💡 This historical event occurred in the ${century}${this.getOrdinalSuffix(century)} century.`;
+            }
+        }
+        
+        // "Equivalent to" or "similar to" questions
+        if (questionLower.includes('equivalent') || questionLower.includes('similar to') || questionLower.includes('like hollywood') || questionLower.includes('known as')) {
+            const firstLetter = answer.charAt(0).toUpperCase();
+            return `💡 Think about what area or district serves a similar function to the comparison being made. The answer starts with "${firstLetter}".`;
+        }
+        
+        // Geography contexts
+        if (questionLower.includes('capital') || questionLower.includes('country') || questionLower.includes('city')) {
+            const firstLetter = answer.charAt(0).toUpperCase();
+            return `💡 This geographical location starts with "${firstLetter}" and is significant to the region mentioned.`;
+        }
+        
+        // Literature contexts
+        if (questionLower.includes('author') || questionLower.includes('writer') || questionLower.includes('wrote')) {
+            const words = answer.split(' ');
+            if (words.length > 1) {
+                return `💡 This person's name has ${words.length} parts. Think about famous writers in this context.`;
+            }
+        }
+        
+        // Mathematical contexts
+        if (questionLower.includes('calculate') || questionLower.includes('solve') || /[\+\-\*\/\=]/.test(question)) {
+            return `💡 Work through the calculation step by step. What mathematical process applies here?`;
+        }
+        
+        // Percentage/Statistics (only when actually relevant)
+        if (answer.includes('%') && (questionLower.includes('percent') || questionLower.includes('rate') || questionLower.includes('proportion'))) {
+            return `💡 Look for the statistical data mentioned. What percentage is being asked about?`;
+        }
+        
+        // Factual "how many" or "number of" questions
+        if ((questionLower.includes('how many') || questionLower.includes('number of')) && answer.match(/^\d+$/)) {
+            const num = parseInt(answer);
+            if (questionLower.includes('school') || questionLower.includes('university') || questionLower.includes('college')) {
+                if (num > 1000) {
+                    return `💡 Think about the scale of education in a major city or region. The answer is in the thousands.`;
+                } else if (num > 100) {
+                    return `💡 Consider the educational infrastructure. The answer is in the hundreds.`;
+                } else {
+                    return `💡 Think about the number of educational institutions in this context.`;
+                }
+            }
+            if (num > 1000000) {
+                return `💡 This is a very large number - think millions. Consider the scale of what's being asked about.`;
+            } else if (num > 1000) {
+                return `💡 This number is in the thousands. Think about the magnitude of what's being counted.`;
+            }
+        }
+        
+        // Generic but intelligent fallback based on answer structure
+        if (answer.match(/^\d+$/)) {
+            const num = parseInt(answer);
+            if (num < 10) {
+                return `💡 The answer is a single digit number. Think about the specific value related to what's being asked.`;
+            } else if (num < 100) {
+                return `💡 The answer is a two-digit number. Consider the typical ranges for this type of measurement or value.`;
+            }
+        }
+        
+        if (answer.split(' ').length === 1) {
+            const firstLetter = answer.charAt(0).toUpperCase();
+            const lastLetter = answer.charAt(answer.length - 1).toLowerCase();
+            return `💡 The answer is one word starting with "${firstLetter}" and ending with "${lastLetter}".`;
+        }
+        
+        // Last resort - give structural information
+        const wordCount = answer.split(' ').length;
+        return `💡 The answer has ${wordCount} word${wordCount === 1 ? '' : 's'}. Think about what specifically relates to the question being asked.`;
     }
     
-    generateTemplateBasedCards(options, count) {
-        const { subject, difficulty } = options;
+    getWordCategory(word) {
+        const categories = {
+            technology: ['tech', 'digital', 'software', 'computer', 'internet', 'data', 'cyber'],
+            business: ['finance', 'bank', 'trade', 'market', 'company', 'industry', 'economy'],
+            science: ['biology', 'chemistry', 'physics', 'element', 'molecule', 'cell', 'energy'],
+            geography: ['country', 'city', 'river', 'mountain', 'continent', 'ocean', 'climate'],
+            history: ['war', 'empire', 'revolution', 'ancient', 'medieval', 'dynasty', 'battle'],
+            literature: ['novel', 'poem', 'story', 'author', 'writer', 'book', 'character']
+        };
+        
+        for (const [category, keywords] of Object.entries(categories)) {
+            if (keywords.some(keyword => word.includes(keyword))) {
+                return category;
+            }
+        }
+        return 'this topic';
+    }
+    
+    getOrdinalSuffix(number) {
+        const suffixes = ['th', 'st', 'nd', 'rd'];
+        const remainder = number % 100;
+        return suffixes[(remainder - 20) % 10] || suffixes[remainder] || suffixes[0];
+    }
+
+    generateContextualHint(question, answer) {
+        // Enhanced contextual hint generation
+        const questionLower = question.toLowerCase();
+        const answerLower = answer.toLowerCase();
+        const answerWords = answer.split(' ').filter(word => word.length > 2);
+        
+        // Math/calculation hints
+        if (questionLower.includes('solve') || questionLower.includes('calculate') || questionLower.includes('find') || /[\d\+\-\*\/\=]/.test(question)) {
+            return 'Look for the mathematical relationship between the given numbers. What operation or formula applies here?';
+        }
+        
+        // Definition/concept hints
+        if (questionLower.includes('what is') || questionLower.includes('define') || questionLower.includes('meaning')) {
+            if (answerWords.length > 0) {
+                const firstWord = answerWords[0];
+                return `Think about concepts related to "${firstWord}". What category or field does this belong to?`;
+            }
+            return 'Consider the key characteristics and properties. What field of study does this relate to?';
+        }
+        
+        // Science hints
+        if (questionLower.includes('cell') || questionLower.includes('atom') || questionLower.includes('molecule') || questionLower.includes('reaction')) {
+            return 'Think about the basic scientific principles involved. What processes or structures are at work?';
+        }
+        
+        // History/dates hints
+        if (/\d{4}/.test(question) || questionLower.includes('when') || questionLower.includes('year')) {
+            return 'Consider the historical context and timeline. What major events were happening around this time?';
+        }
+        
+        // Language/literature hints
+        if (questionLower.includes('author') || questionLower.includes('wrote') || questionLower.includes('poem') || questionLower.includes('novel')) {
+            return 'Think about the time period and literary movement. What themes or styles was this writer known for?';
+        }
+        
+        // Give a hint based on answer structure
+        if (answer.length < 15) {
+            return `The answer is concise - think of a ${answerWords.length === 1 ? 'single key term' : 'short phrase'} that directly addresses the question.`;
+        }
+        
+        // Generic but helpful hint
+        return 'Break down the question into its key components. What is it really asking for?';
+    }
+
+
+
+    generateSmartHint(question, answer) {
+        // Fallback smart hint generation based on analysis
+        const questionLower = question.toLowerCase();
+        const answerLower = answer.toLowerCase();
+        
+        // Math hints
+        if (questionLower.includes('solve') || questionLower.includes('calculate') || questionLower.includes('find')) {
+            return {
+                type: 'smart',
+                text: 'Think about what mathematical operation or formula might be needed here. Look for key numbers or variables in the question.',
+                source: 'Smart hint system'
+            };
+        }
+        
+        // Science hints
+        if (questionLower.includes('what is') || questionLower.includes('define')) {
+            return {
+                type: 'smart',
+                text: 'Think about the key characteristics or properties. What category does this belong to?',
+                source: 'Smart hint system'
+            };
+        }
+        
+        // Give a hint based on answer length
+        if (answer.length < 10) {
+            return {
+                type: 'smart',
+                text: `The answer is a short ${answer.split(' ').length === 1 ? 'single word' : 'phrase'}. Think about the most direct response to the question.`,
+                source: 'Smart hint system'
+            };
+        }
+        
+        // Generic hint
+        return {
+            type: 'smart',
+            text: 'Think about what you already know about this topic. What concepts or keywords come to mind?',
+            source: 'Smart hint system'
+        };
+    }
+
+    showHintLoading() {
+        const hintButton = document.querySelector('.hint-button');
+        if (hintButton) {
+            hintButton.innerHTML = '💭 Generating...';
+            hintButton.disabled = true;
+        }
+    }
+
+    showHint(hint) {
+        // Create hint modal
+        const modal = document.createElement('div');
+        modal.className = 'hint-modal';
+        
+        const aiDisclaimer = '';
+        
+        modal.innerHTML = `
+            <div class="hint-content">
+                <div class="hint-header">
+                    <h3>💡 Hint</h3>
+                    <button class="hint-close" onclick="this.parentElement.parentElement.parentElement.remove()">×</button>
+                </div>
+                <div class="hint-text">${hint.text}</div>
+                <div class="hint-source">${hint.source}</div>
+                ${aiDisclaimer}
+                <div class="hint-actions">
+                    <button class="btn btn-primary" onclick="this.parentElement.parentElement.parentElement.remove()">Got it!</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Reset hint button
+        const hintButton = document.querySelector('.hint-button');
+        if (hintButton) {
+            hintButton.innerHTML = '💡 Hint';
+            hintButton.disabled = false;
+        }
+        
+        // Auto-remove after 30 seconds
+        setTimeout(() => {
+            if (modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
+        }, 30000);
+    }
+
+    useSkipCard() {
+        if (!this.usePowerUp('skipCards')) {
+            this.showNotification('No skip cards available! Buy more in the shop.', 'error');
+            return false;
+        }
+
+        if (this.currentCards.length === 0) return false;
+
+        // Remove current card without penalty
+        this.currentCards.splice(this.currentCardIndex, 1);
+        
+        // Adjust index if needed
+        if (this.currentCardIndex >= this.currentCards.length) {
+            this.currentCardIndex = 0;
+        }
+
+        this.showNotification('Card skipped! No penalty applied. 🚀', 'success');
+        
+        // Show next card or complete study
+        if (this.currentCards.length === 0) {
+            this.showStudyComplete();
+        } else {
+            this.showCurrentCard();
+        }
+        
+        return true;
+    }
+
+
+
+    recordStudySession(deckId, cardsStudied, correctAnswers, totalTime) {
+        const sessions = this.loadSessionData();
+        
+        // Look up the deck
+        let deck = this.decks.find(d => d.id === deckId);
+        const isGeneratedDeck = false;
+        
+        const session = {
+            id: Date.now().toString(),
+            deckId: deckId,
+            date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+            timestamp: Date.now(),
+            cardsStudied: cardsStudied,
+            correctAnswers: correctAnswers,
+            accuracy: cardsStudied > 0 ? Math.round((correctAnswers / cardsStudied) * 100) : 0,
+            totalTime: totalTime,
+            averageTimePerCard: cardsStudied > 0 ? Math.round(totalTime / cardsStudied) : 0,
+            // Enhanced Adaptive learning data
+            deckType: isGeneratedDeck ? 'generated' : 'custom',
+            subject: deck?.subject || 'Unknown',
+            difficulty: deck?.difficulty || 'Unknown',
+            // Additional Adaptive metadata for generated decks
+            ...(isGeneratedDeck && deck.generatedMetadata ? {
+                generationType: deck.generationType,
+                generatedConfidence: deck.confidence,
+                targetWeakness: deck.generatedMetadata.targetWeakness
+            } : {}),
+            // Power-up usage tracking
+            powerUpsUsed: this.currentSession?.powerUpsUsed || {}
+        };
+        
+        sessions.push(session);
+        this.saveSessionData(sessions);
+        
+    }
+
+
+    getDifficultyMultiplier(difficulty) {
+        const multipliers = {
+            'Beginner': 0.7,
+            'Intermediate': 1.0,
+            'Advanced': 1.3,
+            'Expert': 1.6
+        };
+        return multipliers[difficulty] || 1.0;
+    }
+    
+    
+    
+
+
+    getCardLearningData(deckId, cardIndex) {
+        const cardId = `${deckId}-${cardIndex}`;
+        if (!this.learningData[cardId]) {
+            this.learningData[cardId] = {
+                attempts: 0,
+                correctAttempts: 0,
+                incorrectAttempts: 0,
+                averageResponseTime: 0,
+                lastStudied: null,
+                difficultyScore: 1.0, // 1.0 = normal, >1.0 = harder, <1.0 = easier
+                repetitionLevel: 0, // Spaced repetition level
+                nextReviewDate: null,
+                totalStudyTime: 0
+            };
+        }
+        return this.learningData[cardId];
+    }
+
+    updateCardPerformance(deckId, cardIndex, isCorrect, responseTime) {
+        const cardData = this.getCardLearningData(deckId, cardIndex);
+        
+        // Update basic stats
+        cardData.attempts++;
+        cardData.lastStudied = Date.now();
+        cardData.totalStudyTime += responseTime;
+        cardData.averageResponseTime = cardData.totalStudyTime / cardData.attempts;
+        
+        if (isCorrect) {
+            cardData.correctAttempts++;
+            
+            // Improve difficulty score for correct answers
+            cardData.difficultyScore *= 0.95; // Slightly easier
+            cardData.repetitionLevel++;
+            
+            // Calculate next review date (spaced repetition)
+            const intervals = [1, 3, 7, 14, 30, 90]; // Days
+            const intervalDays = intervals[Math.min(cardData.repetitionLevel - 1, intervals.length - 1)];
+            cardData.nextReviewDate = Date.now() + (intervalDays * 24 * 60 * 60 * 1000);
+            
+        } else {
+            cardData.incorrectAttempts++;
+            
+            // Increase difficulty score for incorrect answers
+            cardData.difficultyScore *= 1.2; // Harder
+            cardData.repetitionLevel = Math.max(0, cardData.repetitionLevel - 1);
+            
+            // Reset to shorter interval for difficult cards
+            cardData.nextReviewDate = Date.now() + (1 * 24 * 60 * 60 * 1000); // Tomorrow
+        }
+        
+        // Keep difficulty score within reasonable bounds
+        cardData.difficultyScore = Math.max(0.1, Math.min(5.0, cardData.difficultyScore));
+        
+        this.saveLearningData();
+    }
+
+    calculateCardWeight(deckId, cardIndex) {
+        const cardData = this.getCardLearningData(deckId, cardIndex);
+        const now = Date.now();
+        
+        // Base weight is the difficulty score
+        let weight = cardData.difficultyScore;
+        
+        // If card is due for review (past next review date), increase weight significantly
+        if (cardData.nextReviewDate && now >= cardData.nextReviewDate) {
+            weight *= 3.0; // Much higher chance of appearing
+        }
+        
+        // If card was answered incorrectly recently, increase weight
+        const timeSinceLastStudy = cardData.lastStudied ? (now - cardData.lastStudied) / (1000 * 60 * 60) : 999; // Hours
+        if (cardData.incorrectAttempts > cardData.correctAttempts && timeSinceLastStudy < 24) {
+            weight *= 2.0; // Double weight for recently missed cards
+        }
+        
+        // Never let weight be zero
+        return Math.max(0.1, weight);
+    }
+
+    // Weighted shuffle algorithm - cards with higher weights appear more frequently
+    weightedShuffle(cards, deckId) {
+        const weightedCards = [];
+        
+        cards.forEach((card, index) => {
+            const weight = this.calculateCardWeight(deckId, index);
+            const copies = Math.ceil(weight * 2); // More copies = higher frequency
+            
+            for (let i = 0; i < copies; i++) {
+                weightedCards.push({ ...card, originalIndex: index });
+            }
+        });
+        
+        // Shuffle the weighted array
+        return weightedCards.sort(() => Math.random() - 0.5);
+    }
+
+    saveDeck() {
+        const name = document.getElementById('deck-name').value.trim();
+        const subject = document.getElementById('deck-subject').value.trim();
+        const yearGroup = document.getElementById('year-group').value.trim();
+        
+        if (!name || !subject || !yearGroup) {
+            alert('Please fill in deck name, subject, and year group');
+            return;
+        }
+
+        const cards = this.collectCards();
+        const titleCards = this.collectTitleCards();
+        
+        if (cards.length === 0) {
+            alert('Please add at least one study card');
+            return;
+        }
+
+        if (this.isEditMode && this.editingDeckId) {
+            // Update existing deck
+            const deckIndex = this.decks.findIndex(d => d.id === this.editingDeckId);
+            if (deckIndex !== -1) {
+                this.decks[deckIndex] = {
+                    ...this.decks[deckIndex], // Keep original id and createdAt
+                    name,
+                    subject,
+                    yearGroup,
+                    cards,
+                    titleCards,
+                    style: this.selectedStyle,
+                    color: this.selectedColor,
+                    updatedAt: new Date().toISOString()
+                };
+                this.showNotification('Deck updated successfully!', 'success');
+            }
+        } else {
+            // Create new deck
+            const deck = {
+                id: Date.now().toString(),
+                name,
+                subject,
+                yearGroup,
+                cards,
+                titleCards,
+                style: this.selectedStyle,
+                color: this.selectedColor,
+                createdAt: new Date().toISOString()
+            };
+            this.decks.push(deck);
+            this.showNotification('Deck saved successfully!', 'success');
+            
+            // Award XP for creating a new deck
+            if (typeof awardXP === 'function') {
+                awardXP(XP_VALUES.createDeck, 'Deck created!');
+                
+                // Check deck creation achievements
+                if (typeof checkAchievements === 'function') {
+                    checkAchievements('createDeck', { totalDecks: this.decks.length });
+                }
+            }
+        }
+
+        this.saveDecks();
+        this.clearForm();
+        this.showView('home');
+    }
+
+    collectCards() {
+        const cards = [];
+        const cardItems = document.querySelectorAll('.card-item');
+        
+        cardItems.forEach(item => {
+            const questionEditor = item.querySelector('.card-question-editor');
+            const answerEditor = item.querySelector('.card-answer-editor');
+            
+            // Get HTML content, but remove placeholder elements
+            let questionHTML = questionEditor.innerHTML;
+            let answerHTML = answerEditor.innerHTML;
+            
+            // Remove placeholder spans
+            questionHTML = questionHTML.replace(/<span class="placeholder">.*?<\/span>/g, '');
+            answerHTML = answerHTML.replace(/<span class="placeholder">.*?<\/span>/g, '');
+            
+            const questionText = questionEditor.textContent.trim();
+            const answerText = answerEditor.textContent.trim();
+            
+            // Get explanation if provided
+            const explanationEditor = item.querySelector('.card-explanation-editor');
+            let explanationHTML = '';
+            let explanationText = '';
+            
+            if (explanationEditor) {
+                explanationHTML = explanationEditor.innerHTML;
+                explanationHTML = explanationHTML.replace(/<span class="placeholder">.*?<\/span>/g, '');
+                explanationText = explanationEditor.textContent.trim();
+            }
+            
+            // Get alternative answers
+            const alternativeAnswers = [];
+            const altAnswerInputs = item.querySelectorAll('.alternative-answer-input');
+            altAnswerInputs.forEach(input => {
+                const altAnswer = input.value.trim();
+                if (altAnswer) {
+                    alternativeAnswers.push(altAnswer);
+                }
+            });
+            
+            // Get custom hint if provided
+            const hintInput = item.querySelector('.card-hint-input');
+            const customHint = hintInput ? hintInput.value.trim() : '';
+            
+            if (questionText && answerText) {
+                const card = { 
+                    question: questionHTML.trim(), 
+                    answer: answerHTML.trim(),
+                    questionText: questionText,
+                    answerText: answerText
+                };
+                
+                // Add explanation if provided
+                if (explanationText) {
+                    card.explanation = explanationHTML.trim();
+                    card.explanationText = explanationText;
+                }
+                
+                // Add alternative answers if provided
+                if (alternativeAnswers.length > 0) {
+                    card.alternativeAnswers = alternativeAnswers;
+                }
+                
+                // Add custom hint if provided
+                if (customHint) {
+                    card.customHint = customHint;
+                }
+                
+                cards.push(card);
+            }
+        });
+        
+        return cards;
+    }
+
+    collectTitleCards() {
+        const titleCards = [];
+        const titleCardItems = document.querySelectorAll('.title-card-item');
+        
+        titleCardItems.forEach(item => {
+            const titleEditor = item.querySelector('.title-card-title-editor');
+            const contentEditor = item.querySelector('.title-card-content-editor');
+            
+            // Get HTML content, but remove placeholder elements
+            let titleHTML = titleEditor.innerHTML;
+            let contentHTML = contentEditor.innerHTML;
+            
+            // Remove placeholder spans
+            titleHTML = titleHTML.replace(/<span class="placeholder">.*?<\/span>/g, '');
+            contentHTML = contentHTML.replace(/<span class="placeholder">.*?<\/span>/g, '');
+            
+            const titleText = titleEditor.textContent.trim();
+            const contentText = contentEditor.textContent.trim();
+            
+            if (titleText) {  // Title is required, content is optional
+                titleCards.push({ 
+                    title: titleHTML.trim(), 
+                    content: contentHTML.trim(),
+                    titleText: titleText,
+                    contentText: contentText
+                });
+            }
+        });
+        
+        return titleCards;
+    }
+
+    clearForm() {
+        document.getElementById('deck-form').reset();
+        document.getElementById('cards-list').innerHTML = '';
+        document.getElementById('title-cards-list').innerHTML = '';
+        
+        // Reset customization selections
+        document.querySelectorAll('.style-option').forEach(opt => opt.classList.remove('selected'));
+        document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+        document.querySelector('.style-option[data-style="classic"]')?.classList.add('selected');
+        document.querySelector('.color-option[data-color="blue"]')?.classList.add('selected');
+        this.selectedStyle = 'classic';
+        this.selectedColor = 'blue';
+        
+        // Reset edit mode state
+        this.isEditMode = false;
+        this.editingDeckId = null;
+        this.updateUIForEditMode(false);
+        
+        this.addCard();
+    }
+
+    deleteDeck(deckId) {
+        const deck = this.decks.find(d => d.id === deckId);
+        if (!deck) {
+            alert('Deck not found');
+            return;
+        }
+
+        // Store the deck to delete for confirmation
+        this.deckToDelete = deck;
+        
+        // Show confirmation modal
+        document.getElementById('delete-deck-name').textContent = deck.name;
+        document.getElementById('delete-confirmation-input').value = '';
+        document.getElementById('confirm-delete-btn').disabled = true;
+        document.getElementById('delete-confirmation-modal').style.display = 'flex';
+        
+        // Focus on the input field
+        setTimeout(() => {
+            document.getElementById('delete-confirmation-input').focus();
+        }, 100);
+        
+        // Set up input validation
+        this.setupDeleteConfirmation();
+    }
+
+    setupDeleteConfirmation() {
+        const input = document.getElementById('delete-confirmation-input');
+        const confirmBtn = document.getElementById('confirm-delete-btn');
+        
+        // Remove any existing event listeners
+        input.replaceWith(input.cloneNode(true));
+        const newInput = document.getElementById('delete-confirmation-input');
+        
+        newInput.addEventListener('input', (e) => {
+            const inputValue = e.target.value.trim();
+            const deckName = this.deckToDelete.name;
+            
+            // Check if input matches deck name exactly or is "dev" (developer shortcut)
+            const isValid = inputValue === deckName || inputValue === 'dev';
+            
+            if (isValid) {
+                confirmBtn.disabled = false;
+                newInput.classList.add('valid');
+            } else {
+                confirmBtn.disabled = true;
+                newInput.classList.remove('valid');
+            }
+        });
+        
+        // Allow Enter key to confirm if valid
+        newInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !confirmBtn.disabled) {
+                this.confirmDelete();
+            }
+        });
+    }
+
+    confirmDelete() {
+        if (!this.deckToDelete) return;
+        
+        // Delete the deck
+        this.decks = this.decks.filter(deck => deck.id !== this.deckToDelete.id);
+        this.saveDecks();
+        this.renderDecks();
+        
+        
+        // Show notification
+        this.showNotification(`"${this.deckToDelete.name}" deleted successfully`, 'info');
+        
+        // Close modal and cleanup
+        this.cancelDelete();
+    }
+
+    cancelDelete() {
+        document.getElementById('delete-confirmation-modal').style.display = 'none';
+        this.deckToDelete = null;
+        
+        // Reset form
+        document.getElementById('delete-confirmation-input').value = '';
+        document.getElementById('confirm-delete-btn').disabled = true;
+        document.getElementById('delete-confirmation-input').classList.remove('valid');
+    }
+
+    saveDeckToFile(deckId) {
+        const deck = this.decks.find(d => d.id === deckId);
+        if (!deck) {
+            alert('Deck not found');
+            return;
+        }
+
+        // Create deck data with metadata for file format validation
+        const deckData = {
+            version: '1.0',
+            type: 'flashcards-deck',
+            exportedAt: new Date().toISOString(),
+            deck: {
+                ...deck,
+                // Remove the ID to generate new one on import
+                id: undefined
+            }
+        };
+
+        // Convert to JSON string
+        const jsonString = JSON.stringify(deckData, null, 2);
+        
+        // Create blob and download
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        // Create download link
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${deck.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.flashdeck`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up the URL object
+        URL.revokeObjectURL(url);
+        
+        this.showNotification('Deck saved to file!', 'success');
+    }
+
+    importDeck() {
+        const fileInput = document.getElementById('import-file-input');
+        
+        // Set up the file input change handler
+        fileInput.onchange = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Check file extension
+            if (!file.name.endsWith('.flashdeck')) {
+                alert('Please select a valid .flashdeck file');
+                return;
+            }
+            
+            // Read the file
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const deckData = JSON.parse(e.target.result);
+                    
+                    // Validate file format
+                    if (!deckData.type || deckData.type !== 'flashcards-deck') {
+                        throw new Error('Invalid file format');
+                    }
+                    
+                    if (!deckData.deck || !deckData.deck.name || !deckData.deck.cards) {
+                        throw new Error('Incomplete deck data');
+                    }
+                    
+                    const importedDeck = deckData.deck;
+                    
+                    // Generate new ID and timestamps
+                    importedDeck.id = Date.now().toString();
+                    importedDeck.createdAt = new Date().toISOString();
+                    importedDeck.importedAt = new Date().toISOString();
+                    
+                    // Check for duplicate names and modify if necessary
+                    let deckName = importedDeck.name;
+                    let counter = 1;
+                    while (this.decks.some(d => d.name === deckName)) {
+                        deckName = `${importedDeck.name} (${counter})`;
+                        counter++;
+                    }
+                    importedDeck.name = deckName;
+                    
+                    // Add to decks array
+                    this.decks.push(importedDeck);
+                    this.saveDecks();
+                    this.renderDecks();
+                    
+                    this.showNotification(`Deck "${deckName}" imported successfully!`, 'success');
+                    
+                } catch (error) {
+                    console.error('Import error:', error);
+                    alert('Error importing deck: Invalid file format or corrupted data');
+                }
+                
+                // Reset the file input
+                fileInput.value = '';
+            };
+            
+            reader.onerror = () => {
+                alert('Error reading file');
+                fileInput.value = '';
+            };
+            
+            reader.readAsText(file);
+        };
+        
+        // Trigger file selection
+        fileInput.click();
+    }
+
+    // Learning Statistics
+    showDeckStats(deckId) {
+        const deck = this.decks.find(d => d.id === deckId);
+        if (!deck) {
+            alert('Deck not found');
+            return;
+        }
+
+        // Populate modal with deck name
+        document.getElementById('stats-deck-name').textContent = `${deck.name} - Learning Statistics`;
+
+        // Calculate overall statistics
+        let totalAttempts = 0;
+        let totalCorrect = 0;
+        let totalResponseTime = 0;
+        let totalCards = deck.cards.length;
+        let studiedCards = 0;
+
+        const cardStats = [];
+
+        deck.cards.forEach((card, index) => {
+            const cardData = this.getCardLearningData(deckId, index);
+            
+            if (cardData.attempts > 0) {
+                studiedCards++;
+                totalAttempts += cardData.attempts;
+                totalCorrect += cardData.correctAttempts;
+                totalResponseTime += cardData.totalStudyTime;
+            }
+
+            // Determine difficulty level
+            let difficultyLevel = 'normal';
+            let difficultyColor = '🟡';
+            
+            if (cardData.difficultyScore < 0.8) {
+                difficultyLevel = 'easy';
+                difficultyColor = '🟢';
+            } else if (cardData.difficultyScore > 1.5) {
+                difficultyLevel = 'hard';
+                difficultyColor = '🔴';
+            }
+
+            cardStats.push({
+                question: card.question,
+                accuracy: cardData.attempts > 0 ? Math.round((cardData.correctAttempts / cardData.attempts) * 100) : 0,
+                attempts: cardData.attempts,
+                avgTime: cardData.attempts > 0 ? Math.round(cardData.averageResponseTime / 1000) : 0,
+                difficulty: difficultyLevel,
+                difficultyColor: difficultyColor,
+                difficultyScore: cardData.difficultyScore
+            });
+        });
+
+        // Update summary statistics
+        const overallAccuracy = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : 0;
+        const avgResponseTime = totalAttempts > 0 ? Math.round((totalResponseTime / totalAttempts) / 1000) : 0;
+
+        document.getElementById('total-sessions').textContent = studiedCards;
+        document.getElementById('overall-accuracy').textContent = `${overallAccuracy}%`;
+        document.getElementById('avg-response-time').textContent = `${avgResponseTime}s`;
+
+        // Populate card statistics
+        const cardsStatsContainer = document.getElementById('cards-stats');
+        cardsStatsContainer.innerHTML = cardStats.map(card => `
+            <div class="card-stat-item">
+                <div class="card-question">${this.escapeHtml(card.question)}</div>
+                <div class="card-stats-data">
+                    <span class="difficulty-indicator difficulty-${card.difficulty}">
+                        ${card.difficultyColor} ${card.difficulty}
+                    </span>
+                    <span>${card.accuracy}% (${card.attempts} attempts)</span>
+                    <span>${card.avgTime}s avg</span>
+                </div>
+            </div>
+        `).join('');
+
+        // Generate learning insights
+        this.generateLearningInsights(deckId, cardStats, overallAccuracy);
+
+        // Show modal
+        document.getElementById('stats-modal').style.display = 'flex';
+    }
+
+    generateLearningInsights(deckId, cardStats, overallAccuracy) {
+        const insights = [];
+        
+        // Accuracy insights
+        if (overallAccuracy >= 80) {
+            insights.push("🎉 Excellent work! You're mastering this deck.");
+        } else if (overallAccuracy >= 60) {
+            insights.push("📈 Good progress! Focus on the difficult cards to improve.");
+        } else if (overallAccuracy > 0) {
+            insights.push("🎯 Keep practicing! The adaptive system will help you improve.");
+        }
+
+        // Difficult cards insight
+        const hardCards = cardStats.filter(card => card.difficulty === 'hard').length;
+        if (hardCards > 0) {
+            insights.push(`🔴 ${hardCards} card${hardCards > 1 ? 's' : ''} need${hardCards === 1 ? 's' : ''} more practice - they'll appear more frequently.`);
+        }
+
+        // Easy cards insight
+        const easyCards = cardStats.filter(card => card.difficulty === 'easy').length;
+        if (easyCards > 0) {
+            insights.push(`🟢 ${easyCards} card${easyCards > 1 ? 's' : ''} mastered! They'll appear less frequently.`);
+        }
+
+        // Response time insight
+        const slowCards = cardStats.filter(card => card.avgTime > 10).length;
+        if (slowCards > 0) {
+            insights.push(`⏱️ ${slowCards} card${slowCards > 1 ? 's' : ''} taking longer to answer - practice for faster recall.`);
+        }
+
+        // Adaptive learning explanation
+        if (cardStats.some(card => card.attempts > 0)) {
+            insights.push("🧠 The app is learning your patterns and will show difficult cards more often!");
+        }
+
+        const insightsContainer = document.getElementById('learning-insights');
+        insightsContainer.innerHTML = `
+            <h4>📊 Learning Insights</h4>
+            ${insights.map(insight => `<div class="insight-item">${insight}</div>`).join('')}
+        `;
+    }
+
+    closeStatsModal() {
+        document.getElementById('stats-modal').style.display = 'none';
+        // Reset modal for normal stats view
+        document.querySelector('.stats-summary').style.display = 'grid';
+    }
+
+    // Stats Page Analytics
+    initializeStatsPage() {
+        if (document.querySelector('.view.active')?.id !== 'stats-view') return;
+        
+        // Set up event listeners
+        document.getElementById('stats-time-range').addEventListener('change', () => {
+            this.refreshStatsPage();
+        });
+        
+        this.refreshStatsPage();
+    }
+
+    refreshStatsPage() {
+        this.updateOverviewStats();
+        this.renderCharts();
+        this.generateAdvancedInsights();
+    }
+
+    getFilteredSessions() {
+        const timeRange = document.getElementById('stats-time-range').value;
+        const sessions = this.loadSessionData();
+        
+        if (timeRange === 'all') return sessions;
+        
+        const days = parseInt(timeRange);
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - days);
+        
+        return sessions.filter(session => new Date(session.timestamp) >= cutoffDate);
+    }
+
+    updateOverviewStats() {
+        const sessions = this.getFilteredSessions();
+        
+        // Calculate overall accuracy
+        let totalCards = 0;
+        let totalCorrect = 0;
+        let totalTime = 0;
+        
+        sessions.forEach(session => {
+            totalCards += session.cardsStudied;
+            totalCorrect += session.correctAnswers;
+            totalTime += session.totalTime;
+        });
+        
+        const overallAccuracy = totalCards > 0 ? Math.round((totalCorrect / totalCards) * 100) : 0;
+        const avgResponseTime = totalCards > 0 ? Math.round((totalTime / totalCards) / 1000) : 0;
+        
+        // Calculate study streak
+        const studyStreak = this.calculateStudyStreak();
+        
+        // Calculate total coins earned from coin history
+        const totalCoinsEarned = this.calculateTotalCoinsEarned();
+        
+        // Get power-up usage stats
+        const powerUpStats = this.powerUpUsageStats || {};
+        
+        // Update DOM
+        // Update DOM elements safely
+        const updateElement = (id, value) => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = value;
+        };
+        
+        updateElement('overall-accuracy-stat', `${overallAccuracy}%`);
+        updateElement('total-cards-studied', totalCards.toLocaleString());
+        updateElement('avg-response-time-stat', `${avgResponseTime}s`);
+        updateElement('study-streak', studyStreak);
+        updateElement('total-coins-earned', totalCoinsEarned.toLocaleString());
+        updateElement('hints-used-stat', (powerUpStats.hints || 0).toLocaleString());
+        updateElement('skips-used-stat', (powerUpStats.skipCards || 0).toLocaleString());
+        updateElement('double-coins-used-stat', (powerUpStats.doubleCoins || 0).toLocaleString());
+    }
+
+    calculateStudyStreak() {
+        const sessions = this.loadSessionData();
+        if (sessions.length === 0) return 0;
+        
+        // Get unique study dates, sorted by date
+        const studyDates = [...new Set(sessions.map(s => s.date))].sort().reverse();
+        
+        let streak = 0;
+        const today = new Date().toISOString().split('T')[0];
+        let currentDate = new Date(today);
+        
+        for (const studyDate of studyDates) {
+            const dateStr = currentDate.toISOString().split('T')[0];
+            
+            if (studyDate === dateStr) {
+                streak++;
+                currentDate.setDate(currentDate.getDate() - 1);
+            } else {
+                break;
+            }
+        }
+        
+        return streak;
+    }
+    
+    calculateTotalCoinsEarned() {
+        const coinHistory = this.loadCoinHistory();
+        return coinHistory
+            .filter(transaction => transaction.amount > 0)
+            .reduce((total, transaction) => total + transaction.amount, 0);
+    }
+
+    renderCharts() {
+        // Destroy existing charts to prevent memory leaks
+        Object.keys(this.chartInstances).forEach(key => {
+            if (this.chartInstances[key]) {
+                this.chartInstances[key].destroy();
+            }
+        });
+        this.chartInstances = {};
+        
+        this.renderAccuracyChart();
+        this.renderActivityChart();
+        this.renderDifficultyChart();
+        this.renderResponseTimeChart();
+        this.renderDeckPerformanceChart();
+        this.renderStudyHeatmap();
+        this.renderPowerUpUsageChart();
+    }
+
+    renderAccuracyChart() {
+        const ctx = document.getElementById('accuracy-chart').getContext('2d');
+        const sessions = this.getFilteredSessions();
+        
+        // Group by date and calculate daily accuracy
+        const dailyStats = {};
+        sessions.forEach(session => {
+            if (!dailyStats[session.date]) {
+                dailyStats[session.date] = { total: 0, correct: 0 };
+            }
+            dailyStats[session.date].total += session.cardsStudied;
+            dailyStats[session.date].correct += session.correctAnswers;
+        });
+        
+        const dates = Object.keys(dailyStats).sort();
+        const accuracyData = dates.map(date => {
+            const stats = dailyStats[date];
+            return stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
+        });
+        
+        this.chartInstances.accuracyChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates.map(date => new Date(date).toLocaleDateString()),
+                datasets: [{
+                    label: 'Accuracy %',
+                    data: accuracyData,
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    renderActivityChart() {
+        const ctx = document.getElementById('activity-chart').getContext('2d');
+        const sessions = this.getFilteredSessions();
+        
+        // Group by date
+        const dailyActivity = {};
+        sessions.forEach(session => {
+            dailyActivity[session.date] = (dailyActivity[session.date] || 0) + session.cardsStudied;
+        });
+        
+        const dates = Object.keys(dailyActivity).sort();
+        const activityData = dates.map(date => dailyActivity[date]);
+        
+        this.chartInstances.activityChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: dates.map(date => new Date(date).toLocaleDateString()),
+                datasets: [{
+                    label: 'Cards Studied',
+                    data: activityData,
+                    backgroundColor: 'rgba(72, 187, 120, 0.8)',
+                    borderColor: '#48bb78',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    renderDifficultyChart() {
+        const ctx = document.getElementById('difficulty-chart').getContext('2d');
+        
+        // Analyze all cards across all decks
+        let easyCards = 0;
+        let normalCards = 0;
+        let hardCards = 0;
+        
+        this.decks.forEach(deck => {
+            deck.cards.forEach((_, index) => {
+                const cardData = this.getCardLearningData(deck.id, index);
+                if (cardData.attempts === 0) {
+                    normalCards++; // Unstudied cards are normal
+                } else if (cardData.difficultyScore < 0.8) {
+                    easyCards++;
+                } else if (cardData.difficultyScore > 1.5) {
+                    hardCards++;
+                } else {
+                    normalCards++;
+                }
+            });
+        });
+        
+        this.chartInstances.difficultyChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Easy', 'Normal', 'Hard'],
+                datasets: [{
+                    data: [easyCards, normalCards, hardCards],
+                    backgroundColor: [
+                        '#48bb78', // Green
+                        '#ed8936', // Orange
+                        '#f56565'  // Red
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    renderResponseTimeChart() {
+        const ctx = document.getElementById('response-time-chart').getContext('2d');
+        const sessions = this.getFilteredSessions();
+        
+        // Group by date and calculate average response time
+        const dailyResponseTime = {};
+        sessions.forEach(session => {
+            if (!dailyResponseTime[session.date]) {
+                dailyResponseTime[session.date] = { totalTime: 0, totalCards: 0 };
+            }
+            dailyResponseTime[session.date].totalTime += session.totalTime;
+            dailyResponseTime[session.date].totalCards += session.cardsStudied;
+        });
+        
+        const dates = Object.keys(dailyResponseTime).sort();
+        const responseTimeData = dates.map(date => {
+            const stats = dailyResponseTime[date];
+            return stats.totalCards > 0 ? Math.round((stats.totalTime / stats.totalCards) / 1000) : 0;
+        });
+        
+        this.chartInstances.responseTimeChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates.map(date => new Date(date).toLocaleDateString()),
+                datasets: [{
+                    label: 'Avg Response Time (s)',
+                    data: responseTimeData,
+                    borderColor: '#9f7aea',
+                    backgroundColor: 'rgba(159, 122, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value + 's';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    renderDeckPerformanceChart() {
+        const ctx = document.getElementById('deck-performance-chart').getContext('2d');
+        const sessions = this.getFilteredSessions();
+        
+        // Calculate performance per deck
+        const deckPerformance = {};
+        sessions.forEach(session => {
+            const deck = this.decks.find(d => d.id === session.deckId);
+            if (deck) {
+                if (!deckPerformance[deck.name]) {
+                    deckPerformance[deck.name] = { total: 0, correct: 0 };
+                }
+                deckPerformance[deck.name].total += session.cardsStudied;
+                deckPerformance[deck.name].correct += session.correctAnswers;
+            }
+        });
+        
+        const deckNames = Object.keys(deckPerformance);
+        const accuracyData = deckNames.map(name => {
+            const stats = deckPerformance[name];
+            return stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
+        });
+        
+        this.chartInstances.deckPerformanceChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: deckNames,
+                datasets: [{
+                    label: 'Accuracy %',
+                    data: accuracyData,
+                    backgroundColor: 'rgba(49, 130, 206, 0.8)',
+                    borderColor: '#3182ce',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    renderStudyHeatmap() {
+        const container = document.getElementById('heatmap-container');
+        const sessions = this.loadSessionData(); // Get all sessions for heatmap
+        
+        // Create activity map by date
+        const activityMap = {};
+        sessions.forEach(session => {
+            activityMap[session.date] = (activityMap[session.date] || 0) + session.cardsStudied;
+        });
+        
+        // Generate last 90 days
+        const heatmapHTML = [];
+        const today = new Date();
+        
+        for (let i = 89; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+            
+            const activity = activityMap[dateStr] || 0;
+            let level = 0;
+            
+            if (activity > 0) level = 1;
+            if (activity > 5) level = 2;
+            if (activity > 10) level = 3;
+            if (activity > 20) level = 4;
+            if (activity > 30) level = 5;
+            
+            heatmapHTML.push(`
+                <div class="heatmap-day level-${level}" 
+                     title="${dateStr}: ${activity} cards studied"
+                     data-date="${dateStr}">
+                </div>
+            `);
+        }
+        
+        heatmapHTML.push(`
+            <div class="heatmap-legend">
+                <span>Less</span>
+                <div class="legend-item">
+                    <div class="legend-color level-0"></div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color level-1"></div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color level-2"></div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color level-3"></div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color level-4"></div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color level-5"></div>
+                </div>
+                <span>More</span>
+            </div>
+        `);
+        
+        container.innerHTML = heatmapHTML.join('');
+    }
+    
+    renderPowerUpUsageChart() {
+        const ctx = document.getElementById('powerup-usage-chart');
+        if (!ctx) return;
+        
+        const powerUpStats = this.powerUpUsageStats || {};
+        
+        // Prepare data
+        const data = {
+            labels: ['💡 Hints', '⏭️ Skip Cards', '💰 2x Coins', '🛡️ Streak Shields'],
+            datasets: [{
+                label: 'Times Used',
+                data: [
+                    powerUpStats.hints || 0,
+                    powerUpStats.skipCards || 0,
+                    powerUpStats.doubleCoins || 0,
+                    powerUpStats.streakShields || 0
+                ],
+                backgroundColor: [
+                    'rgba(255, 206, 84, 0.8)',
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(75, 192, 192, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(255, 206, 84, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(75, 192, 192, 1)'
+                ],
+                borderWidth: 2
+            }]
+        };
+        
+        this.chartInstances.powerupUsage = new Chart(ctx, {
+            type: 'doughnut',
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Power-up Usage Distribution',
+                        font: { size: 16, weight: 'bold' }
+                    },
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                return `${label}: ${value} times (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                cutout: '50%',
+                animation: {
+                    animateScale: true,
+                    animateRotate: true
+                }
+            }
+        });
+    }
+
+    generateAdvancedInsights() {
+        const sessions = this.getFilteredSessions();
+        const insights = [];
+        
+        if (sessions.length === 0) {
+            insights.push({
+                icon: '👋',
+                title: 'Start Studying!',
+                description: 'Begin your learning journey by studying some flashcards. The more you practice, the better insights we can provide!'
+            });
+        } else {
+            // Performance trend analysis
+            const recentSessions = sessions.slice(-5);
+            const olderSessions = sessions.slice(0, -5);
+            
+            if (recentSessions.length >= 3 && olderSessions.length >= 3) {
+                const recentAccuracy = recentSessions.reduce((sum, s) => sum + s.accuracy, 0) / recentSessions.length;
+                const olderAccuracy = olderSessions.reduce((sum, s) => sum + s.accuracy, 0) / olderSessions.length;
+                
+                if (recentAccuracy > olderAccuracy + 5) {
+                    insights.push({
+                        icon: '📈',
+                        title: 'Improving Performance!',
+                        description: `Your accuracy has improved by ${Math.round(recentAccuracy - olderAccuracy)}% in recent sessions. Keep up the great work!`
+                    });
+                } else if (recentAccuracy < olderAccuracy - 5) {
+                    insights.push({
+                        icon: '🎯',
+                        title: 'Focus Opportunity',
+                        description: 'Your recent accuracy has decreased slightly. Consider reviewing difficult cards or taking breaks to maintain focus.'
+                    });
+                }
+            }
+            
+            // Study consistency
+            const studyStreak = this.calculateStudyStreak();
+            if (studyStreak >= 7) {
+                insights.push({
+                    icon: '🔥',
+                    title: 'Amazing Consistency!',
+                    description: `You've studied for ${studyStreak} days in a row! Consistent practice leads to better retention.`
+                });
+            } else if (studyStreak >= 3) {
+                insights.push({
+                    icon: '✨',
+                    title: 'Building Good Habits',
+                    description: `${studyStreak} days of consistent studying! Try to maintain this streak for optimal learning.`
+                });
+            }
+            
+            // Power-up usage insights
+            const powerUpStats = this.powerUpUsageStats || {};
+            const totalPowerUpsUsed = Object.values(powerUpStats).reduce((sum, count) => sum + count, 0);
+            
+            if (totalPowerUpsUsed > 0) {
+                const mostUsedPowerUp = Object.keys(powerUpStats).reduce((a, b) => 
+                    (powerUpStats[a] || 0) > (powerUpStats[b] || 0) ? a : b
+                );
+                
+                const powerUpNames = {
+                    hints: 'Hints',
+                    skipCards: 'Skip Cards',
+                    doubleCoins: '2x Coins',
+                    streakShields: 'Streak Shields'
+                };
+                
+                const powerUpEmojis = {
+                    hints: '💡',
+                    skipCards: '⏭️', 
+                    doubleCoins: '💰',
+                    streakShields: '🛡️'
+                };
+                
+                insights.push({
+                    icon: '🚀',
+                    title: 'Power-up Activity',
+                    description: `You've used ${totalPowerUpsUsed} power-ups total! Your favorite is ${powerUpEmojis[mostUsedPowerUp]} ${powerUpNames[mostUsedPowerUp]} (${powerUpStats[mostUsedPowerUp]} times).`
+                });
+                
+                // Strategic insight about power-up usage
+                if (powerUpStats.hints > powerUpStats.skipCards * 2) {
+                    insights.push({
+                        icon: '🧠',
+                        title: 'Learning Strategy',
+                        description: 'You prefer hints over skipping cards - great approach! This shows you want to understand rather than avoid difficult content.'
+                    });
+                }
+            }
+            
+            // Time of day analysis
+            const sessionsByHour = {};
+            sessions.forEach(session => {
+                const hour = new Date(session.timestamp).getHours();
+                if (!sessionsByHour[hour]) sessionsByHour[hour] = [];
+                sessionsByHour[hour].push(session);
+            });
+            
+            let bestHour = null;
+            let bestAccuracy = 0;
+            
+            Object.keys(sessionsByHour).forEach(hour => {
+                if (sessionsByHour[hour].length >= 3) { // Need at least 3 sessions
+                    const avgAccuracy = sessionsByHour[hour].reduce((sum, s) => sum + s.accuracy, 0) / sessionsByHour[hour].length;
+                    if (avgAccuracy > bestAccuracy) {
+                        bestAccuracy = avgAccuracy;
+                        bestHour = parseInt(hour);
+                    }
+                }
+            });
+            
+            if (bestHour !== null) {
+                const timeString = bestHour < 12 ? `${bestHour || 12}:00 AM` : `${bestHour > 12 ? bestHour - 12 : bestHour}:00 PM`;
+                insights.push({
+                    icon: '⏰',
+                    title: 'Optimal Study Time',
+                    description: `You perform best around ${timeString} with ${Math.round(bestAccuracy)}% accuracy. Consider scheduling study sessions at this time.`
+                });
+            }
+            
+            // Card difficulty insights
+            let hardCardCount = 0;
+            this.decks.forEach(deck => {
+                deck.cards.forEach((_, index) => {
+                    const cardData = this.getCardLearningData(deck.id, index);
+                    if (cardData.attempts > 0 && cardData.difficultyScore > 1.5) {
+                        hardCardCount++;
+                    }
+                });
+            });
+            
+            if (hardCardCount > 0) {
+                insights.push({
+                    icon: '🎓',
+                    title: 'Challenge Cards Identified',
+                    description: `You have ${hardCardCount} challenging cards that appear more frequently. The adaptive system is helping you master them!`
+                });
+            }
+        }
+        
+        // Render insights
+        const container = document.getElementById('learning-insights-list');
+        container.innerHTML = insights.map(insight => `
+            <div class="insight-card">
+                <div class="insight-icon">${insight.icon}</div>
+                <div class="insight-content">
+                    <div class="insight-title">${insight.title}</div>
+                    <div class="insight-description">${insight.description}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    editDeck(deckId) {
+        const deck = this.decks.find(d => d.id === deckId);
+        if (!deck) {
+            alert('Deck not found');
+            return;
+        }
+
+        this.isEditMode = true;
+        this.editingDeckId = deckId;
+        this.loadDeckForEditing(deck);
+        this.showView('create');
+    }
+
+    loadDeckForEditing(deck) {
+        // Clear any existing cards and title cards first
+        document.getElementById('cards-list').innerHTML = '';
+        document.getElementById('title-cards-list').innerHTML = '';
+
+        // Load basic deck info
+        document.getElementById('deck-name').value = deck.name;
+        document.getElementById('deck-subject').value = deck.subject;
+        document.getElementById('year-group').value = deck.yearGroup || '';
+
+        // Load style selection
+        this.selectedStyle = deck.style || 'classic';
+        document.querySelectorAll('.style-option').forEach(opt => opt.classList.remove('selected'));
+        document.querySelector(`.style-option[data-style="${this.selectedStyle}"]`)?.classList.add('selected');
+
+        // Load color selection
+        this.selectedColor = deck.color || 'blue';
+        document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+        document.querySelector(`.color-option[data-color="${this.selectedColor}"]`)?.classList.add('selected');
+
+        // Load title cards
+        if (deck.titleCards && deck.titleCards.length > 0) {
+            deck.titleCards.forEach((titleCard, index) => {
+                this.addTitleCard();
+                const titleCardItems = document.querySelectorAll('.title-card-item');
+                const titleCardItem = titleCardItems[titleCardItems.length - 1];
+                
+                const titleEditor = titleCardItem.querySelector('.title-card-title-editor');
+                const contentEditor = titleCardItem.querySelector('.title-card-content-editor');
+                
+                // Use HTML content if available, otherwise use plain text
+                const titleContent = titleCard.title || '';
+                const contentContent = titleCard.content || '';
+                
+                // Check for HTML content for backward compatibility
+                if (titleContent.indexOf('<') === -1) {
+                    titleEditor.textContent = titleContent;
+                } else {
+                    titleEditor.innerHTML = titleContent;
+                }
+                
+                if (contentContent.indexOf('<') === -1) {
+                    contentEditor.textContent = contentContent;
+                } else {
+                    contentEditor.innerHTML = contentContent;
+                }
+            });
+        }
+
+        // Load cards
+        deck.cards.forEach((card, index) => {
+            this.addCard();
+            const cardItems = document.querySelectorAll('.card-item');
+            const cardItem = cardItems[cardItems.length - 1];
+            
+            const questionEditor = cardItem.querySelector('.card-question-editor');
+            const answerEditor = cardItem.querySelector('.card-answer-editor');
+            
+            // Use HTML content if available (for formatted cards), otherwise use plain text
+            // For backward compatibility, check if content contains HTML tags
+            const questionContent = card.question || '';
+            const answerContent = card.answer || '';
+            
+            // If content doesn't contain HTML tags, treat as plain text
+            if (questionContent.indexOf('<') === -1) {
+                questionEditor.textContent = questionContent;
+            } else {
+                questionEditor.innerHTML = questionContent;
+            }
+            
+            if (answerContent.indexOf('<') === -1) {
+                answerEditor.textContent = answerContent;
+            } else {
+                answerEditor.innerHTML = answerContent;
+            }
+            
+            // Load explanation if available
+            const explanationEditor = cardItem.querySelector('.card-explanation-editor');
+            if (explanationEditor && card.explanation) {
+                const explanationContent = card.explanation || '';
+                
+                if (explanationContent.indexOf('<') === -1) {
+                    explanationEditor.textContent = explanationContent;
+                } else {
+                    explanationEditor.innerHTML = explanationContent;
+                }
+            }
+            
+            // Load alternative answers if available
+            if (card.alternativeAnswers && card.alternativeAnswers.length > 0) {
+                const alternativeAnswersContainer = cardItem.querySelector('.alternative-answers');
+                
+                card.alternativeAnswers.forEach(altAnswer => {
+                    this.addAlternativeAnswer(alternativeAnswersContainer);
+                    const altAnswerInputs = alternativeAnswersContainer.querySelectorAll('.alternative-answer-input');
+                    const lastInput = altAnswerInputs[altAnswerInputs.length - 1];
+                    lastInput.value = altAnswer;
+                });
+            }
+            
+            // Load custom hint if available
+            const hintInput = cardItem.querySelector('.card-hint-input');
+            if (hintInput && card.customHint) {
+                hintInput.value = card.customHint;
+            }
+        });
+
+        // Update UI labels for edit mode
+        this.updateUIForEditMode(true);
+    }
+
+    updateUIForEditMode(isEdit) {
+        const createHeader = document.querySelector('.create-header h2');
+        const submitButton = document.querySelector('#deck-form button[type="submit"]');
+        
+        if (isEdit) {
+            createHeader.textContent = 'Edit Deck';
+            submitButton.textContent = 'Update Deck';
+        } else {
+            createHeader.textContent = 'Create New Deck';
+            submitButton.textContent = 'Save Deck';
+        }
+    }
+
+    renderDecks() {
+        const grid = document.getElementById('decks-grid');
+        const emptyState = document.getElementById('empty-state');
+        
+        if (this.decks.length === 0) {
+            grid.style.display = 'none';
+            emptyState.style.display = 'block';
+            return;
+        }
+        
+        grid.style.display = 'grid';
+        emptyState.style.display = 'none';
+        
+        // Update generated decks display
+        this.updateGeneratedDecksDisplay();
+        
+        grid.innerHTML = this.decks.map(deck => {
+            const style = deck.style || 'classic';
+            const color = deck.color || 'blue';
+            const styleIcon = {
+                classic: '📄',
+                modern: '✨',
+                vintage: '📜',
+                neon: '💠'
+            }[style];
+            
+            // Check if this deck has been studied
+            const hasLearningData = deck.cards.some((_, index) => {
+                const cardData = this.getCardLearningData(deck.id, index);
+                return cardData.attempts > 0;
+            });
+
+            return `
+            <div class="deck-card deck-${style} deck-${color}" onclick="app.startStudy('${deck.id}')">
+                <div class="deck-header">
+                    <div>
+                        <div class="deck-name">
+                            ${this.escapeHtml(deck.name)}
+                            ${hasLearningData ? '<span class="learning-indicator" title="Adaptive learning active">🧠</span>' : ''}
+                        </div>
+                        <div class="deck-meta">
+                            <div class="deck-subject">${this.escapeHtml(deck.subject)}</div>
+                            ${deck.yearGroup ? `<div class="deck-year-group">${this.escapeHtml(deck.yearGroup)}</div>` : ''}
+                        </div>
+                        <div class="deck-style-indicator">${styleIcon} ${style.charAt(0).toUpperCase() + style.slice(1)}</div>
+                    </div>
+                    <button class="deck-delete" onclick="event.stopPropagation(); deleteDeck('${deck.id}')" title="Delete deck">
+                        🗑️
+                    </button>
+                </div>
+                <div class="deck-info">${deck.cards.length} cards</div>
+                <div class="deck-buttons">
+                    <button class="btn btn-primary btn-small" onclick="event.stopPropagation(); startStudy('${deck.id}')" title="Study this deck">
+                        ▶️ Study
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); editDeck('${deck.id}')" title="Edit deck">
+                        ✏️ Edit
+                    </button>
+                    <button class="btn btn-info btn-small" onclick="event.stopPropagation(); showDeckStats('${deck.id}')" title="View learning progress">
+                        📊 Stats
+                    </button>
+                    <button class="btn btn-accent btn-small" onclick="event.stopPropagation(); saveDeckToFile('${deck.id}')" title="Save deck to file">
+                        💾 Save
+                    </button>
+                </div>
+            </div>
+            `;
+        }).join('');
+    }
+
+    // Card Management
+    addCard() {
+        const cardsList = document.getElementById('cards-list');
+        const cardNumber = cardsList.children.length + 1;
+        
+        const cardHtml = `
+            <div class="card-item">
+                <div class="card-header">
+                    <span class="card-number">Card ${cardNumber}</span>
+                    <button type="button" class="card-remove" onclick="this.parentElement.parentElement.remove(); app.updateCardNumbers();">Remove</button>
+                </div>
+                
+                <!-- Formatting Toolbar -->
+                <div class="formatting-toolbar">
+                    <div class="toolbar-group">
+                        <button type="button" class="format-btn" data-command="bold" title="Bold">
+                            <strong>B</strong>
+                        </button>
+                        <button type="button" class="format-btn" data-command="italic" title="Italic">
+                            <em>I</em>
+                        </button>
+                        <button type="button" class="format-btn" data-command="underline" title="Underline">
+                            <u>U</u>
+                        </button>
+                        <button type="button" class="format-btn" data-command="strikeThrough" title="Strikethrough">
+                            <s>S</s>
+                        </button>
+                        <button type="button" class="format-btn" data-command="subscript" title="Subscript">
+                            X<sub>2</sub>
+                        </button>
+                        <button type="button" class="format-btn" data-command="superscript" title="Superscript">
+                            X<sup>2</sup>
+                        </button>
+                    </div>
+                    <div class="toolbar-group">
+                        <div class="color-picker-group">
+                            <label>Text:</label>
+                            <input type="color" class="text-color-picker" value="#000000" title="Text Color">
+                            <button type="button" class="format-btn apply-text-color" title="Apply Text Color">Apply</button>
+                        </div>
+                        <div class="color-picker-group">
+                            <label>Highlight:</label>
+                            <input type="color" class="highlight-color-picker" value="#ffff00" title="Highlight Color">
+                            <button type="button" class="format-btn apply-highlight-color" title="Apply Highlight Color">Apply</button>
+                        </div>
+                    </div>
+                    <div class="toolbar-group">
+                        <button type="button" class="format-btn clear-format" title="Clear Formatting">
+                            🗑️ Clear
+                        </button>
+                        <div class="formatting-help" title="Use subscript for chemical formulas (H₂O) and superscript for exponents (x²)">
+                            ❓
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-inputs">
+                    <div class="card-input-group">
+                        <label>Question (Front)</label>
+                        <div class="card-question-editor" contenteditable="true" data-placeholder="Enter question..." required></div>
+                    </div>
+                    <div class="card-input-group">
+                        <label>Answer (Back)</label>
+                        <div class="card-answer-editor" contenteditable="true" data-placeholder="Enter answer..." required></div>
+                        <div class="multiple-answers-container">
+                            <div class="answers-header">
+                                <span class="answers-label">💡 Multiple Answer Variations (Optional)</span>
+                                <button type="button" class="btn btn-small add-answer-btn">+ Add Alternative</button>
+                            </div>
+                            <div class="alternative-answers">
+                                <!-- Alternative answers will be added here -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-input-group">
+                        <label>📝 Explanation (Optional)</label>
+                        <div class="card-explanation-editor" contenteditable="true" data-placeholder="Add detailed explanation, context, or additional information..."></div>
+                        <small class="explanation-help">This explanation will appear below the answer to provide additional context and learning information.</small>
+                    </div>
+                    <div class="card-input-group hint-input-group">
+                        <label>💡 Custom Hint (Optional)</label>
+                        <textarea class="card-hint-input" placeholder="Enter a helpful hint that guides without giving away the answer..."></textarea>
+                        <small class="hint-help">This hint will be shown when users use the hint power-up. If empty, a hint will be generated.</small>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        cardsList.insertAdjacentHTML('beforeend', cardHtml);
+        
+        // Set up formatting toolbar events for the new card
+        this.setupFormattingToolbar(cardsList.lastElementChild);
+        
+        // Set up multiple answers functionality for the new card
+        this.setupMultipleAnswers(cardsList.lastElementChild);
+    }
+
+    addTitleCard() {
+        const titleCardsList = document.getElementById('title-cards-list');
+        const titleCardNumber = titleCardsList.children.length + 1;
+        
+        const titleCardHtml = `
+            <div class="title-card-item">
+                <div class="card-header">
+                    <span class="card-number">Title Card ${titleCardNumber}</span>
+                    <button type="button" class="card-remove" onclick="this.parentElement.parentElement.remove(); app.updateTitleCardNumbers();">Remove</button>
+                </div>
+                
+                <!-- Formatting Toolbar for Title Cards -->
+                <div class="formatting-toolbar">
+                    <div class="toolbar-group">
+                        <button type="button" class="format-btn" data-command="bold" title="Bold">
+                            <strong>B</strong>
+                        </button>
+                        <button type="button" class="format-btn" data-command="italic" title="Italic">
+                            <em>I</em>
+                        </button>
+                        <button type="button" class="format-btn" data-command="underline" title="Underline">
+                            <u>U</u>
+                        </button>
+                        <button type="button" class="format-btn" data-command="strikeThrough" title="Strikethrough">
+                            <s>S</s>
+                        </button>
+                        <button type="button" class="format-btn" data-command="subscript" title="Subscript">
+                            X<sub>2</sub>
+                        </button>
+                        <button type="button" class="format-btn" data-command="superscript" title="Superscript">
+                            X<sup>2</sup>
+                        </button>
+                    </div>
+                    <div class="toolbar-group">
+                        <div class="color-picker-group">
+                            <label>Text:</label>
+                            <input type="color" class="text-color-picker" value="#000000" title="Text Color">
+                            <button type="button" class="format-btn apply-text-color" title="Apply Text Color">Apply</button>
+                        </div>
+                        <div class="color-picker-group">
+                            <label>Highlight:</label>
+                            <input type="color" class="highlight-color-picker" value="#ffff00" title="Highlight Color">
+                            <button type="button" class="format-btn apply-highlight-color" title="Apply Highlight Color">Apply</button>
+                        </div>
+                    </div>
+                    <div class="toolbar-group">
+                        <button type="button" class="format-btn clear-format" title="Clear Formatting">
+                            🗑️ Clear
+                        </button>
+                        <div class="formatting-help" title="Use subscript for chemical formulas (H₂O) and superscript for exponents (x²)">
+                            ❓
+                        </div>
+                    </div>
+                </div>
+
+                <div class="title-card-inputs">
+                    <div class="card-input-group title-input">
+                        <label>Title</label>
+                        <div class="title-card-title-editor" contenteditable="true" data-placeholder="Enter title card title..." required></div>
+                    </div>
+                    <div class="card-input-group content-input">
+                        <label>Content</label>
+                        <div class="title-card-content-editor" contenteditable="true" data-placeholder="Enter title card content, instructions, or description..."></div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        titleCardsList.insertAdjacentHTML('beforeend', titleCardHtml);
+        
+        // Set up formatting toolbar events for the new title card
+        this.setupFormattingToolbar(titleCardsList.lastElementChild);
+    }
+
+    updateTitleCardNumbers() {
+        document.querySelectorAll('.title-card-item').forEach((item, index) => {
+            item.querySelector('.card-number').textContent = `Title Card ${index + 1}`;
+        });
+    }
+
+    updateCardNumbers() {
+        document.querySelectorAll('.card-item').forEach((item, index) => {
+            item.querySelector('.card-number').textContent = `Card ${index + 1}`;
+        });
+    }
+
+    setupFormattingToolbar(cardElement) {
+        const toolbar = cardElement.querySelector('.formatting-toolbar');
+        const formatButtons = toolbar.querySelectorAll('.format-btn');
+        const textColorPicker = toolbar.querySelector('.text-color-picker');
+        const highlightColorPicker = toolbar.querySelector('.highlight-color-picker');
+        const applyTextColorBtn = toolbar.querySelector('.apply-text-color');
+        const applyHighlightColorBtn = toolbar.querySelector('.apply-highlight-color');
+        const clearButton = toolbar.querySelector('.clear-format');
+
+        // Format buttons (bold, italic, underline, strikethrough)
+        formatButtons.forEach(button => {
+            if (!button.classList.contains('clear-format') && 
+                !button.classList.contains('apply-text-color') && 
+                !button.classList.contains('apply-highlight-color')) {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const command = button.getAttribute('data-command');
+                    this.applyFormat(command);
+                });
+            }
+        });
+
+        // Apply text color button
+        applyTextColorBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const selectedColor = textColorPicker.value;
+            this.applyFormat('foreColor', selectedColor);
+        });
+
+        // Apply highlight color button
+        applyHighlightColorBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const selectedColor = highlightColorPicker.value;
+            this.applyFormat('backColor', selectedColor);
+        });
+
+        // Clear formatting button
+        clearButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.clearFormatting();
+        });
+
+        // Add placeholder support for contenteditable divs
+        const editors = cardElement.querySelectorAll('[contenteditable]');
+        editors.forEach(editor => {
+            this.setupPlaceholder(editor);
+        });
+    }
+
+    applyFormat(command, value = null) {
+        // Ensure the selection is preserved
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+            document.execCommand(command, false, value);
+        }
+    }
+
+    clearFormatting() {
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+            document.execCommand('removeFormat', false, null);
+            // Also remove any inline styles
+            const range = selection.getRangeAt(0);
+            const contents = range.extractContents();
+            const div = document.createElement('div');
+            div.appendChild(contents);
+            // Remove all style attributes
+            const elementsWithStyle = div.querySelectorAll('[style]');
+            elementsWithStyle.forEach(el => el.removeAttribute('style'));
+            range.insertNode(div.firstChild || document.createTextNode(div.textContent));
+        }
+    }
+
+    setupPlaceholder(editor) {
+        const placeholder = editor.getAttribute('data-placeholder');
+        
+        // Show placeholder if empty
+        const updatePlaceholder = () => {
+            if (editor.textContent.trim() === '') {
+                editor.classList.add('empty');
+                if (!editor.querySelector('.placeholder')) {
+                    const placeholderEl = document.createElement('span');
+                    placeholderEl.className = 'placeholder';
+                    placeholderEl.textContent = placeholder;
+                    editor.appendChild(placeholderEl);
+                }
+            } else {
+                editor.classList.remove('empty');
+                const placeholderEl = editor.querySelector('.placeholder');
+                if (placeholderEl) {
+                    placeholderEl.remove();
+                }
+            }
+        };
+
+        // Initial placeholder setup
+        updatePlaceholder();
+
+        // Handle focus events
+        editor.addEventListener('focus', () => {
+            const placeholderEl = editor.querySelector('.placeholder');
+            if (placeholderEl) {
+                placeholderEl.remove();
+            }
+        });
+
+        editor.addEventListener('blur', updatePlaceholder);
+        editor.addEventListener('input', updatePlaceholder);
+
+        // Prevent placeholder from being part of the content
+        editor.addEventListener('keydown', (e) => {
+            const placeholderEl = editor.querySelector('.placeholder');
+            if (placeholderEl && e.key !== 'Tab') {
+                placeholderEl.remove();
+            }
+        });
+    }
+
+    // Study Mode
+    startStudy(deckId) {
+        let deck = this.decks.find(d => d.id === deckId);
+        
+        if (!deck || deck.cards.length === 0) {
+            alert('This deck has no cards to study');
+            return;
+        }
+        
+        // Mark if this is a generated deck for analytics
+        deck.isGeneratedStudy = isGenerated;
+
+        // Ensure deck has style and color properties
+        if (!deck.style) deck.style = 'classic';
+        if (!deck.color) deck.color = 'blue';
+        
+        console.log('Starting study with deck:', { name: deck.name, style: deck.style, color: deck.color });
+        
+        this.currentDeck = deck;
+        
+        // Use adaptive learning to prioritize difficult cards
+        // Add original index to each card for tracking
+        this.currentCards = this.weightedShuffle([...deck.cards], deckId).map((card, index) => ({
+            ...card,
+            originalIndex: deck.cards.findIndex(originalCard => 
+                originalCard.question === card.question && originalCard.answer === card.answer
+            )
+        }));
+        
+        this.currentCardIndex = 0;
+        this.score = 0;
+        this.cardCount = 0;
+        this.currentTitleCardIndex = 0;
+        this.sessionStartTime = Date.now();
+        
+        // Initialize current session for power-up tracking
+        this.currentSession = {
+            powerUpsUsed: {}
+        };
+        
+        // Reset streak for new study session
+        this.resetStreak();
+        
+        // Reset session power-ups
+        this.powerUps.activePowerUps.doubleCoinsActive = false;
+        this.powerUps.activePowerUps.streakShieldActive = false;
+        this.savePowerUps();
+        
+        // Update visual indicators
+        const coinDisplay = document.querySelector('.coin-display');
+        if (coinDisplay) {
+            coinDisplay.classList.remove('double-coins-active');
+        }
+        
+        // Track which cards have been completed correctly
+        this.completedCards = new Set();
+        this.totalUniqueCards = deck.cards.length;
+        
+        this.showView('study');
+        this.updateStudyHeader();
+        this.hideStudyComplete();
+        
+        // Check if deck has title cards
+        if (deck.titleCards && deck.titleCards.length > 0) {
+            this.showTitleCards();
+        } else {
+            this.startActualStudy();
+        }
+    }
+
+    showTitleCards() {
+        document.getElementById('title-card-display').style.display = 'block';
+        document.getElementById('study-card-container').style.display = 'none';
+        
+        this.create3DTitleCardStack();
+        this.updateTitleCardNavigation();
+    }
+
+    create3DTitleCardStack() {
+        const titleCards = this.currentDeck.titleCards;
+        const contentDisplay = document.getElementById('display-title-card-content').parentElement;
+        
+        // Clear existing content and create stack container
+        contentDisplay.innerHTML = `
+            <div class="title-cards-stack" id="title-cards-stack">
+                ${titleCards.map((card, index) => `
+                    <div class="title-card-layer ${index === this.currentTitleCardIndex ? 'active' : ''}" 
+                         data-card-index="${index}"
+                         onclick="app.selectTitleCard(${index})">
+                        <h2 class="title-card-title">${this.escapeHtml(card.title || '')}</h2>
+                        <div class="title-card-text">${this.escapeHtml(card.content || card.description || '')}</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        // Update counter
+        document.getElementById('title-card-counter').textContent = 
+            `${this.currentTitleCardIndex + 1} / ${titleCards.length}`;
+        
+        // Apply stacking positions
+        this.updateCardStackPositions();
+    }
+
+    updateCardStackPositions() {
+        const titleCards = this.currentDeck.titleCards;
+        const cardLayers = document.querySelectorAll('.title-card-layer');
+        
+        cardLayers.forEach((layer, index) => {
+            // Clear any leftover animation properties
+            layer.style.removeProperty('animation');
+            layer.classList.remove('active', 'moving-to-front', 'moving-to-back');
+            
+            const relativePosition = index - this.currentTitleCardIndex;
+            
+            if (relativePosition === 0) {
+                // Active card (front)
+                layer.classList.add('active');
+                layer.style.zIndex = '15';
+                layer.style.transform = 'translateZ(20px) translateY(-10px) scale(1.02)';
+                layer.style.opacity = '1';
+                layer.style.filter = 'brightness(1)';
+            } else if (relativePosition > 0) {
+                // Cards behind the active card
+                const stackLevel = Math.min(relativePosition, 4);
+                const zIndex = Math.max(6, 10 - stackLevel);
+                const translateZ = -stackLevel * 20;
+                const translateY = stackLevel * 8;
+                const scale = Math.max(0.8, 1 - (stackLevel * 0.05));
+                const opacity = Math.max(0.6, 1 - (stackLevel * 0.1));
+                const brightness = Math.max(0.8, 1 - (stackLevel * 0.05));
+                
+                layer.style.zIndex = zIndex;
+                layer.style.transform = `translateZ(${translateZ}px) translateY(${translateY}px) scale(${scale})`;
+                layer.style.opacity = opacity;
+                layer.style.filter = `brightness(${brightness})`;
+            } else {
+                // Cards that would be "before" the current active card
+                layer.style.zIndex = '5';
+                layer.style.transform = 'translateZ(-100px) translateY(40px) scale(0.75)';
+                layer.style.opacity = '0.5';
+                layer.style.filter = 'brightness(0.75)';
+            }
+        });
+    }
+
+    selectTitleCard(index) {
+        if (index === this.currentTitleCardIndex || this.isAnimating) return;
+        
+        const direction = index > this.currentTitleCardIndex ? 'next' : 'prev';
+        this.currentTitleCardIndex = index;
+        this.animateStackTransition(direction);
+    }
+
+    showCurrentTitleCard() {
+        this.updateCardStackPositions();
+        this.updateTitleCardNavigation();
+    }
+
+    previousTitleCard() {
+        if (this.currentTitleCardIndex > 0 && !this.isAnimating) {
+            this.currentTitleCardIndex--;
+            this.animateStackTransition('prev');
+        }
+    }
+
+    nextTitleCard() {
+        const titleCards = this.currentDeck.titleCards;
+        if (this.currentTitleCardIndex < titleCards.length - 1 && !this.isAnimating) {
+            this.currentTitleCardIndex++;
+            this.animateStackTransition('next');
+        }
+    }
+
+    animateStackTransition(direction) {
+        if (this.isAnimating) return;
+        
+        this.isAnimating = true;
+        
+        // Disable navigation buttons during animation
+        const prevBtn = document.getElementById('title-prev-btn');
+        const nextBtn = document.getElementById('title-next-btn');
+        const actionButtons = document.querySelectorAll('.title-card-actions button');
+        
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+        actionButtons.forEach(btn => btn.disabled = true);
+        
+        const cardLayers = document.querySelectorAll('.title-card-layer');
+        
+        // Update counter immediately
+        document.getElementById('title-card-counter').textContent = 
+            `${this.currentTitleCardIndex + 1} / ${this.currentDeck.titleCards.length}`;
+        
+        if (direction === 'next') {
+            // Find the card that WAS active (now should move to back)
+            const previousActiveIndex = this.currentTitleCardIndex - 1;
+            
+            cardLayers.forEach((layer, index) => {
+                layer.classList.remove('active');
+                if (index === previousActiveIndex) {
+                    layer.classList.add('moving-to-back');
+                }
+            });
+            
+        } else { // prev
+            // Find the card that WILL BE active (should move from back to front)
+            const newActiveIndex = this.currentTitleCardIndex;
+            
+            cardLayers.forEach((layer, index) => {
+                layer.classList.remove('active');
+                if (index === newActiveIndex) {
+                    layer.classList.add('moving-to-front');
+                }
+            });
+        }
+        
+        // Wait for animation to complete
+        setTimeout(() => {
+            // Clean up all animation classes
+            cardLayers.forEach(layer => {
+                layer.classList.remove('moving-to-front', 'moving-to-back');
+            });
+            
+            // Apply final positions to all cards
+            this.updateCardStackPositions();
+            
+            // Re-enable buttons
+            prevBtn.disabled = false;
+            nextBtn.disabled = false;
+            actionButtons.forEach(btn => btn.disabled = false);
+            
+            // Update navigation state
+            this.updateTitleCardNavigation();
+            
+            this.isAnimating = false;
+        }, 1200);
+    }
+
+    escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    updateTitleCardNavigation() {
+        const titleCards = this.currentDeck.titleCards;
+        
+        // Update navigation buttons
+        const prevBtn = document.getElementById('title-prev-btn');
+        const nextBtn = document.getElementById('title-next-btn');
+        
+        prevBtn.style.visibility = this.currentTitleCardIndex === 0 ? 'hidden' : 'visible';
+        nextBtn.style.visibility = this.currentTitleCardIndex === titleCards.length - 1 ? 'hidden' : 'visible';
+        
+        // Update action buttons based on title card position and count
+        const titleCardActions = document.querySelector('.title-card-actions');
+        const isLastCard = this.currentTitleCardIndex === titleCards.length - 1;
+        const isSingleCard = titleCards.length === 1;
+        
+        // Show Start/Skip buttons only for single card OR at the last card
+        if (isSingleCard || isLastCard) {
+            titleCardActions.innerHTML = `
+                <button class="btn btn-primary" onclick="startActualStudy()">
+                    Start Studying →
+                </button>
+                <button class="btn btn-secondary" onclick="skipToStudy()">
+                    Skip to Cards
+                </button>
+            `;
+        } else {
+            // Show Next/Prev buttons for multi-card navigation + Skip to Cards
+            const prevDisabled = this.currentTitleCardIndex === 0 ? 'disabled' : '';
+            const nextDisabled = isLastCard ? 'disabled' : '';
+            
+            titleCardActions.innerHTML = `
+                <button class="btn btn-secondary" onclick="previousTitleCard()" ${prevDisabled}>
+                    ← Previous
+                </button>
+                <button class="btn btn-primary" onclick="nextTitleCard()" ${nextDisabled}>
+                    Next →
+                </button>
+                <button class="btn btn-outline" onclick="skipToStudy()" title="Skip all title cards and go directly to flashcards">
+                    Skip to Cards
+                </button>
+            `;
+        }
+    }
+
+    startActualStudy() {
+        document.getElementById('title-card-display').style.display = 'none';
+        document.getElementById('study-card-container').style.display = 'block';
+        
+        this.showCurrentCard();
+        
+        // Focus on answer input
+        setTimeout(() => {
+            document.getElementById('answer-input').focus();
+        }, 100);
+    }
+
+    skipToStudy() {
+        this.startActualStudy();
+    }
+
+    updateStudyHeader() {
+        document.getElementById('study-deck-name').textContent = this.currentDeck.name;
+        
+        // Show progress as completed cards / total cards
+        const completedCount = this.completedCards ? this.completedCards.size : this.score;
+        const totalCards = this.totalUniqueCards || this.currentDeck.cards.length;
+        document.getElementById('card-counter').textContent = 
+            `Progress: ${completedCount} / ${totalCards} completed`;
+            
+        document.getElementById('score').textContent = `Cards Remaining: ${this.currentCards.length}`;
+    }
+    
+    setupMultipleAnswers(cardElement) {
+        const addAnswerBtn = cardElement.querySelector('.add-answer-btn');
+        const alternativeAnswersContainer = cardElement.querySelector('.alternative-answers');
+        
+        if (!addAnswerBtn || !alternativeAnswersContainer) return;
+        
+        addAnswerBtn.addEventListener('click', () => {
+            this.addAlternativeAnswer(alternativeAnswersContainer);
+        });
+    }
+    
+    addAlternativeAnswer(container) {
+        const answerNumber = container.children.length + 1;
+        const answerHtml = `
+            <div class="alternative-answer-item">
+                <span class="answer-number">${answerNumber}.</span>
+                <input type="text" class="alternative-answer-input" placeholder="Enter alternative answer...">
+                <button type="button" class="remove-answer-btn" onclick="this.parentElement.remove(); app.updateAnswerNumbers(this);">Remove</button>
+            </div>
+        `;
+        
+        container.insertAdjacentHTML('beforeend', answerHtml);
+    }
+    
+    updateAnswerNumbers(removedElement) {
+        const container = removedElement.closest('.alternative-answers');
+        const items = container.querySelectorAll('.alternative-answer-item');
+        
+        items.forEach((item, index) => {
+            const numberSpan = item.querySelector('.answer-number');
+            if (numberSpan) {
+                numberSpan.textContent = `${index + 1}.`;
+            }
+        });
+    }
+
+    // Professional Card Editor Methods
+    initInteractiveEditor() {
+        console.log('Initializing Professional Card Editor...');
+        
+        this.professionalEditor = {
+            elements: [],
+            selectedElement: null,
+            isDragging: false,
+            dragOffset: { x: 0, y: 0 },
+            isResizing: false,
+            currentTool: 'select',
+            currentCard: 1,
+            currentSide: 'front',
+            selectedStyle: 'neon',
+            selectedTheme: 'blue',
+            zoom: 1,
+            history: [{ action: 'Document Created', timestamp: Date.now() }],
+            historyIndex: 0,
+            layers: [{ id: 'background', name: 'Background', visible: true, locked: true }]
+        };
+        
+        this.setupProfessionalEditorEvents();
+        this.initCardCanvas();
+        console.log('Professional Card Editor initialized successfully');
+    }
+    
+    setupProfessionalEditorEvents() {
+        // Tool button events
+        document.querySelectorAll('.tool-button[data-tool]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.selectTool(e.target.dataset.tool);
+            });
+        });
+
+        // Style selection events
+        document.querySelectorAll('.style-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                this.selectCardStyle(e.target.dataset.style);
+            });
+        });
+
+        // Theme selection events
+        document.querySelectorAll('.theme-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                this.selectTheme(e.target.dataset.theme);
+            });
+        });
+
+        // Side tab events
+        document.querySelectorAll('.side-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                this.switchSide(e.target.dataset.side);
+            });
+        });
+
+        // Canvas events
+        const canvas = document.getElementById('editing-surface');
+        if (canvas) {
+            canvas.addEventListener('mousedown', (e) => this.handleCanvasMouseDown(e));
+            canvas.addEventListener('mousemove', (e) => this.handleCanvasMouseMove(e));
+            canvas.addEventListener('mouseup', (e) => this.handleCanvasMouseUp(e));
+            canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
+            
+            // Prevent context menu
+            canvas.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                this.showContextMenu(e);
+            });
+        }
+
+        // Format controls
+        document.getElementById('font-family-select')?.addEventListener('change', (e) => {
+            this.updateSelectedElementProperty('fontFamily', e.target.value);
+        });
+
+        document.getElementById('font-size-input')?.addEventListener('input', (e) => {
+            this.updateSelectedElementProperty('fontSize', e.target.value + 'px');
+        });
+
+        document.getElementById('text-color-picker')?.addEventListener('change', (e) => {
+            this.updateSelectedElementProperty('color', e.target.value);
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => this.handleKeyboardShortcuts(e));
+
+        // Asset items
+        document.querySelectorAll('.asset-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                if (e.target.dataset.shape) {
+                    this.addShape(e.target.dataset.shape);
+                } else if (e.target.dataset.icon) {
+                    this.addIcon(e.target.dataset.icon);
+                }
+            });
+        });
+
+        // Layer controls
+        document.querySelectorAll('.layer-control-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const action = e.target.textContent;
+                if (action === '➕') this.addLayer();
+                else if (action === '🗑️') this.deleteLayer();
+                else if (action === '📄') this.duplicateLayer();
+            });
+        });
+
+        console.log('Professional editor events set up successfully');
+    }
+    
+    initCardCanvas() {
+        const cardCanvas = document.getElementById('card-canvas');
+        if (cardCanvas) {
+            // Set initial style and theme
+            cardCanvas.setAttribute('data-style', this.professionalEditor.selectedStyle);
+            cardCanvas.setAttribute('data-theme', this.professionalEditor.selectedTheme);
+            this.updateCanvasBackground();
+        }
+    }
+
+    selectTool(tool) {
+        this.professionalEditor.currentTool = tool;
+        
+        // Update UI
+        document.querySelectorAll('.tool-button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`.tool-button[data-tool="${tool}"]`)?.classList.add('active');
+        
+        // Update cursor
+        const editingSurface = document.getElementById('editing-surface');
+        if (editingSurface) {
+            switch (tool) {
+                case 'select':
+                    editingSurface.style.cursor = 'default';
+                    break;
+                case 'text':
+                    editingSurface.style.cursor = 'text';
+                    break;
+                default:
+                    editingSurface.style.cursor = 'crosshair';
+            }
+        }
+        
+        console.log('Selected tool:', tool);
+    }
+
+    selectCardStyle(style) {
+        this.professionalEditor.selectedStyle = style;
+        
+        // Update UI
+        document.querySelectorAll('.style-option').forEach(option => {
+            option.classList.remove('active');
+        });
+        document.querySelector(`.style-option[data-style="${style}"]`)?.classList.add('active');
+        
+        // Update canvas
+        const cardCanvas = document.getElementById('card-canvas');
+        if (cardCanvas) {
+            cardCanvas.setAttribute('data-style', style);
+            this.updateCanvasBackground();
+        }
+        
+        console.log('Selected style:', style);
+    }
+
+    selectTheme(theme) {
+        this.professionalEditor.selectedTheme = theme;
+        
+        // Update UI
+        document.querySelectorAll('.theme-option').forEach(option => {
+            option.classList.remove('active');
+        });
+        document.querySelector(`.theme-option[data-theme="${theme}"]`)?.classList.add('active');
+        
+        // Update canvas
+        const cardCanvas = document.getElementById('card-canvas');
+        if (cardCanvas) {
+            cardCanvas.setAttribute('data-theme', theme);
+        }
+        
+        console.log('Selected theme:', theme);
+    }
+
+    switchSide(side) {
+        this.professionalEditor.currentSide = side;
+        
+        // Update UI
+        document.querySelectorAll('.side-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelector(`.side-tab[data-side="${side}"]`)?.classList.add('active');
+        
+        // Load elements for this side
+        this.loadSideElements();
+        
+        console.log('Switched to side:', side);
+    }
+
+    updateCanvasBackground() {
+        // This method updates the visual appearance of the canvas based on selected style
+        const cardCanvas = document.getElementById('card-canvas');
+        if (!cardCanvas) return;
+        
+        // The CSS handles the visual styling based on data attributes
+        // We just need to ensure the canvas reflects the current state
+        this.rerenderElements();
+    }
+
+    loadSideElements() {
+        // Clear current display and show elements for current side
+        const editingSurface = document.getElementById('editing-surface');
+        if (!editingSurface) return;
+        
+        // Clear existing elements
+        editingSurface.innerHTML = '';
+        
+        // Add elements for current side
+        const sideElements = this.professionalEditor.elements.filter(
+            el => el.side === this.professionalEditor.currentSide && 
+                  el.card === this.professionalEditor.currentCard
+        );
+        
+        sideElements.forEach(element => {
+            this.renderElement(element);
+        });
+        
+        this.updateLayersPanel();
+    }
+
+    editorAction(action) {
+        switch (action) {
+            case 'new':
+                this.newDocument();
+                break;
+            case 'save':
+                this.saveDocument();
+                break;
+            case 'export':
+                this.exportDocument();
+                break;
+            case 'undo':
+                this.undo();
+                break;
+            case 'redo':
+                this.redo();
+                break;
+            default:
+                console.log('Unknown editor action:', action);
+        }
+    }
+
+    zoomCanvas(zoomLevel) {
+        this.professionalEditor.zoom = zoomLevel;
+        
+        // Update zoom UI
+        document.querySelectorAll('.zoom-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`.zoom-btn[onclick*="${zoomLevel}"]`)?.classList.add('active');
+        
+        // Apply zoom to canvas wrapper
+        const canvasWrapper = document.getElementById('canvas-wrapper');
+        if (canvasWrapper) {
+            canvasWrapper.style.transform = `scale(${zoomLevel})`;
+        }
+        
+        console.log('Zoom level set to:', zoomLevel);
+    }
+    
+    handleCanvasMouseDown(e) {
+        const rect = e.target.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / this.professionalEditor.zoom;
+        const y = (e.clientY - rect.top) / this.professionalEditor.zoom;
+        
+        if (this.professionalEditor.currentTool === 'select') {
+            const element = this.getElementAt(x, y);
+            if (element) {
+                this.selectElement(element);
+                this.professionalEditor.isDragging = true;
+                this.professionalEditor.dragOffset = {
+                    x: x - element.x,
+                    y: y - element.y
+                };
+            } else {
+                this.selectElement(null);
+            }
+        } else {
+            this.createElement(x, y);
+        }
+    }
+
+    handleCanvasMouseMove(e) {
+        const rect = e.target.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / this.professionalEditor.zoom;
+        const y = (e.clientY - rect.top) / this.professionalEditor.zoom;
+        
+        // Update cursor position display
+        document.getElementById('cursor-position').textContent = `x: ${Math.round(x)}, y: ${Math.round(y)}`;
+        
+        if (this.professionalEditor.isDragging && this.professionalEditor.selectedElement) {
+            const element = this.professionalEditor.selectedElement;
+            element.x = Math.max(0, x - this.professionalEditor.dragOffset.x);
+            element.y = Math.max(0, y - this.professionalEditor.dragOffset.y);
+            
+            this.updateElementPosition(element);
+            this.updatePropertiesPanel();
+        }
+    }
+
+    handleCanvasMouseUp(e) {
+        if (this.professionalEditor.isDragging) {
+            this.addToHistory('Move Element');
+        }
+        
+        this.professionalEditor.isDragging = false;
+        this.professionalEditor.isResizing = false;
+    }
+
+    handleCanvasClick(e) {
+        // Handle tool-specific click actions
+    }
+
+    getElementAt(x, y) {
+        const elements = this.professionalEditor.elements.filter(
+            el => el.side === this.professionalEditor.currentSide && 
+                  el.card === this.professionalEditor.currentCard
+        );
+        
+        for (let i = elements.length - 1; i >= 0; i--) {
+            const element = elements[i];
+            if (x >= element.x && x <= element.x + element.width &&
+                y >= element.y && y <= element.y + element.height) {
+                return element;
+            }
+        }
+        return null;
+    }
+
+    createElement(x, y) {
+        const tool = this.professionalEditor.currentTool;
+        const element = {
+            id: `element_${Date.now()}`,
+            type: tool,
+            side: this.professionalEditor.currentSide,
+            card: this.professionalEditor.currentCard,
+            x: x,
+            y: y,
+            width: tool === 'text' ? 200 : 100,
+            height: tool === 'text' ? 50 : 100,
+            zIndex: this.professionalEditor.elements.length,
+            style: {
+                fontFamily: 'Inter',
+                fontSize: '16px',
+                color: '#000000',
+                backgroundColor: tool === 'shape' ? '#e2e8f0' : 'transparent',
+                borderColor: '#d1d5db',
+                borderWidth: '1px',
+                borderRadius: '4px'
+            }
+        };
+
+        if (tool === 'text') {
+            element.content = 'Enter text here';
+            element.editable = true;
+        } else if (tool === 'image') {
+            this.handleImageUpload(element);
+            return;
+        } else if (tool === 'shape') {
+            element.shapeType = 'rectangle';
+        }
+
+        this.professionalEditor.elements.push(element);
+        this.renderElement(element);
+        this.selectElement(element);
+        this.addToHistory(`Add ${tool} element`);
+        this.updateLayersPanel();
+        
+        console.log('Created element:', element);
+    }
+
+    renderElement(element) {
+        const editingSurface = document.getElementById('editing-surface');
+        if (!editingSurface) return;
+
+        const elementDiv = document.createElement('div');
+        elementDiv.className = `editor-element ${element.type}-element`;
+        elementDiv.id = element.id;
+        elementDiv.style.cssText = `
+            left: ${element.x}px;
+            top: ${element.y}px;
+            width: ${element.width}px;
+            height: ${element.height}px;
+            z-index: ${element.zIndex};
+            font-family: ${element.style.fontFamily};
+            font-size: ${element.style.fontSize};
+            color: ${element.style.color};
+            background-color: ${element.style.backgroundColor};
+            border: ${element.style.borderWidth} solid ${element.style.borderColor};
+            border-radius: ${element.style.borderRadius};
+        `;
+
+        if (element.type === 'text') {
+            elementDiv.innerHTML = `<div contenteditable="true" style="width: 100%; height: 100%; outline: none; padding: 8px;">${element.content}</div>`;
+            const textContent = elementDiv.querySelector('[contenteditable]');
+            textContent.addEventListener('blur', () => {
+                element.content = textContent.innerHTML;
+                this.addToHistory('Edit text');
+            });
+        } else if (element.type === 'image' && element.imageData) {
+            elementDiv.innerHTML = `<img src="${element.imageData}" style="width: 100%; height: 100%; object-fit: cover;" alt="Image">`;
+        } else if (element.type === 'shape') {
+            // Shape styling is handled by CSS
+        }
+
+        elementDiv.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+            this.selectElement(element);
+        });
+
+        editingSurface.appendChild(elementDiv);
+    }
+
+    selectElement(element) {
+        // Remove selection from all elements
+        document.querySelectorAll('.editor-element').forEach(el => {
+            el.classList.remove('selected');
+        });
+
+        this.professionalEditor.selectedElement = element;
+
+        if (element) {
+            // Add selection to current element
+            document.getElementById(element.id)?.classList.add('selected');
+            this.addResizeHandles(element);
+            document.getElementById('selection-info').textContent = `Selected: ${element.type} element`;
+        } else {
+            document.getElementById('selection-info').textContent = 'No selection';
+        }
+
+        this.updatePropertiesPanel();
+        this.updateLayersPanel();
+    }
+
+    addResizeHandles(element) {
+        // Remove existing handles
+        document.querySelectorAll('.resize-handle').forEach(handle => handle.remove());
+
+        const elementDiv = document.getElementById(element.id);
+        if (!elementDiv) return;
+
+        const positions = ['nw', 'ne', 'sw', 'se', 'n', 's', 'w', 'e'];
+        positions.forEach(pos => {
+            const handle = document.createElement('div');
+            handle.className = `resize-handle ${pos}`;
+            handle.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                this.startResize(element, pos, e);
+            });
+            elementDiv.appendChild(handle);
+        });
+    }
+
+    updateElementPosition(element) {
+        const elementDiv = document.getElementById(element.id);
+        if (elementDiv) {
+            elementDiv.style.left = element.x + 'px';
+            elementDiv.style.top = element.y + 'px';
+        }
+    }
+
+    handleKeyboardShortcuts(e) {
+        if (e.ctrlKey || e.metaKey) {
+            switch (e.key) {
+                case 'z':
+                    e.preventDefault();
+                    if (e.shiftKey) {
+                        this.redo();
+                    } else {
+                        this.undo();
+                    }
+                    break;
+                case 's':
+                    e.preventDefault();
+                    this.saveDocument();
+                    break;
+                case 'c':
+                    e.preventDefault();
+                    this.copyElement();
+                    break;
+                case 'v':
+                    e.preventDefault();
+                    this.pasteElement();
+                    break;
+                case 'Delete':
+                case 'Backspace':
+                    e.preventDefault();
+                    this.deleteSelectedElement();
+                    break;
+            }
+        }
+
+        // Tool shortcuts
+        switch (e.key) {
+            case 'v':
+                if (!e.ctrlKey && !e.metaKey) this.selectTool('select');
+                break;
+            case 't':
+                if (!e.ctrlKey && !e.metaKey) this.selectTool('text');
+                break;
+            case 'u':
+                if (!e.ctrlKey && !e.metaKey) this.selectTool('shape');
+                break;
+            case 'i':
+                if (!e.ctrlKey && !e.metaKey) this.selectTool('image');
+                break;
+        }
+    }
+    
+    updatePropertiesPanel() {
+        const propertiesContainer = document.getElementById('element-properties');
+        if (!propertiesContainer) return;
+
+        const element = this.professionalEditor.selectedElement;
+        
+        if (!element) {
+            propertiesContainer.innerHTML = `
+                <div class="no-selection">
+                    <span class="no-selection-icon">👆</span>
+                    <p>Select an element to edit its properties</p>
+                </div>
+            `;
+            return;
+        }
+
+        propertiesContainer.innerHTML = `
+            <div class="property-group">
+                <label>Position</label>
+                <div class="property-row">
+                    <input type="number" id="element-x" value="${Math.round(element.x)}" placeholder="X">
+                    <input type="number" id="element-y" value="${Math.round(element.y)}" placeholder="Y">
+                </div>
+            </div>
+            <div class="property-group">
+                <label>Size</label>
+                <div class="property-row">
+                    <input type="number" id="element-width" value="${element.width}" placeholder="Width">
+                    <input type="number" id="element-height" value="${element.height}" placeholder="Height">
+                </div>
+            </div>
+            ${element.type === 'text' ? `
+                <div class="property-group">
+                    <label>Text Content</label>
+                    <textarea id="element-text" rows="3">${element.content}</textarea>
+                </div>
+                <div class="property-group">
+                    <label>Font Family</label>
+                    <select id="element-font-family">
+                        <option value="Inter" ${element.style.fontFamily === 'Inter' ? 'selected' : ''}>Inter</option>
+                        <option value="Arial" ${element.style.fontFamily === 'Arial' ? 'selected' : ''}>Arial</option>
+                        <option value="Helvetica" ${element.style.fontFamily === 'Helvetica' ? 'selected' : ''}>Helvetica</option>
+                        <option value="Times New Roman" ${element.style.fontFamily === 'Times New Roman' ? 'selected' : ''}>Times New Roman</option>
+                    </select>
+                </div>
+                <div class="property-group">
+                    <label>Font Size</label>
+                    <input type="number" id="element-font-size" value="${parseInt(element.style.fontSize)}" min="8" max="128">
+                </div>
+            ` : ''}
+            <div class="property-group">
+                <label>Colors</label>
+                <div class="property-row">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem;">
+                        <label style="font-size: 0.7rem;">Text</label>
+                        <input type="color" id="element-color" value="${element.style.color}">
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem;">
+                        <label style="font-size: 0.7rem;">Background</label>
+                        <input type="color" id="element-bg-color" value="${element.style.backgroundColor}">
+                    </div>
+                </div>
+            </div>
+            <div class="property-group">
+                <label>Border</label>
+                <div class="property-row">
+                    <input type="color" id="element-border-color" value="${element.style.borderColor}">
+                    <input type="number" id="element-border-width" value="${parseInt(element.style.borderWidth)}" min="0" max="10">
+                </div>
+            </div>
+        `;
+
+        // Add event listeners for property changes
+        ['element-x', 'element-y', 'element-width', 'element-height'].forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('input', () => this.updateElementFromProperties());
+            }
+        });
+
+        if (element.type === 'text') {
+            ['element-text', 'element-font-family', 'element-font-size'].forEach(id => {
+                const input = document.getElementById(id);
+                if (input) {
+                    input.addEventListener('input', () => this.updateElementFromProperties());
+                }
+            });
+        }
+
+        ['element-color', 'element-bg-color', 'element-border-color', 'element-border-width'].forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('input', () => this.updateElementFromProperties());
+            }
+        });
+    }
+
+    updateElementFromProperties() {
+        const element = this.professionalEditor.selectedElement;
+        if (!element) return;
+
+        // Update position and size
+        const x = document.getElementById('element-x')?.value;
+        const y = document.getElementById('element-y')?.value;
+        const width = document.getElementById('element-width')?.value;
+        const height = document.getElementById('element-height')?.value;
+
+        if (x !== undefined) element.x = parseFloat(x);
+        if (y !== undefined) element.y = parseFloat(y);
+        if (width !== undefined) element.width = parseFloat(width);
+        if (height !== undefined) element.height = parseFloat(height);
+
+        // Update text properties
+        if (element.type === 'text') {
+            const text = document.getElementById('element-text')?.value;
+            const fontFamily = document.getElementById('element-font-family')?.value;
+            const fontSize = document.getElementById('element-font-size')?.value;
+
+            if (text !== undefined) element.content = text;
+            if (fontFamily) element.style.fontFamily = fontFamily;
+            if (fontSize) element.style.fontSize = fontSize + 'px';
+        }
+
+        // Update colors and border
+        const color = document.getElementById('element-color')?.value;
+        const bgColor = document.getElementById('element-bg-color')?.value;
+        const borderColor = document.getElementById('element-border-color')?.value;
+        const borderWidth = document.getElementById('element-border-width')?.value;
+
+        if (color) element.style.color = color;
+        if (bgColor) element.style.backgroundColor = bgColor;
+        if (borderColor) element.style.borderColor = borderColor;
+        if (borderWidth !== undefined) element.style.borderWidth = borderWidth + 'px';
+
+        // Re-render the element
+        this.rerenderElement(element);
+    }
+
+    rerenderElement(element) {
+        const elementDiv = document.getElementById(element.id);
+        if (!elementDiv) return;
+
+        elementDiv.style.cssText = `
+            left: ${element.x}px;
+            top: ${element.y}px;
+            width: ${element.width}px;
+            height: ${element.height}px;
+            z-index: ${element.zIndex};
+            font-family: ${element.style.fontFamily};
+            font-size: ${element.style.fontSize};
+            color: ${element.style.color};
+            background-color: ${element.style.backgroundColor};
+            border: ${element.style.borderWidth} solid ${element.style.borderColor};
+            border-radius: ${element.style.borderRadius};
+        `;
+
+        if (element.type === 'text') {
+            const textContent = elementDiv.querySelector('[contenteditable]');
+            if (textContent) {
+                textContent.innerHTML = element.content;
+            }
+        }
+    }
+
+    updateLayersPanel() {
+        const layersList = document.getElementById('editor-layers-list');
+        if (!layersList) return;
+
+        const currentElements = this.professionalEditor.elements.filter(
+            el => el.side === this.professionalEditor.currentSide && 
+                  el.card === this.professionalEditor.currentCard
+        );
+
+        layersList.innerHTML = `
+            <div class="layer-item">
+                <span class="layer-visibility">👁️</span>
+                <span class="layer-name">Background</span>
+                <span class="layer-lock">🔒</span>
+            </div>
+        `;
+
+        currentElements.reverse().forEach(element => {
+            const layerItem = document.createElement('div');
+            layerItem.className = `layer-item ${element === this.professionalEditor.selectedElement ? 'active' : ''}`;
+            layerItem.innerHTML = `
+                <span class="layer-visibility">👁️</span>
+                <span class="layer-name">${element.type} ${element.id.split('_')[1]}</span>
+                <span class="layer-lock"></span>
+            `;
+            layerItem.addEventListener('click', () => this.selectElement(element));
+            layersList.appendChild(layerItem);
+        });
+    }
+
+    addToHistory(action) {
+        this.professionalEditor.history.push({
+            action: action,
+            timestamp: Date.now(),
+            state: JSON.parse(JSON.stringify(this.professionalEditor.elements))
+        });
+
+        // Update history panel
+        this.updateHistoryPanel();
+    }
+
+    updateHistoryPanel() {
+        const historyContainer = document.querySelector('.history-container');
+        if (!historyContainer) return;
+
+        historyContainer.innerHTML = '';
+        this.professionalEditor.history.slice(-10).forEach((item, index) => {
+            const historyItem = document.createElement('div');
+            historyItem.className = `history-item ${index === this.professionalEditor.history.length - 1 ? 'active' : ''}`;
+            historyItem.innerHTML = `
+                <span class="history-icon">📝</span>
+                <span class="history-action">${item.action}</span>
+            `;
+            historyContainer.appendChild(historyItem);
+        });
+    }
+
+    handleImageUpload(element) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    element.imageData = event.target.result;
+                    this.professionalEditor.elements.push(element);
+                    this.renderElement(element);
+                    this.selectElement(element);
+                    this.addToHistory('Add image');
+                    this.updateLayersPanel();
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        input.click();
+    }
+
+    rerenderElements() {
+        const editingSurface = document.getElementById('editing-surface');
+        if (!editingSurface) return;
+
+        editingSurface.innerHTML = '';
+        this.loadSideElements();
+    }
+
+    // Placeholder methods for additional functionality
+    newDocument() { console.log('New document'); }
+    saveDocument() { console.log('Save document'); }
+    exportDocument() { console.log('Export document'); }
+    undo() { console.log('Undo'); }
+    redo() { console.log('Redo'); }
+    copyElement() { console.log('Copy element'); }
+    pasteElement() { console.log('Paste element'); }
+    deleteSelectedElement() { 
+        if (this.professionalEditor.selectedElement) {
+            this.deleteElement(this.professionalEditor.selectedElement);
+        }
+    }
+    deleteElement(element) {
+        const index = this.professionalEditor.elements.indexOf(element);
+        if (index > -1) {
+            this.professionalEditor.elements.splice(index, 1);
+            document.getElementById(element.id)?.remove();
+            this.selectElement(null);
+            this.addToHistory('Delete element');
+            this.updateLayersPanel();
+        }
+    }
+    showContextMenu(e) { console.log('Show context menu'); }
+    addShape(shape) { console.log('Add shape:', shape); }
+    addIcon(icon) { console.log('Add icon:', icon); }
+    addLayer() { console.log('Add layer'); }
+    deleteLayer() { console.log('Delete layer'); }
+    duplicateLayer() { console.log('Duplicate layer'); }
+    
+    switchCanvasSide(side) {
+        this.switchCard(side);
+    }
+    
+    initCanvas() {
+        const canvas = this.interactiveEditor.canvas;
+        console.log('initCanvas called, canvas:', canvas);
+        if (!canvas) {
+            console.error('Canvas not found!');
+            return;
+        }
+        
+        // Set canvas size
+        canvas.width = 800;
+        canvas.height = 600;
+        console.log('Canvas initialized with size:', canvas.width, 'x', canvas.height);
+        
+        // Clear canvas
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw card background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.strokeRect(0, 0, canvas.width, canvas.height);
+        
+        // Load current card elements
+        this.loadCardElements(this.interactiveEditor.currentCard);
+    }
+    
+    loadCardElements(card) {
+        // Clear current elements
+        this.interactiveEditor.elements = this.interactiveEditor.elements.filter(el => el.card === card);
+        
+        // Redraw canvas
+        this.redrawCanvas();
+        
+        // Update layers panel
+        this.updateLayersPanel();
+    }
+    
+    handleCanvasMouseDown(e) {
+        console.log('Canvas mouse down event');
+        const rect = this.interactiveEditor.canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / this.interactiveEditor.zoom;
+        const y = (e.clientY - rect.top) / this.interactiveEditor.zoom;
+        console.log('Mouse position:', x, y, 'Current tool:', this.interactiveEditor.currentTool);
+        
+        if (this.interactiveEditor.currentTool === 'select') {
+            // Check if clicking on an element
+            const element = this.getElementAt(x, y);
+            if (element) {
+                this.selectElement(element);
+                this.interactiveEditor.isDragging = true;
+                this.interactiveEditor.dragOffset = {
+                    x: x - element.x,
+                    y: y - element.y
+                };
+            } else {
+                this.selectElement(null);
+            }
+        } else {
+            // Create new element
+            this.createElementAt(x, y);
+        }
+    }
+    
+    handleCanvasMouseMove(e) {
+        const rect = this.interactiveEditor.canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / this.interactiveEditor.zoom;
+        const y = (e.clientY - rect.top) / this.interactiveEditor.zoom;
+        
+        if (this.interactiveEditor.isDragging && this.interactiveEditor.selectedElement) {
+            // Move selected element
+            this.interactiveEditor.selectedElement.x = x - this.interactiveEditor.dragOffset.x;
+            this.interactiveEditor.selectedElement.y = y - this.interactiveEditor.dragOffset.y;
+            this.redrawCanvas();
+            this.updatePropertyPanel();
+        }
+    }
+    
+    handleCanvasMouseUp(e) {
+        this.interactiveEditor.isDragging = false;
+        this.interactiveEditor.isResizing = false;
+    }
+    
+    handleCanvasClick(e) {
+        // Handle click events for tools
+    }
+    
+    getElementAt(x, y) {
+        // Return the topmost element at the given coordinates
+        for (let i = this.interactiveEditor.elements.length - 1; i >= 0; i--) {
+            const element = this.interactiveEditor.elements[i];
+            if (element.card !== this.interactiveEditor.currentCard) continue;
+            
+            if (x >= element.x && x <= element.x + element.width &&
+                y >= element.y && y <= element.y + element.height) {
+                return element;
+            }
+        }
+        return null;
+    }
+    
+    selectElement(element) {
+        this.interactiveEditor.selectedElement = element;
+        this.redrawCanvas();
+        this.updatePropertyPanel();
+        this.updateLayersPanel();
+    }
+    
+    createElementAt(x, y) {
+        const tool = this.interactiveEditor.currentTool;
+        console.log('Creating element at:', x, y, 'with tool:', tool);
+        const element = {
+            id: Date.now(),
+            type: tool,
+            card: this.interactiveEditor.currentCard,
+            x: x,
+            y: y,
+            width: 100,
+            height: 50,
+            text: tool === 'text' ? 'Text' : '',
+            fontSize: 16,
+            fontFamily: 'Arial',
+            color: '#000000',
+            backgroundColor: tool === 'shape' ? '#ffffff' : 'transparent',
+            borderColor: '#000000',
+            borderWidth: 1,
+            rotation: 0,
+            zIndex: this.interactiveEditor.elements.length
+        };
+        
+        if (tool === 'image') {
+            // Handle image upload
+            this.uploadImage(element);
+        } else {
+            this.interactiveEditor.elements.push(element);
+            this.selectElement(element);
+            this.redrawCanvas();
+            this.updateLayersPanel();
+        }
+    }
+    
+    uploadImage(element) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    element.imageData = e.target.result;
+                    this.interactiveEditor.elements.push(element);
+                    this.selectElement(element);
+                    this.redrawCanvas();
+                    this.updateLayersPanel();
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        input.click();
+    }
+    
+    redrawCanvas() {
+        const canvas = this.interactiveEditor.canvas;
+        const ctx = canvas.getContext('2d');
+        
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.strokeRect(0, 0, canvas.width, canvas.height);
+        
+        // Sort elements by z-index
+        const elements = this.interactiveEditor.elements
+            .filter(el => el.card === this.interactiveEditor.currentCard)
+            .sort((a, b) => a.zIndex - b.zIndex);
+        
+        // Draw elements
+        elements.forEach(element => {
+            this.drawElement(ctx, element);
+        });
+        
+        // Draw selection handles
+        if (this.interactiveEditor.selectedElement) {
+            this.drawSelectionHandles(ctx, this.interactiveEditor.selectedElement);
+        }
+    }
+    
+    drawElement(ctx, element) {
+        ctx.save();
+        
+        // Apply transformations
+        const centerX = element.x + element.width / 2;
+        const centerY = element.y + element.height / 2;
+        ctx.translate(centerX, centerY);
+        ctx.rotate(element.rotation * Math.PI / 180);
+        ctx.translate(-centerX, -centerY);
+        
+        // Draw based on element type
+        switch (element.type) {
+            case 'text':
+                this.drawTextElement(ctx, element);
+                break;
+            case 'image':
+                this.drawImageElement(ctx, element);
+                break;
+            case 'shape':
+                this.drawShapeElement(ctx, element);
+                break;
+            case 'answer-zone':
+                this.drawAnswerZoneElement(ctx, element);
+                break;
+        }
+        
+        ctx.restore();
+    }
+    
+    drawTextElement(ctx, element) {
+        ctx.font = `${element.fontSize}px ${element.fontFamily}`;
+        ctx.fillStyle = element.color;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        
+        // Word wrap text
+        const words = element.text.split(' ');
+        const lines = [];
+        let currentLine = '';
+        
+        words.forEach(word => {
+            const testLine = currentLine + (currentLine ? ' ' : '') + word;
+            const metrics = ctx.measureText(testLine);
+            if (metrics.width > element.width && currentLine) {
+                lines.push(currentLine);
+                currentLine = word;
+            } else {
+                currentLine = testLine;
+            }
+        });
+        if (currentLine) lines.push(currentLine);
+        
+        // Draw lines
+        lines.forEach((line, index) => {
+            ctx.fillText(line, element.x, element.y + index * element.fontSize * 1.2);
+        });
+    }
+    
+    drawImageElement(ctx, element) {
+        if (element.imageData) {
+            const img = new Image();
+            img.onload = () => {
+                ctx.drawImage(img, element.x, element.y, element.width, element.height);
+            };
+            img.src = element.imageData;
+        } else {
+            // Draw placeholder
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(element.x, element.y, element.width, element.height);
+            ctx.strokeStyle = '#ccc';
+            ctx.strokeRect(element.x, element.y, element.width, element.height);
+            ctx.fillStyle = '#999';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Image', element.x + element.width/2, element.y + element.height/2);
+        }
+    }
+    
+    drawShapeElement(ctx, element) {
+        ctx.fillStyle = element.backgroundColor;
+        ctx.fillRect(element.x, element.y, element.width, element.height);
+        
+        if (element.borderWidth > 0) {
+            ctx.strokeStyle = element.borderColor;
+            ctx.lineWidth = element.borderWidth;
+            ctx.strokeRect(element.x, element.y, element.width, element.height);
+        }
+    }
+    
+    drawAnswerZoneElement(ctx, element) {
+        // Draw dashed border for answer zone
+        ctx.setLineDash([5, 5]);
+        ctx.strokeStyle = '#007bff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(element.x, element.y, element.width, element.height);
+        ctx.setLineDash([]);
+        
+        // Draw label
+        ctx.fillStyle = '#007bff';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText('Answer Zone', element.x + 5, element.y + 15);
+    }
+    
+    drawSelectionHandles(ctx, element) {
+        const handleSize = 8;
+        const handles = [
+            { x: element.x - handleSize/2, y: element.y - handleSize/2 }, // top-left
+            { x: element.x + element.width - handleSize/2, y: element.y - handleSize/2 }, // top-right
+            { x: element.x - handleSize/2, y: element.y + element.height - handleSize/2 }, // bottom-left
+            { x: element.x + element.width - handleSize/2, y: element.y + element.height - handleSize/2 } // bottom-right
+        ];
+        
+        ctx.fillStyle = '#007bff';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        
+        handles.forEach(handle => {
+            ctx.fillRect(handle.x, handle.y, handleSize, handleSize);
+            ctx.strokeRect(handle.x, handle.y, handleSize, handleSize);
+        });
+    }
+    
+    setupPropertyPanelEvents() {
+        // Property input event listeners will be added here
+        const propertyInputs = document.querySelectorAll('.ie-property-input');
+        propertyInputs.forEach(input => {
+            input.addEventListener('change', (e) => {
+                this.updateElementProperty(e.target.dataset.property, e.target.value);
+            });
+        });
+    }
+    
+    setupLayerPanelEvents() {
+        // Layer panel event listeners will be added here
+    }
+    
+    updatePropertyPanel() {
+        const element = this.interactiveEditor.selectedElement;
+        const panel = document.getElementById('element-properties');
+        
+        if (!panel) return;
+        
+        if (!element) {
+            panel.innerHTML = '<p>Select an element to edit its properties</p>';
+            return;
+        }
+        
+        // Create property form based on element type
+        let propertiesHTML = `
+            <div class="property-group">
+                <label>Position</label>
+                <div class="property-row">
+                    <input type="number" data-property="x" value="${Math.round(element.x)}" placeholder="X">
+                    <input type="number" data-property="y" value="${Math.round(element.y)}" placeholder="Y">
+                </div>
+            </div>
+            <div class="property-group">
+                <label>Size</label>
+                <div class="property-row">
+                    <input type="number" data-property="width" value="${Math.round(element.width)}" placeholder="Width">
+                    <input type="number" data-property="height" value="${Math.round(element.height)}" placeholder="Height">
+                </div>
+            </div>
+        `;
+        
+        if (element.type === 'text') {
+            propertiesHTML += `
+                <div class="property-group">
+                    <label>Text</label>
+                    <textarea data-property="text" placeholder="Enter text">${element.text || ''}</textarea>
+                </div>
+                <div class="property-group">
+                    <label>Font Size</label>
+                    <input type="number" data-property="fontSize" value="${element.fontSize}" min="8" max="72">
+                </div>
+                <div class="property-group">
+                    <label>Color</label>
+                    <input type="color" data-property="color" value="${element.color}">
+                </div>
+            `;
+        }
+        
+        if (element.type === 'shape') {
+            propertiesHTML += `
+                <div class="property-group">
+                    <label>Background Color</label>
+                    <input type="color" data-property="backgroundColor" value="${element.backgroundColor}">
+                </div>
+                <div class="property-group">
+                    <label>Border Color</label>
+                    <input type="color" data-property="borderColor" value="${element.borderColor}">
+                </div>
+                <div class="property-group">
+                    <label>Border Width</label>
+                    <input type="number" data-property="borderWidth" value="${element.borderWidth}" min="0" max="10">
+                </div>
+            `;
+        }
+        
+        panel.innerHTML = propertiesHTML;
+        
+        // Add event listeners to new inputs
+        panel.querySelectorAll('input, select, textarea').forEach(input => {
+            input.addEventListener('change', (e) => {
+                this.updateElementProperty(e.target.dataset.property, e.target.value);
+            });
+        });
+    }
+    
+    updateElementProperty(property, value) {
+        const element = this.interactiveEditor.selectedElement;
+        if (!element) return;
+        
+        // Convert value to appropriate type
+        if (['x', 'y', 'width', 'height', 'fontSize', 'borderWidth', 'rotation', 'zIndex'].includes(property)) {
+            value = parseFloat(value) || 0;
+        }
+        
+        element[property] = value;
+        this.redrawCanvas();
+        this.updateLayersPanel();
+    }
+    
+    updateLayersPanel() {
+        const panel = document.getElementById('layers-list');
+        if (!panel) return;
+        
+        // Clear current layers
+        panel.innerHTML = '';
+        
+        // Get elements for current card, sorted by z-index (reverse for UI)
+        const elements = this.interactiveEditor.elements
+            .filter(el => el.card === this.interactiveEditor.currentCard)
+            .sort((a, b) => b.zIndex - a.zIndex);
+        
+        // Create layer items
+        elements.forEach(element => {
+            const layerItem = document.createElement('div');
+            layerItem.className = 'ie-layer-item';
+            if (element === this.interactiveEditor.selectedElement) {
+                layerItem.classList.add('selected');
+            }
+            
+            const icon = this.getElementIcon(element.type);
+            const name = element.text || element.type.charAt(0).toUpperCase() + element.type.slice(1);
+            
+            layerItem.innerHTML = `
+                <span class="layer-icon">${icon}</span>
+                <span class="layer-name">${name}</span>
+                <div class="layer-actions">
+                    <button class="layer-btn" onclick="app.moveElementUp('${element.id}')">↑</button>
+                    <button class="layer-btn" onclick="app.moveElementDown('${element.id}')">↓</button>
+                    <button class="layer-btn" onclick="app.deleteElement('${element.id}')">×</button>
+                </div>
+            `;
+            
+            layerItem.addEventListener('click', () => {
+                this.selectElement(element);
+            });
+            
+            panel.appendChild(layerItem);
+        });
+    }
+    
+    getElementIcon(type) {
+        const icons = {
+            text: '📝',
+            image: '🖼️',
+            shape: '⬜',
+            'answer-zone': '💭'
+        };
+        return icons[type] || '❓';
+    }
+    
+    moveElementUp(elementId) {
+        const element = this.interactiveEditor.elements.find(el => el.id == elementId);
+        if (element) {
+            element.zIndex += 1;
+            this.redrawCanvas();
+            this.updateLayersPanel();
+        }
+    }
+    
+    moveElementDown(elementId) {
+        const element = this.interactiveEditor.elements.find(el => el.id == elementId);
+        if (element && element.zIndex > 0) {
+            element.zIndex -= 1;
+            this.redrawCanvas();
+            this.updateLayersPanel();
+        }
+    }
+    
+    deleteElement(elementId) {
+        const index = this.interactiveEditor.elements.findIndex(el => el.id == elementId);
+        if (index > -1) {
+            this.interactiveEditor.elements.splice(index, 1);
+            if (this.interactiveEditor.selectedElement?.id == elementId) {
+                this.interactiveEditor.selectedElement = null;
+            }
+            this.redrawCanvas();
+            this.updateLayersPanel();
+            this.updatePropertyPanel();
+        }
+    }
+    
+    // Global functions for onclick handlers
+    moveElementUp(elementId) {
+        return this.moveElementUp(elementId);
+    }
+    
+    moveElementDown(elementId) {
+        return this.moveElementDown(elementId);
+    }
+    
+    deleteElement(elementId) {
+        return this.deleteElement(elementId);
+    }
+    
+    // Interactive Editor View Management
+    switchToInteractiveEditor() {
+        console.log('Switching to Professional Card Editor');
+        
+        // Hide all views first
+        document.querySelectorAll('.view').forEach(view => {
+            view.classList.remove('active');
+        });
+        
+        // Show the interactive editor view
+        const interactiveView = document.getElementById('interactive-create-view');
+        if (interactiveView) {
+            interactiveView.classList.add('active');
+        }
+        
+        // Initialize the professional editor if not already done
+        if (!this.professionalEditor) {
+            this.initInteractiveEditor();
+        }
+        
+        // Set up the editor after DOM is ready
+        setTimeout(() => {
+            this.setupProfessionalEditorEvents(); // Re-setup events for newly visible elements
+            this.initCardCanvas();
+        }, 200); // Longer delay to ensure DOM is ready
+        
+        // Set up back button for interactive editor
+        const backBtn = document.getElementById('back-to-home-from-interactive');
+        if (backBtn) {
+            backBtn.onclick = () => this.showView('home');
+        }
+    }
+    
+    switchToSimpleEditor() {
+        console.log('Switching to Simple Editor');
+        
+        // Hide interactive editor
+        const interactiveView = document.getElementById('interactive-create-view');
+        if (interactiveView) {
+            interactiveView.classList.remove('active');
+        }
+        
+        // Show the create view properly
+        this.showView('create');
+    }
+    
+    saveInteractiveDeck() {
+        console.log('Saving Interactive Deck');
+        
+        const deckName = document.getElementById('interactive-deck-name')?.value;
+        const deckSubject = document.getElementById('interactive-deck-subject')?.value;
+        
+        if (!deckName || !deckSubject) {
+            this.showNotification('Missing Information', 'Please enter deck name and subject', 'warning');
+            return;
+        }
+        
+        // Create deck from interactive editor elements
+        const frontElements = this.interactiveEditor.elements.filter(el => el.card === 'front');
+        const backElements = this.interactiveEditor.elements.filter(el => el.card === 'back');
+        
+        // Convert interactive elements to standard cards
+        const cards = this.convertInteractiveElementsToCards(frontElements, backElements);
+        
+        if (cards.length === 0) {
+            this.showNotification('No Content', 'Please add some elements to create cards', 'warning');
+            return;
+        }
+        
+        // Create the deck
+        const deck = {
+            id: Date.now(),
+            name: deckName,
+            subject: deckSubject,
+            cards: cards,
+            style: 'modern', // Interactive decks use modern style
+            color: 'blue',
+            createdAt: new Date().toISOString(),
+            interactiveElements: {
+                front: frontElements,
+                back: backElements
+            }
+        };
+        
+        // Save deck
+        this.decks.push(deck);
+        this.saveDecks();
+        
+        // Clear interactive editor
+        this.clearInteractiveEditor();
+        
+        // Show success and return to home
+        this.showNotification('Deck Created!', `"${deckName}" has been saved successfully`, 'success');
+        this.showView('home');
+    }
+    
+    convertInteractiveElementsToCards(frontElements, backElements) {
+        // For now, create a single card from the elements
+        // In a more advanced version, this could create multiple cards based on answer zones
+        
         const cards = [];
         
-        // Get subject-specific templates
-        const templates = this.getSubjectTemplates(subject);
+        // Find text elements to use as question/answer
+        const frontTexts = frontElements.filter(el => el.type === 'text');
+        const backTexts = backElements.filter(el => el.type === 'text');
+        const answerZones = [...frontElements, ...backElements].filter(el => el.type === 'answer-zone');
         
-        for (let i = 0; i < count; i++) {
-            const template = templates[i % templates.length];
-            const card = this.generateCardFromTemplate(template, difficulty, i + 1);
+        if (frontTexts.length > 0 && backTexts.length > 0) {
+            const card = {
+                question: frontTexts.map(el => el.text).join(' '),
+                answer: backTexts.map(el => el.text).join(' '),
+                explanation: answerZones.length > 0 ? 'Interactive card with answer zones' : '',
+                hint: 'Use the interactive elements to help you answer'
+            };
             cards.push(card);
         }
         
         return cards;
     }
     
-    getSubjectTemplates(subject) {
-        const subjectLower = subject.toLowerCase();
-        
-        if (subjectLower.includes('math') || subjectLower.includes('algebra')) {
-            return [
-                { type: 'algebra', template: 'Simplify: {a}x + {b}x', answer: '{sum}x', explanation: 'Add coefficients: {a} + {b} = {sum}, keep variable x' },
-                { type: 'equation', template: 'Solve: x + {a} = {b}', answer: 'x = {diff}', explanation: 'Subtract {a} from both sides: x = {b} - {a} = {diff}' },
-                { type: 'fraction', template: 'What is {a}/{b} + {c}/{d}?', answer: '{result}', explanation: 'Find common denominator and add numerators' },
-                { type: 'geometry', template: 'Area of rectangle: length {l}, width {w}', answer: '{area}', explanation: 'Area = length × width = {l} × {w} = {area}' },
-                { type: 'percentage', template: 'What is {percent}% of {number}?', answer: '{result}', explanation: 'Multiply: {number} × {percent}/100 = {result}' }
-            ];
-        } else if (subjectLower.includes('science') || subjectLower.includes('biology')) {
-            return [
-                { type: 'definition', template: 'What is photosynthesis?', answer: 'Plants making food from sunlight', explanation: 'Process where plants convert light energy into chemical energy (glucose)' },
-                { type: 'process', template: 'What is respiration?', answer: 'Breaking down glucose for energy', explanation: 'Cellular process that releases energy from glucose: C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O + energy' },
-                { type: 'structure', template: 'What controls cell activities?', answer: 'Nucleus', explanation: 'The nucleus contains DNA and controls all cell functions and reproduction' },
-                { type: 'classification', template: 'What are mammals?', answer: 'Warm-blooded animals with hair', explanation: 'Vertebrates that regulate body temperature, have hair/fur, and feed milk to offspring' }
-            ];
-        } else if (subjectLower.includes('history')) {
-            return [
-                { type: 'date', template: 'When did World War II end?', answer: '1945', explanation: 'World War II ended on September 2, 1945, with Japan\'s surrender after atomic bombs' },
-                { type: 'person', template: 'Who was the first US President?', answer: 'George Washington', explanation: 'George Washington (1732-1799) led the Continental Army and became first President (1789-1797)' },
-                { type: 'event', template: 'What started the American Revolution?', answer: 'Boston Tea Party', explanation: 'Colonists dumped British tea in Boston Harbor (1773) to protest taxation without representation' }
-            ];
-        } else {
-            return [
-                { type: 'general', template: 'What is the main concept in {subject}?', answer: 'Core principle', explanation: 'This fundamental idea forms the basis of understanding in this subject area' },
-                { type: 'application', template: 'How is {subject} used in real life?', answer: 'Practical applications', explanation: 'This subject has many real-world uses and applications in daily life and careers' }
-            ];
+    clearInteractiveEditor() {
+        if (this.interactiveEditor) {
+            this.interactiveEditor.elements = [];
+            this.interactiveEditor.selectedElement = null;
+            this.redrawCanvas();
+            this.updateLayersPanel();
+            this.updatePropertyPanel();
         }
+        
+        // Clear form fields
+        document.getElementById('interactive-deck-name').value = '';
+        document.getElementById('interactive-deck-subject').value = '';
     }
-    
-    generateCardFromTemplate(template, difficulty, cardNumber) {
-        const { type, template: questionTemplate, answer: answerTemplate, explanation: explanationTemplate } = template;
+
+    showCurrentCard() {
+        if (this.currentCards.length === 0) {
+            this.showStudyComplete();
+            return;
+        }
+
+        const card = this.currentCards[this.currentCardIndex];
+        const questionElement = document.getElementById('card-question');
         
-        // Generate random values for placeholders
-        const values = this.generateTemplateValues(type, difficulty);
+        // Ensure card is not flipped when showing new card
+        const flipCard = document.getElementById('flip-card');
+        if (flipCard) {
+            flipCard.classList.remove('flipped');
+        }
         
-        // Replace placeholders in template
-        let question = questionTemplate;
-        let answer = answerTemplate;
-        let explanation = explanationTemplate;
+        // Check if content contains HTML tags for backward compatibility
+        if (card.question && card.question.indexOf('<') === -1) {
+            questionElement.textContent = card.question;
+        } else {
+            questionElement.innerHTML = card.question || '';
+        }
+        document.getElementById('answer-input').value = '';
+        document.getElementById('card-number').textContent = `${this.cardCount + 1} / ${this.currentDeck.cards.length}`;
+        this.hideFeedback();
         
-        Object.keys(values).forEach(key => {
-            const placeholder = `{${key}}`;
-            question = question.replace(new RegExp(placeholder, 'g'), values[key]);
-            answer = answer.replace(new RegExp(placeholder, 'g'), values[key]);
-            explanation = explanation.replace(new RegExp(placeholder, 'g'), values[key]);
+        // Apply deck style and color to all study card elements
+        const studyCards = document.querySelectorAll('.study-card');
+        
+        // Get deck's style and color (with fallbacks for older decks)
+        const deckStyle = this.currentDeck.style || 'classic';
+        const deckColor = this.currentDeck.color || 'blue';
+        
+        console.log('Applying card styles:', { deckStyle, deckColor, cardCount: studyCards.length });
+        
+        studyCards.forEach(studyCard => {
+            // Remove existing style and animation classes
+            studyCard.classList.remove('classic', 'modern', 'vintage', 'neon');
+            studyCard.classList.remove('blue', 'green', 'purple', 'red', 'orange', 'teal');
+            studyCard.classList.remove('fall-correct', 'slide-incorrect', 'slide-out', 'slide-in', 'bounce-in', 'slide-in-top');
+            
+            // Apply deck's style and color
+            studyCard.classList.add(deckStyle, deckColor);
+            
+            // Reset any inline styles from animations
+            studyCard.style.transform = '';
+            studyCard.style.opacity = '1';
         });
         
-        return {
-            front: question,
-            back: answer,
-            explanation: explanation,
-            cardNumber: cardNumber,
-            difficulty: difficulty,
-            type: type
-        };
-    }
-    
-    generateTemplateValues(type, difficulty) {
-        const values = {};
-        
-        switch (type) {
-            case 'algebra':
-                values.a = Math.floor(Math.random() * 10) + 1;
-                values.b = Math.floor(Math.random() * 10) + 1;
-                values.sum = values.a + values.b;
-                break;
-            case 'equation':
-                values.a = Math.floor(Math.random() * 20) + 1;
-                values.b = values.a + Math.floor(Math.random() * 20) + 1;
-                values.diff = values.b - values.a;
-                break;
-            case 'geometry':
-                values.l = Math.floor(Math.random() * 10) + 2;
-                values.w = Math.floor(Math.random() * 8) + 2;
-                values.area = values.l * values.w;
-                break;
-            case 'percentage':
-                values.percent = [10, 20, 25, 50, 75][Math.floor(Math.random() * 5)];
-                values.number = Math.floor(Math.random() * 100) + 10;
-                values.result = (values.number * values.percent) / 100;
-                break;
-            default:
-                values.subject = 'this topic';
-                break;
-        }
-        
-        return values;
-    }
-    
-    parseAdaptiveCardResponse(response, expectedCount = 20) {
-        console.log('🔍 Parsing Adaptive response for cards...');
-        
-        const cards = [];
-        
-        // Try multiple parsing methods
-        
-        // Method 1: Look for Q: ... | A: ... | E: ... format
-        const formatMatches = response.match(/Q:\s*([^|]+)\s*\|\s*A:\s*([^|]+)\s*\|\s*E:\s*([^|Q]+)/gi);
-        if (formatMatches) {
-            formatMatches.forEach(match => {
-                const parts = match.split('|');
-                if (parts.length >= 3) {
-                    const question = parts[0].replace(/^Q:\s*/i, '').trim();
-                    const answer = parts[1].replace(/^A:\s*/i, '').trim();
-                    const explanation = parts[2].replace(/^E:\s*/i, '').trim();
-                    
-                    if (question && answer) {
-                        cards.push({
-                            front: question,
-                            back: answer,
-                            explanation: explanation || 'Additional explanation for this concept.'
-                        });
-                    }
+        // Double-check that the classes were applied
+        setTimeout(() => {
+            studyCards.forEach(studyCard => {
+                if (!studyCard.classList.contains(deckStyle) || !studyCard.classList.contains(deckColor)) {
+                    console.warn('Card styles not applied properly, retrying...');
+                    studyCard.classList.add(deckStyle, deckColor);
                 }
             });
-        }
+        }, 10);
         
-        // Method 2: Look for Q: ... A: ... format (fallback)
-        if (cards.length < expectedCount / 2) {
-            const simpleMatches = response.match(/Q:\s*([^\n]+)\s*A:\s*([^\n]+)/gi);
-            if (simpleMatches) {
-                simpleMatches.forEach(match => {
-                    const qMatch = match.match(/Q:\s*([^\n]+)/i);
-                    const aMatch = match.match(/A:\s*([^\n]+)/i);
-                    
-                    if (qMatch && aMatch) {
-                        const question = qMatch[1].trim();
-                        const answer = aMatch[1].trim();
-                        
-                        // Don't add duplicates
-                        if (!cards.some(card => card.front === question)) {
-                            cards.push({
-                                front: question,
-                                back: answer,
-                                explanation: `This answer relates to the concept being tested in the question.`
-                            });
-                        }
-                    }
-                });
-            }
+        // Focus on answer input
+        setTimeout(() => {
+            document.getElementById('answer-input').focus();
+        }, 100);
+    }
+
+    checkAnswer() {
+        const userAnswer = document.getElementById('answer-input').value.trim();
+        if (!userAnswer) {
+            alert('Please enter an answer');
+            return;
         }
-        
-        console.log(`✅ Parsed ${cards.length} cards from Adaptive response`);
-        return cards.slice(0, expectedCount); // Limit to expected count
+
+        const currentCard = this.currentCards[this.currentCardIndex];
+        // Check against main answer and all alternative answers
+        const answerResult = this.checkAllAnswers(userAnswer, currentCard);
+        const isCorrect = answerResult.isCorrect;
+
+        // Process the answer and flip the card
+        this.processAnswer(isCorrect, answerResult, currentCard);
     }
     
-    generateDeckTitleCards(options) {
-        const { subject, difficulty } = options;
+    showAnswer() {
+        // "I Don't Know" button pressed
+        const currentCard = this.currentCards[this.currentCardIndex];
         
-        return [
-            {
-                title: `📚 ${subject} Study Deck`,
-                content: `Welcome to your generated ${subject} study deck! This deck contains carefully crafted questions to help you master key concepts.`,
-                type: 'intro'
-            },
-            {
-                title: `🎯 Learning Objectives`,
-                content: `By completing this deck, you will:
-• Understand core ${subject} concepts
-• Practice problem-solving skills
-• Build confidence in ${difficulty} level material
-• Prepare for assessments and exams`,
-                type: 'objectives'
-            },
-            {
-                title: `💡 Study Tips`,
-                content: `For best results:
-• Read each question carefully
-• Think through your answer before revealing
-• Pay attention to explanations
-• Review incorrect answers
-• Practice regularly for retention`,
-                type: 'tips'
-            }
-        ];
+        // Process as incorrect answer
+        const answerResult = { reason: 'dont_know' };
+        this.processAnswer(false, answerResult, currentCard);
     }
     
-    generateComprehensiveDeckTitle(options) {
-        const { subject, difficulty, cardCount } = options;
-        const difficultyEmoji = {
-            'beginner': '🌱',
-            'intermediate': '📈',
-            'advanced': '🚀',
-            'expert': '🎯'
+    processAnswer(isCorrect, answerResult, currentCard) {
+        // Calculate response time for learning algorithm
+        const responseTime = Date.now() - this.sessionStartTime;
+        
+        // Update adaptive learning data
+        const cardIndex = currentCard.originalIndex !== undefined ? currentCard.originalIndex : 
+                         this.currentDeck.cards.findIndex(c => c === currentCard || 
+                         (c.question === currentCard.question && c.answer === currentCard.answer));
+        
+        if (cardIndex !== -1) {
+            this.updateCardPerformance(this.currentDeck.id, cardIndex, isCorrect, responseTime);
+        }
+
+        this.cardCount++;
+        
+        // Store result for when card flips
+        this.currentAnswerResult = {
+            isCorrect,
+            answerResult,
+            currentCard,
+            cardIndex
         };
         
-        return `${difficultyEmoji[difficulty] || '📚'} ${subject} - ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} (${cardCount} Cards)`;
-    }
-    
-    // =================== END COMPREHENSIVE Adaptive GENERATION ===================
-    
-    flipCard() {
-        const flipCard = document.getElementById('flip-card');
-        const cardAnswer = document.getElementById('card-answer');
-        const answerResult = document.getElementById('answer-result');
-        
-        if (!flipCard || !cardAnswer || !answerResult) return;
-        
-        // Set the answer on the back of the card
-        const currentCard = this.currentAnswerResult.currentCard;
-        cardAnswer.innerHTML = currentCard.answer || currentCard.answerText;
-        
-        // Set the explanation if available
-        const cardExplanation = document.getElementById('card-explanation');
-        if (cardExplanation) {
-            if (currentCard.explanation && currentCard.explanationText) {
-                cardExplanation.innerHTML = currentCard.explanation;
-                cardExplanation.style.display = 'block';
-            } else {
-                cardExplanation.innerHTML = '';
-                cardExplanation.style.display = 'none';
-            }
-        }
-        
-        // Show result (correct/incorrect)
-        const isCorrect = this.currentAnswerResult.isCorrect;
-        const answerResultData = this.currentAnswerResult.answerResult;
-        
-        if (isCorrect) {
-            let resultText = '✅ Correct! Well done!';
-            
-            // Add coin reward
-            const difficulty = this.currentDeck.difficulty || 'Intermediate';
-            const streakCount = this.getCorrectStreakCount();
-            const responseTime = Date.now() - this.sessionStartTime;
-            const coinReward = this.calculateCoinReward(difficulty, streakCount, responseTime);
-            
-            resultText += ` (+${coinReward} 💰)`;
-            answerResult.innerHTML = resultText;
-            answerResult.className = 'answer-result correct';
-            
-            // Award coins
-            this.earnCoins(coinReward, 'Correct answer!');
-            this.incrementStreak();
-            
-        } else {
-            let resultText = '❌ Incorrect - Better luck next time!';
-            if (answerResultData.reason === 'close') {
-                resultText = '❌ Close! You were on the right track.';
-            } else if (answerResultData.reason === 'dont_know') {
-                resultText = '💭 No worries! Learning is a process.';
-            }
-            
-            // Add coin penalty
-            const difficulty = this.currentDeck.difficulty || 'Intermediate';
-            const coinPenalty = this.calculateCoinPenalty(difficulty);
-            
-            if (coinPenalty > 0) {
-                resultText += ` (-${coinPenalty} 💰)`;
-                this.loseCoins(coinPenalty, 'Incorrect answer');
-            }
-            
-            answerResult.innerHTML = resultText;
-            answerResult.className = 'answer-result incorrect';
-            this.resetStreak();
-        }
-        
-        // Add flipped class to trigger animation
-        flipCard.classList.add('flipped');
-        
-        // Clear input
-        document.getElementById('answer-input').value = '';
-    }
-    
-    continueToNext() {
-        const flipCard = document.getElementById('flip-card');
-        if (!flipCard) return;
-        
-        const isCorrect = this.currentAnswerResult.isCorrect;
-        const currentCard = this.currentAnswerResult.currentCard;
-        const cardIndex = this.currentAnswerResult.cardIndex;
+        // Flip the card to show answer
+        this.flipCard();
         
         if (isCorrect) {
             // Track unique card completion
             const cardOriginalIndex = currentCard.originalIndex;
             if (cardOriginalIndex !== undefined && !this.completedCards.has(cardOriginalIndex)) {
                 this.completedCards.add(cardOriginalIndex);
-                this.score = this.completedCards.size;
+                this.score = this.completedCards.size; // Score = number of unique cards completed
             }
+            
+            // 🪙 Gamification: Award coins for correct answer
+            const difficulty = this.currentDeck.difficulty || 'Intermediate';
+            const streakCount = this.getCorrectStreakCount();
+            const responseTime = Date.now() - this.sessionStartTime;
+            const coinReward = this.calculateCoinReward(difficulty, streakCount, responseTime);
+            
+            // Provide encouraging feedback based on how they got it right
+            let feedbackMessage = 'Correct! Well done! 🎉';
+            if (answerResult.reason === 'key_terms') {
+                feedbackMessage = 'Correct! You got the key points! 🎯';
+            } else if (answerResult.reason === 'high_similarity') {
+                feedbackMessage = 'Correct! Close enough - great understanding! ✨';
+            }
+            
+            // Add coin information to feedback
+            feedbackMessage += ` <span class="coin-reward">+${coinReward} 💰</span>`;
+            
+            this.showFeedback(feedbackMessage, 'correct');
+            this.earnCoins(coinReward, 'Correct answer!');
+            this.incrementStreak(); // Track streak for bonus calculations
+            
+            // Award XP for correct answer
+            if (typeof awardXP === 'function') {
+                awardXP(XP_VALUES.correctAnswer, 'Correct answer!');
+                
+                // Check for first answer achievement
+                if (typeof checkAchievements === 'function') {
+                    checkAchievements('firstAnswer');
+                    
+                    // Check streak achievements
+                    const currentStreak = this.getCorrectStreakCount();
+                    checkAchievements('streak', { streak: currentStreak });
+                }
+            }
+            
+            // Trigger fall animation for correct answer
+            this.animateCorrectAnswer();
             
             // Remove correct card from deck
             this.currentCards.splice(this.currentCardIndex, 1);
@@ -10443,6 +11439,36 @@ Generate exactly ${cardCount} cards following this format, tailored to ${yearGro
                 this.currentCardIndex = 0;
             }
         } else {
+            // 🪙 Gamification: Lose coins for incorrect answer
+            const difficulty = this.currentDeck.difficulty || 'Intermediate';
+            const coinPenalty = this.calculateCoinPenalty(difficulty);
+            
+            // Provide helpful feedback based on how close they were
+            let feedbackMessage = `Incorrect. The correct answer is: "${currentCard.answerText || currentCard.answer}"`;
+            if (answerResult.reason === 'close') {
+                feedbackMessage = `Close! You were on the right track. The correct answer is: "${currentCard.answerText || currentCard.answer}"`;
+            }
+            
+            // Add coin penalty information to feedback (but be encouraging)
+            if (coinPenalty > 0) {
+                feedbackMessage += ` <span class="coin-penalty">-${coinPenalty} 💰</span>`;
+            }
+            
+            this.showFeedback(feedbackMessage, 'incorrect', currentCard.answer);
+            
+            if (coinPenalty > 0) {
+                this.loseCoins(coinPenalty, 'Incorrect answer');
+            }
+            this.resetStreak(); // Reset streak on incorrect answer
+            
+            // Award small XP for effort even when wrong
+            if (typeof awardXP === 'function') {
+                awardXP(XP_VALUES.wrongAnswer, 'Keep trying!');
+            }
+            
+            // Trigger slide animation for incorrect answer
+            this.animateIncorrectAnswer();
+            
             // For adaptive learning: keep difficult cards in rotation longer
             const incorrectCard = this.currentCards.splice(this.currentCardIndex, 1)[0];
             
@@ -10462,6 +11488,415 @@ Generate exactly ${cardCount} cards following this format, tailored to ${yearGro
                 this.currentCardIndex = 0;
             }
         }
+
+        this.updateStudyHeader();
+        
+        // Reset session timer for next card
+        this.sessionStartTime = Date.now();
+        
+        // Show next card after animation completes
+        const animationDelay = isCorrect ? 1000 : 1400; // Different delays for different animations
+        setTimeout(() => {
+            this.nextCard();
+        }, animationDelay);
+    }
+
+    animateCorrectAnswer() {
+        const studyCard = document.getElementById('flip-card');
+        
+        // Clear any existing animation classes
+        studyCard.classList.remove('slide-out', 'slide-in', 'slide-incorrect', 'fall-correct', 'bounce-in');
+        
+        // Add fall animation
+        studyCard.classList.add('fall-correct');
+        
+        // Prepare next card preview
+        this.prepareNextCardPreview();
+    }
+
+    animateIncorrectAnswer() {
+        const studyCard = document.getElementById('flip-card');
+        
+        // Clear any existing animation classes
+        studyCard.classList.remove('slide-out', 'slide-in', 'slide-incorrect', 'fall-correct', 'bounce-in');
+        
+        // Add slide to side animation
+        studyCard.classList.add('slide-incorrect');
+        
+        // Prepare next card preview
+        this.prepareNextCardPreview();
+    }
+
+    prepareNextCardPreview() {
+        const nextCardPreview = document.getElementById('next-card-preview');
+        
+        if (this.currentCards.length > 1) {
+            // Show preview of next card
+            const nextCardIndex = this.currentCardIndex < this.currentCards.length - 1 ? 
+                this.currentCardIndex + 1 : 0;
+            
+            // For incorrect answers, the "next" card is actually the current one going to the back
+            const isIncorrectAnswer = document.getElementById('flip-card').classList.contains('slide-incorrect');
+            
+            if (isIncorrectAnswer && this.currentCards.length > 1) {
+                // Show the actual next card in deck
+                const nextCard = this.currentCards[nextCardIndex === this.currentCardIndex ? 
+                    (this.currentCardIndex + 1) % this.currentCards.length : nextCardIndex];
+                nextCardPreview.style.display = 'block';
+                nextCardPreview.style.opacity = '0.6';
+            } else if (!isIncorrectAnswer) {
+                // For correct answers, show the next card
+                if (this.currentCards.length > 1) {
+                    nextCardPreview.style.display = 'block';
+                    nextCardPreview.style.opacity = '0.6';
+                }
+            }
+        } else {
+            nextCardPreview.style.display = 'none';
+        }
+    }
+
+    nextCard() {
+        if (this.currentCards.length === 0) {
+            this.showStudyComplete();
+            return;
+        }
+
+        // Hide next card preview
+        const nextCardPreview = document.getElementById('next-card-preview');
+        nextCardPreview.style.display = 'none';
+        
+        // Get the current card element
+        const studyCard = document.getElementById('flip-card');
+        
+        // Clear all animation classes and reset the card
+        studyCard.classList.remove('fall-correct', 'slide-incorrect', 'slide-out', 'slide-in', 'bounce-in', 'slide-in-top');
+        
+        // Reset any transform styles that might be left over from animations
+        studyCard.style.transform = '';
+        studyCard.style.opacity = '';
+        
+        // Brief delay to ensure the DOM is clean, then show new card with entrance animation
+        setTimeout(() => {
+            this.showCurrentCard();
+            
+            // Add entrance animation
+            setTimeout(() => {
+                studyCard.classList.add('bounce-in');
+            }, 50);
+        }, 100);
+    }
+
+    showFeedback(message, type, correctAnswer = null) {
+        const feedback = document.getElementById('answer-feedback');
+        
+        let content = message;
+        if (correctAnswer && type === 'incorrect') {
+            content += `<div class="correct-answer">Correct answer: <span class="formatted-answer">${correctAnswer}</span></div>`;
+        }
+        
+        feedback.innerHTML = content;
+        feedback.className = `answer-feedback ${type} show`;
+    }
+
+    hideFeedback() {
+        const feedback = document.getElementById('answer-feedback');
+        feedback.classList.remove('show', 'correct', 'incorrect');
+    }
+
+    showStudyComplete() {
+        document.getElementById('study-card-container').style.display = 'none';
+        document.getElementById('study-complete').classList.add('show');
+        document.getElementById('final-score').textContent = 
+            `${this.score} / ${this.totalUniqueCards}`;
+
+        // 🪙 Gamification: Award completion bonus
+        if (this.currentDeck) {
+            const completionRate = this.score / this.totalUniqueCards;
+            let completionBonus = 0;
+            
+            if (completionRate === 1.0) {
+                // Perfect completion - big bonus!
+                completionBonus = 50;
+                this.earnCoins(completionBonus, 'Perfect completion! 🌟');
+                
+                // Award XP for perfect completion
+                if (typeof awardXP === 'function') {
+                    awardXP(XP_VALUES.perfectCompletion, 'Perfect completion!');
+                    
+                    // Check perfect deck achievement
+                    if (typeof checkAchievements === 'function') {
+                        checkAchievements('perfectDeck');
+                    }
+                }
+            } else if (completionRate >= 0.8) {
+                // Good completion
+                completionBonus = 25;
+                this.earnCoins(completionBonus, 'Great job completing the deck!');
+                
+                // Award XP for deck completion
+                if (typeof awardXP === 'function') {
+                    awardXP(XP_VALUES.deckCompletion, 'Deck completed!');
+                }
+            } else if (completionRate >= 0.5) {
+                // Decent effort
+                completionBonus = 10;
+                this.earnCoins(completionBonus, 'Good effort!');
+                
+                // Award XP for study session
+                if (typeof awardXP === 'function') {
+                    awardXP(XP_VALUES.studySession, 'Study session completed!');
+                }
+            }
+            
+            // Add streak bonus if applicable
+            const streakBonus = Math.min(this.getCorrectStreakCount() * 5, 30);
+            if (streakBonus > 0) {
+                this.earnCoins(streakBonus, `${this.getCorrectStreakCount()}-answer streak bonus! 🔥`);
+            }
+        }
+
+        // Record study session for analytics
+        if (this.currentDeck) {
+            const sessionDuration = Date.now() - this.sessionStartTime;
+            this.recordStudySession(
+                this.currentDeck.id,
+                this.cardCount,
+                this.score,
+                sessionDuration
+            );
+            // Update Adaptive lock status in case user just unlocked it
+            
+        }
+    }
+
+    hideStudyComplete() {
+        document.getElementById('study-card-container').style.display = 'block';
+        document.getElementById('study-complete').classList.remove('show');
+    }
+
+    restartStudy() {
+        if (this.currentDeck) {
+            this.startStudy(this.currentDeck.id);
+        }
+    }
+
+    exitStudy() {
+        this.currentDeck = null;
+        this.currentCards = [];
+        this.showView('home');
+    }
+
+    // Utility functions
+    showNotification(message, type = 'info') {
+        // Simple notification - could be enhanced with a toast library
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#48bb78' : type === 'error' ? '#f56565' : '#4299e1'};
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            animation: slideInRight 0.3s ease;
+        `;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+
+    checkAllAnswers(userAnswer, currentCard) {
+        // Get main answer
+        const mainAnswer = currentCard.answerText || currentCard.answer;
+        
+        // Try main answer first
+        let result = this.smartAnswerComparison(userAnswer, mainAnswer);
+        if (result.isCorrect) {
+            result.matchedAnswer = 'main';
+            return result;
+        }
+        
+        // Try alternative answers if they exist
+        if (currentCard.alternativeAnswers && currentCard.alternativeAnswers.length > 0) {
+            for (let i = 0; i < currentCard.alternativeAnswers.length; i++) {
+                const altAnswer = currentCard.alternativeAnswers[i];
+                const altResult = this.smartAnswerComparison(userAnswer, altAnswer);
+                
+                if (altResult.isCorrect) {
+                    altResult.matchedAnswer = `alternative_${i + 1}`;
+                    return altResult;
+                }
+                
+                // Keep track of the best similarity score
+                if (altResult.similarity && (!result.similarity || altResult.similarity > result.similarity)) {
+                    result = altResult;
+                }
+            }
+        }
+        
+        return result;
+    }
+
+    smartAnswerComparison(userAnswer, correctAnswer) {
+        // Debug logging for troubleshooting
+        console.log('🔍 Answer Comparison Debug:');
+        console.log('User Answer:', `"${userAnswer}"`);
+        console.log('Correct Answer:', `"${correctAnswer}"`);
+        
+        // First try exact match with just trimming and case normalization
+        const simpleUser = userAnswer.toString().trim().toLowerCase();
+        const simpleCorrect = correctAnswer.toString().trim().toLowerCase();
+        
+        console.log('Simple User:', `"${simpleUser}"`);
+        console.log('Simple Correct:', `"${simpleCorrect}"`);
+        
+        if (simpleUser === simpleCorrect) {
+            console.log('✅ EXACT MATCH (simple)');
+            return { isCorrect: true, reason: 'exact_simple' };
+        }
+        
+        // Clean both answers for comparison (more aggressive cleaning)
+        const cleanUser = this.cleanAnswerForComparison(userAnswer);
+        const cleanCorrect = this.cleanAnswerForComparison(correctAnswer);
+        
+        console.log('Clean User:', `"${cleanUser}"`);
+        console.log('Clean Correct:', `"${cleanCorrect}"`);
+        
+        // Direct match after cleaning
+        if (cleanUser === cleanCorrect) {
+            console.log('✅ EXACT MATCH (cleaned)');
+            return { isCorrect: true, reason: 'exact' };
+        }
+        
+        // Extract key terms from both answers
+        const userTerms = this.extractKeyTerms(cleanUser);
+        const correctTerms = this.extractKeyTerms(cleanCorrect);
+        
+        // Check if user answer contains all essential terms
+        const essentialTermsPresent = this.checkEssentialTerms(userTerms, correctTerms);
+        
+        // Calculate similarity score
+        const similarityScore = this.calculateSimilarity(cleanUser, cleanCorrect);
+        
+        // Determine if answer is correct and why
+        if (essentialTermsPresent && similarityScore >= 0.6) {
+            return { isCorrect: true, reason: 'key_terms', similarity: similarityScore };
+        } else if (similarityScore >= 0.8) {
+            return { isCorrect: true, reason: 'high_similarity', similarity: similarityScore };
+        } else if (similarityScore >= 0.6) {
+            return { isCorrect: false, reason: 'close', similarity: similarityScore };
+        } else {
+            return { isCorrect: false, reason: 'different', similarity: similarityScore };
+        }
+    }
+    
+    cleanAnswerForComparison(answer) {
+        return answer
+            .toString()
+            .toLowerCase()
+            .replace(/<[^>]*>/g, '') // Remove HTML tags
+            .replace(/[""'']/g, '"') // Normalize quotes
+            .replace(/[–—]/g, '-') // Normalize dashes
+            .replace(/\s+/g, ' ') // Normalize whitespace
+            .replace(/[^\w\s%$£€¥₹.,;:!?()[\]{}/"'-]/g, '') // Keep important punctuation
+            .trim();
+    }
+    
+    extractKeyTerms(text) {
+        // Common words to ignore
+        const stopWords = new Set([
+            'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+            'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did',
+            'will', 'would', 'could', 'should', 'may', 'might', 'can', 'must', 'shall',
+            'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they',
+            'my', 'your', 'his', 'her', 'its', 'our', 'their', 'me', 'him', 'her', 'us', 'them'
+        ]);
+        
+        return text
+            .split(' ')
+            .filter(word => word.length > 2 && !stopWords.has(word))
+            .filter(word => /[a-zA-Z]/.test(word)); // Must contain at least one letter
+    }
+    
+    checkEssentialTerms(userTerms, correctTerms) {
+        if (correctTerms.length === 0) return true;
+        
+        // For short answers (1-2 key terms), require all terms
+        // For longer answers, require majority of terms
+        const requiredRatio = correctTerms.length <= 2 ? 1.0 : 0.7;
+        const requiredTerms = Math.ceil(correctTerms.length * requiredRatio);
+        
+        let matchedTerms = 0;
+        for (const correctTerm of correctTerms) {
+            // Check for exact matches or close matches (allowing for minor typos)
+            const hasMatch = userTerms.some(userTerm => 
+                userTerm === correctTerm || 
+                this.isCloseMatch(userTerm, correctTerm)
+            );
+            if (hasMatch) matchedTerms++;
+        }
+        
+        return matchedTerms >= requiredTerms;
+    }
+    
+    isCloseMatch(word1, word2) {
+        // Allow for single character differences for words longer than 3 characters
+        if (word1.length < 4 || word2.length < 4) return false;
+        if (Math.abs(word1.length - word2.length) > 1) return false;
+        
+        const maxDistance = Math.floor(Math.max(word1.length, word2.length) * 0.2);
+        return this.levenshteinDistance(word1, word2) <= maxDistance;
+    }
+    
+    calculateSimilarity(str1, str2) {
+        const maxLen = Math.max(str1.length, str2.length);
+        if (maxLen === 0) return 1.0;
+        
+        const distance = this.levenshteinDistance(str1, str2);
+        return (maxLen - distance) / maxLen;
+    }
+    
+    levenshteinDistance(str1, str2) {
+        const matrix = [];
+        
+        for (let i = 0; i <= str2.length; i++) {
+            matrix[i] = [i];
+        }
+        
+        for (let j = 0; j <= str1.length; j++) {
+            matrix[0][j] = j;
+        }
+        
+        for (let i = 1; i <= str2.length; i++) {
+            for (let j = 1; j <= str1.length; j++) {
+                if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                    matrix[i][j] = matrix[i - 1][j - 1];
+                } else {
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j - 1] + 1, // substitution
+                        matrix[i][j - 1] + 1,     // insertion
+                        matrix[i - 1][j] + 1      // deletion
+                    );
+                }
+            }
+        }
+        
+        return matrix[str2.length][str1.length];
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
 
         // Remove flipped class and update display
         flipCard.classList.remove('flipped');
