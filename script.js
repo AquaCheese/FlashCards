@@ -1,7 +1,7 @@
 // Global app instance
 let app = null;
 
-// FlashCards App - AI-Enhanced Learning System
+// FlashCards App - Adaptive-Enhanced Learning System
 console.log('FlashCards script loading...');
 
 // Immediately available global functions for onclick handlers
@@ -97,7 +97,7 @@ window.deleteDeck = function(deckId) {
 
 window.generateSubjectSpecificDeck = function() {
     console.log('generateSubjectSpecificDeck called, app:', !!app);
-    if (app && app.generateAIDeck) {
+    if (app && app.generateAdaptiveDeck) {
         const subjectSelect = document.getElementById('deck-subject');
         const subject = subjectSelect.value;
         
@@ -107,7 +107,7 @@ window.generateSubjectSpecificDeck = function() {
         }
         
         // Generate comprehensive 20-card deck with full features
-        app.generateAIDeck({ 
+        app.generateAdaptiveDeck({ 
             subject: subject, 
             cardCount: 20,  // Always generate 20 cards
             difficulty: 'intermediate',
@@ -116,7 +116,7 @@ window.generateSubjectSpecificDeck = function() {
             includeTitleCards: true
         });
     } else {
-        console.log('App not ready or generateAIDeck method missing');
+        console.log('App not ready or generateAdaptiveDeck method missing');
     }
 };
 
@@ -361,11 +361,11 @@ window.updateAnswerNumbers = function(element) {
 };
 
 // Additional global functions for HTML onclick handlers
-window.generateAIDeck = function() {
-    console.log('generateAIDeck called via app.generateAIDeck()');
-    if (app && app.generateAIDeck) {
+window.generateAdaptiveDeck = function() {
+    console.log('generateAdaptiveDeck called via app.generateAdaptiveDeck()');
+    if (app && app.generateAdaptiveDeck) {
         // Generate comprehensive 20-card deck with default settings
-        app.generateAIDeck({
+        app.generateAdaptiveDeck({
             cardCount: 20,
             subject: 'Mathematics',
             difficulty: 'intermediate',
@@ -374,7 +374,7 @@ window.generateAIDeck = function() {
             includeTitleCards: true
         });
     } else {
-        console.log('App not ready or generateAIDeck method missing');
+        console.log('App not ready or generateAdaptiveDeck method missing');
     }
 };
 
@@ -554,32 +554,8 @@ class FlashCardsApp {
         this.currentTitleCardIndex = 0;
         this.isAnimating = false;
         
-        // Advanced GCSE AI Learning System
-        console.log('Initializing Advanced GCSE AI Engine...');
-        this.aiEngine = new GCSEAIEngine();
         this.learningData = this.loadLearningData();
-        console.log('GCSE AI Engine loaded');
         this.sessionStartTime = Date.now();
-        
-        // Initialize comprehensive AI Manager for deck generation
-        console.log('Initializing AI Manager for deck generation...');
-        try {
-            if (typeof AIManager !== 'undefined') {
-                this.aiManager = new AIManager();
-                this.aiManagerReady = false; // Will be set to true when ready
-                
-                // Initialize AI Manager asynchronously (don't block constructor)
-                this.initializeAIManager();
-            } else {
-                console.warn('AIManager class not available - AI features will be disabled');
-                this.aiManager = null;
-                this.aiManagerReady = false;
-            }
-        } catch (error) {
-            console.error('Error creating AI Manager:', error);
-            this.aiManager = null;
-            this.aiManagerReady = false;
-        }
         
         // Gamification System - Coin Management
         this.coins = this.loadCoins();
@@ -619,8 +595,8 @@ class FlashCardsApp {
             console.log('Generated decks loaded and rendered');
         }
         
-        this.updateAILockStatus();
-        console.log('updateAILockStatus() completed');
+        this.updateAdaptiveLockStatus();
+        console.log('updateAdaptiveLockStatus() completed');
         
         // Initialize level system
         this.initializeLevelSystem();
@@ -634,41 +610,10 @@ class FlashCardsApp {
         
         this.showView('home');
         
-        // Start background AI monitoring
-        this.startBackgroundAIMonitoring();
+        // Start background Adaptive monitoring
+        this.startBackgroundAdaptiveMonitoring();
         
         console.log('init() completed');
-    }
-
-    async initializeAIManager() {
-        if (!this.aiManager) {
-            console.log('No AI Manager available - skipping initialization');
-            this.aiManagerReady = false;
-            return;
-        }
-        
-        try {
-            console.log('Starting AI Manager initialization...');
-            const initialized = await this.aiManager.initialize();
-            if (initialized) {
-                console.log('AI Manager initialized for deck generation');
-                this.aiManagerReady = true;
-            } else {
-                console.log('AI Manager not fully initialized');
-                this.aiManagerReady = false;
-            }
-        } catch (error) {
-            console.error('AI Manager initialization failed:', error);
-            this.aiManagerReady = false;
-        }
-        
-        // Update UI to show AI status
-        this.updateAIStatus();
-    }
-    
-    updateAIStatus() {
-        // You can add UI indicators here if needed
-        console.log('AI Manager Ready:', this.aiManagerReady);
     }
 
     setupEventListeners() {
@@ -747,58 +692,41 @@ class FlashCardsApp {
         }
     }
 
-    updateAILockStatus() {
-        // AI Generator is always available - no more lock system
-        const lockOverlay = document.getElementById('ai-lock-overlay');
+    updateAdaptiveLockStatus() {
+        const lockOverlay = document.getElementById('generated-lock-overlay');
         const regenerateBtn = document.getElementById('regenerate-btn');
-
-        // Hide lock overlay and enable regenerate button
-        if (lockOverlay) {
-            lockOverlay.style.display = 'none';
-        }
-        if (regenerateBtn) {
-            regenerateBtn.disabled = false;
-        }
-
-        // AI will generate content based on actual user study patterns
-        console.log('🤖 AI system ready - will generate content based on your study patterns');
+        if (lockOverlay) lockOverlay.style.display = 'none';
+        if (regenerateBtn) regenerateBtn.disabled = false;
     }
 
-    updateAIGenerationStatus() {
-        const aiRequirements = document.getElementById('ai-requirements');
-        const aiButtons = document.querySelectorAll('.btn-ai, .btn-ai-subject');
+    updateAdaptiveGenerationStatus() {
+        const aiRequirements = document.getElementById('generated-requirements');
+        const aiButtons = document.querySelectorAll('.btn-generated, .btn-generated-subject');
         
         if (!aiRequirements) return;
         
-        // Check if user has enough data for AI generation
-        const profile = JSON.parse(localStorage.getItem('ai-learning-profile') || '{}');
+        const profile = JSON.parse(localStorage.getItem('generated-learning-profile') || '{}');
         const sessionCount = profile.preferences?.accuracyTrends?.length || 0;
         
         if (sessionCount >= 2) {
-            // User has enough data
             aiRequirements.innerHTML = `
-                <p>✅ <strong>AI Ready!</strong> Generated from ${sessionCount} study sessions</p>
+                <p>✅ <strong>Ready!</strong> Generated from ${sessionCount} study sessions</p>
             `;
             aiRequirements.style.background = 'rgba(34, 197, 94, 0.1)';
             aiRequirements.style.borderColor = 'rgba(34, 197, 94, 0.2)';
             aiRequirements.style.color = '#166534';
-            
-            // Enable AI buttons
             aiButtons.forEach(btn => {
                 btn.disabled = false;
                 btn.style.opacity = '1';
             });
         } else {
-            // User needs more data
             const needed = 2 - sessionCount;
             aiRequirements.innerHTML = `
-                <p>📊 <strong>Requirements:</strong> Complete ${needed} more study session${needed === 1 ? '' : 's'} to unlock AI generation</p>
+                <p>📊 <strong>Requirements:</strong> Complete ${needed} more study session${needed === 1 ? '' : 's'}</p>
             `;
             aiRequirements.style.background = 'rgba(59, 130, 246, 0.1)';
             aiRequirements.style.borderColor = 'rgba(59, 130, 246, 0.2)';
             aiRequirements.style.color = '#1e40af';
-            
-            // Disable AI buttons
             aiButtons.forEach(btn => {
                 btn.disabled = true;
                 btn.style.opacity = '0.5';
@@ -806,7 +734,7 @@ class FlashCardsApp {
         }
     }
 
-    // Removed generateStarterDecks - AI now creates decks without preset content
+    // Removed generateStarterDecks - Adaptive now creates decks without preset content
 
     generateIntelligentTemplates(deckName, subject, count = 10) {
         // Analyze the deck name to understand what specific topic to focus on
@@ -815,7 +743,7 @@ class FlashCardsApp {
         // Generate contextually relevant questions based on the specific topic
         const templates = [];
         
-        // Use AI-driven template generation based on the actual topic
+        // Use Adaptive-driven template generation based on the actual topic
         if (topicAnalysis.isGCSE) {
             templates.push(...this.generateGCSESpecificTemplates(topicAnalysis));
         } else if (topicAnalysis.specificTopic) {
@@ -1125,7 +1053,7 @@ class FlashCardsApp {
                     <div class="deck-meta">
                         <span class="subject-badge">${deck.subject}</span>
                         <span class="difficulty-badge ${deck.difficulty.toLowerCase()}">${deck.difficulty}</span>
-                        <span class="ai-badge">🤖 AI Generated</span>
+                        <span class="generated-badge">🤖 Generated</span>
                         ${deck.isAdopted ? '<span class="adopted-badge">📚 In Collection</span>' : ''}
                     </div>
                     <p class="deck-description">${deck.cards.length} cards • Generated ${new Date(deck.generatedAt).toLocaleDateString()}${deck.isAdopted ? ` • Adopted ${new Date(deck.adoptedAt).toLocaleDateString()}` : ''}</p>
@@ -1189,9 +1117,9 @@ class FlashCardsApp {
         // Special handling for views
         if (viewName === 'home') {
             this.renderDecks();
-            this.updateAILockStatus();
+            this.updateAdaptiveLockStatus();
         } else if (viewName === 'create') {
-            this.updateAIGenerationStatus();
+            this.updateAdaptiveGenerationStatus();
             if (!this.isEditMode) {
                 // Reset to create mode if not already in edit mode
                 this.updateUIForEditMode(false);
@@ -1738,7 +1666,7 @@ class FlashCardsApp {
         }, 10000);
     }
 
-    // 💡 AI Hint System
+    // 💡 Adaptive Hint System
     async useHint() {
         if (!this.usePowerUp('hints')) {
             // Offer to buy hints
@@ -1762,7 +1690,7 @@ class FlashCardsApp {
                 this.showHint(hint);
                 return true;
             } else {
-                // AI failed - refund and show error
+                // Adaptive failed - refund and show error
                 this.powerUps.hints++;
                 this.savePowerUps();
                 this.updatePowerUpDisplay();
@@ -1770,7 +1698,7 @@ class FlashCardsApp {
             }
         } catch (error) {
             console.error('Hint generation failed:', error);
-            this.showNotification('AI unavailable, good luck!', 'error');
+            this.showNotification('Hints are only available for cards with a custom hint.', 'info');
             // Refund the hint
             this.powerUps.hints++;
             this.savePowerUps();
@@ -1784,7 +1712,7 @@ class FlashCardsApp {
     }
 
     async generateHint(card) {
-        // First check if card has custom hint
+        // Check if card has a custom hint
         if (card.customHint && card.customHint.trim()) {
             return {
                 type: 'custom',
@@ -1792,93 +1720,8 @@ class FlashCardsApp {
                 source: 'Custom hint from deck creator'
             };
         }
-
-        // Try AI hint generation - no fallback
-        const aiHint = await this.generateAIHint(card.question, card.answer);
-        if (aiHint) {
-            return {
-                type: 'ai',
-                text: aiHint,
-                source: 'AI-generated hint'
-            };
-        } else {
-            // Return null if AI failed - no fallback
-            return null;
-        }
+        return null;
     }
-
-    async generateAIHint(question, answer) {
-        console.log('🤖 Generating AI hint for:', question, 'Answer:', answer);
-        
-        try {
-            // Show loading state to user
-            this.showHintLoadingState();
-            
-            let hint = null;
-            
-            // Try AI Manager first (uses WebLLM, Ollama, etc.)
-            if (this.aiManagerReady && this.aiManager) {
-                try {
-                    console.log('🤖 Using AI Manager for hint generation...');
-                    const hintResult = await this.aiManager.generateHint(question, answer);
-                    
-                    if (hintResult && hintResult.text) {
-                        hint = hintResult.text;
-                        console.log('✅ AI Manager generated hint successfully:', hint);
-                    }
-                } catch (error) {
-                    console.log('AI Manager hint failed, trying Hugging Face:', error.message);
-                }
-            }
-            
-            // Fallback to Hugging Face if AI Manager failed
-            if (!hint) {
-                try {
-                    console.log('🔄 Trying Hugging Face fallback for hint...');
-                    hint = await this.getHuggingFaceHint(question, answer);
-                } catch (error) {
-                    console.log('Hugging Face hint failed:', error.message);
-                }
-            }
-            
-            // Hide loading state
-            this.hideHintLoadingState();
-            
-            if (hint) {
-                console.log('✅ AI hint successful:', hint);
-                return hint;
-            } else {
-                throw new Error('All AI hint methods failed');
-            }
-        } catch (error) {
-            console.log('❌ All AI hint generation failed:', error);
-            
-            // Hide loading state and show error
-            this.hideHintLoadingState();
-            
-            // Show error message instead of fallback
-            this.showNotification('AI unavailable, good luck!', 'error');
-            console.error('All AI systems failed - cannot generate hint without AI');
-            return null;
-        }
-    }
-    
-    showHintLoadingState() {
-        const hintText = document.querySelector('.hint-text');
-        if (hintText) {
-            hintText.innerHTML = '🤖 <em>AI is thinking...</em>';
-            hintText.style.opacity = '0.7';
-        }
-    }
-    
-    hideHintLoadingState() {
-        const hintText = document.querySelector('.hint-text');
-        if (hintText) {
-            hintText.style.opacity = '1';
-        }
-    }
-
-
 
     async getHuggingFaceHint(question, answer) {
         // Get user statistics for personalized hints
@@ -1901,7 +1744,7 @@ Student Statistics:
 
 Please tailor the hint complexity to match the student's performance level and year group.`;
 
-        // Try multiple AI models with the improved prompt
+        // Try multiple Adaptive models with the improved prompt
         const models = [
             {
                 name: 'microsoft/DialoGPT-medium',
@@ -1924,7 +1767,7 @@ Please tailor the hint complexity to match the student's performance level and y
         // Try each model in sequence
         for (const model of models) {
             try {
-                console.log(`🤖 Trying AI model: ${model.name}`);
+                console.log(`🤖 Trying Adaptive model: ${model.name}`);
                 
                 const response = await fetch(`https://api-inference.huggingface.co/models/${model.name}`, {
                     method: 'POST',
@@ -1964,7 +1807,7 @@ Please tailor the hint complexity to match the student's performance level and y
                         .replace(/\n.*/s, '') // Remove everything after first line break
                         .trim();
                     
-                    // Additional cleaning - remove common AI artifacts
+                    // Additional cleaning - remove common Adaptive artifacts
                     if (hintText.startsWith('"') && hintText.endsWith('"')) {
                         hintText = hintText.slice(1, -1);
                     }
@@ -1983,8 +1826,8 @@ Please tailor the hint complexity to match the student's performance level and y
             }
         }
         
-        // If all AI models fail, try a simpler approach
-        return await this.getSimpleAIHint(question, answer);
+        // If all Adaptive models fail, try a simpler approach
+        return await this.getSimpleAdaptiveHint(question, answer);
     }
 
     isGoodHint(hintText, question, answer) {
@@ -2044,7 +1887,7 @@ Please tailor the hint complexity to match the student's performance level and y
         const badPatterns = [
             'i cannot', 'i can\'t', 'i don\'t know', 'i\'m sorry', 'i am not able',
             'mathematical relationship', 'operation or formula', 'what operation',
-            'as an ai', 'i\'m not sure', 'i apologize', 'sorry,',
+            'as an assistant', 'i\'m not sure', 'i apologize', 'sorry,',
             'think about much', 'related to much', 'focus on much',
             'the answer is', 'it is', 'this is', 'the correct answer'
         ];
@@ -2080,7 +1923,7 @@ Please tailor the hint complexity to match the student's performance level and y
         return hasHelpfulPattern || hintText.length > 30;
     }
 
-    async getSimpleAIHint(question, answer) {
+    async getSimpleAdaptiveHint(question, answer) {
         // Try one more simplified approach
         try {
             const response = await fetch('https://api-inference.huggingface.co/models/gpt2', {
@@ -2114,7 +1957,7 @@ Please tailor the hint complexity to match the student's performance level and y
                 }
             }
         } catch (error) {
-            console.log('Simple AI hint failed:', error);
+            console.log('Simple Adaptive hint failed:', error);
         }
         
         // Final fallback - smart but minimal hint
@@ -2374,8 +2217,7 @@ Please tailor the hint complexity to match the student's performance level and y
         const modal = document.createElement('div');
         modal.className = 'hint-modal';
         
-        const aiDisclaimer = hint.source === 'AI-generated hint' ? 
-            `<div class="hint-disclaimer">⚠️ This hint is AI-generated and may not be fully accurate</div>` : '';
+        const aiDisclaimer = '';
         
         modal.innerHTML = `
             <div class="hint-content">
@@ -2452,7 +2294,7 @@ Please tailor the hint complexity to match the student's performance level and y
             deck = generatedDecks.find(d => d.id === deckId);
             isGeneratedDeck = !!deck;
         } else {
-            // Check if it's an adopted deck (originated from AI)
+            // Check if it's an adopted deck (originated from Adaptive)
             isGeneratedDeck = !!deck.adoptedFrom;
         }
         
@@ -2466,15 +2308,15 @@ Please tailor the hint complexity to match the student's performance level and y
             accuracy: cardsStudied > 0 ? Math.round((correctAnswers / cardsStudied) * 100) : 0,
             totalTime: totalTime,
             averageTimePerCard: cardsStudied > 0 ? Math.round(totalTime / cardsStudied) : 0,
-            // Enhanced AI learning data
+            // Enhanced Adaptive learning data
             deckType: isGeneratedDeck ? 'generated' : 'custom',
             subject: deck?.subject || 'Unknown',
             difficulty: deck?.difficulty || 'Unknown',
-            // Additional AI metadata for generated decks
-            ...(isGeneratedDeck && deck.aiMetadata ? {
+            // Additional Adaptive metadata for generated decks
+            ...(isGeneratedDeck && deck.generatedMetadata ? {
                 generationType: deck.generationType,
-                aiConfidence: deck.confidence,
-                targetWeakness: deck.aiMetadata.targetWeakness
+                generatedConfidence: deck.confidence,
+                targetWeakness: deck.generatedMetadata.targetWeakness
             } : {}),
             // Power-up usage tracking
             powerUpsUsed: this.currentSession?.powerUpsUsed || {}
@@ -2483,15 +2325,15 @@ Please tailor the hint complexity to match the student's performance level and y
         sessions.push(session);
         this.saveSessionData(sessions);
         
-        // Update AI learning patterns
-        this.updateAILearningPatterns(session);
+        // Update Adaptive learning patterns
+        this.updateAdaptiveLearningPatterns(session);
         
 
     }
 
-    updateAILearningPatterns(session) {
+    updateAdaptiveLearningPatterns(session) {
         // Get or create user learning profile
-        let profile = JSON.parse(localStorage.getItem('ai-learning-profile') || '{}');
+        let profile = JSON.parse(localStorage.getItem('generated-learning-profile') || '{}');
         
         // Initialize profile if new
         if (!profile.preferences) {
@@ -2556,38 +2398,38 @@ Please tailor the hint complexity to match the student's performance level and y
         );
 
         profile.lastUpdated = Date.now();
-        localStorage.setItem('ai-learning-profile', JSON.stringify(profile));
+        localStorage.setItem('generated-learning-profile', JSON.stringify(profile));
         
-        console.log('AI Learning Profile updated:', profile);
+        console.log('Adaptive Learning Profile updated:', profile);
         
-        // Trigger background AI deck generation
-        this.triggerBackgroundAI(profile);
+        // Trigger background Adaptive deck generation
+        this.triggerBackgroundAdaptive(profile);
     }
 
-    // =================== ADVANCED GCSE AI LEARNING SYSTEM ===================
+    // =================== ADVANCED GCSE Adaptive LEARNING SYSTEM ===================
     
-    triggerBackgroundAI(profile) {
+    triggerBackgroundAdaptive(profile) {
         // Intelligent frequency control based on user activity
-        const lastAIGeneration = localStorage.getItem('last-ai-generation') || 0;
-        const timeSinceLastGeneration = Date.now() - parseInt(lastAIGeneration);
+        const lastAdaptiveGeneration = localStorage.getItem('last-generated-generation') || 0;
+        const timeSinceLastGeneration = Date.now() - parseInt(lastAdaptiveGeneration);
         const minInterval = this.calculateOptimalGenerationInterval(profile);
         
         if (timeSinceLastGeneration < minInterval) {
-            console.log(`🧠 AI cooling down... Next generation in ${Math.round((minInterval - timeSinceLastGeneration) / (1000 * 60))} minutes`);
+            console.log(`🧠 Adaptive cooling down... Next generation in ${Math.round((minInterval - timeSinceLastGeneration) / (1000 * 60))} minutes`);
             return;
         }
         
         // Dynamic data requirements based on user progression
-        const requiredSessions = this.getRequiredSessionsForAI(profile);
+        const requiredSessions = this.getRequiredSessionsForAdaptive(profile);
         if (profile.preferences.accuracyTrends.length < requiredSessions) {
-            console.log(`📊 Insufficient data for AI generation. Need ${requiredSessions - profile.preferences.accuracyTrends.length} more sessions`);
+            console.log(`📊 Insufficient data for Adaptive generation. Need ${requiredSessions - profile.preferences.accuracyTrends.length} more sessions`);
             return;
         }
         
-        console.log('🤖 GCSE AI Engine: Analyzing learning patterns...');
-        this.showAIAnalysisStatus();
+        console.log('🤖 GCSE Adaptive Engine: Analyzing learning patterns...');
+        this.showAdaptiveAnalysisStatus();
         
-        // Non-blocking AI processing with progress updates
+        // Non-blocking Adaptive processing with progress updates
         setTimeout(() => {
             this.runAdvancedGCSEAnalysis(profile);
         }, 1500);
@@ -2612,7 +2454,7 @@ Please tailor the hint complexity to match the student's performance level and y
         return interval;
     }
     
-    getRequiredSessionsForAI(profile) {
+    getRequiredSessionsForAdaptive(profile) {
         // Fewer sessions needed for returning users
         const totalSessions = profile.preferences.accuracyTrends.length;
         if (totalSessions === 0) return 3;
@@ -2620,7 +2462,7 @@ Please tailor the hint complexity to match the student's performance level and y
         return 1; // Frequent users need less data for new generation
     }
     
-    showAIAnalysisStatus() {
+    showAdaptiveAnalysisStatus() {
         const statusElement = document.getElementById('generation-status');
         if (statusElement) {
             statusElement.style.display = 'flex';
@@ -2653,7 +2495,7 @@ Please tailor the hint complexity to match the student's performance level and y
     
     runAdvancedGCSEAnalysis(profile) {
         try {
-            console.log('🎓 Starting Advanced GCSE AI Analysis...');
+            console.log('🎓 Starting Advanced GCSE Adaptive Analysis...');
             
             // 1. Deep learning pattern analysis
             const patterns = this.analyzeGCSELearningPatterns(profile);
@@ -2671,16 +2513,16 @@ Please tailor the hint complexity to match the student's performance level and y
             const generationPlan = this.createGCSEGenerationPlan(patterns, curriculumGaps, examReadiness);
             
             if (generationPlan.shouldGenerate) {
-                console.log('✨ AI generating GCSE content:', generationPlan.reason);
+                console.log('✨ Adaptive generating GCSE content:', generationPlan.reason);
                 this.generateAdvancedGCSEDeck(patterns, generationPlan);
             } else {
-                console.log('📊 AI analysis complete - optimal learning state detected');
+                console.log('📊 Adaptive analysis complete - optimal learning state detected');
                 // Optionally show encouragement message to user
                 this.showLearningProgressFeedback(patterns, examReadiness);
             }
             
         } catch (error) {
-            console.error('🚨 Advanced GCSE AI Analysis error:', error);
+            console.error('🚨 Advanced GCSE Adaptive Analysis error:', error);
             // Fallback to basic generation
             this.fallbackGeneration(profile);
         }
@@ -2914,18 +2756,18 @@ Please tailor the hint complexity to match the student's performance level and y
     }
     
     assessGCSEExamReadiness(profile, patterns) {
-        return this.aiEngine.assessGCSEExamReadiness(profile, patterns);
+        return { overall: 0, bySubject: {}, recommendations: [], timeToExam: { days: 0, weeks: 0, phase: 'unknown' }, criticalAreas: [], strengths: [], examStrategies: [] };
     }
     
     createGCSEGenerationPlan(patterns, curriculumGaps, examReadiness) {
-        return this.aiEngine.createGCSEGenerationPlan(patterns, curriculumGaps, examReadiness);
+        return { shouldGenerate: false, reason: '', targetSubject: null, difficulty: 'intermediate', cardCount: 8 };
     }
     
     generateAdvancedGCSEDeck(patterns, generationPlan) {
         console.log('🎨 Generating Advanced GCSE Deck:', generationPlan);
         
         // Mark generation timestamp
-        localStorage.setItem('last-ai-generation', Date.now().toString());
+        localStorage.setItem('last-generated-generation', Date.now().toString());
         
         const deckConfig = this.createAdvancedDeckConfig(patterns, generationPlan);
         const cards = this.generateAdvancedGCSECards(deckConfig, patterns, generationPlan);
@@ -2936,7 +2778,7 @@ Please tailor the hint complexity to match the student's performance level and y
         }
         
         const newDeck = {
-            id: 'gcse_ai_' + Date.now(),
+            id: 'gcse_generated_' + Date.now(),
             name: deckConfig.name,
             subject: deckConfig.subject,
             yearGroup: deckConfig.yearGroup,
@@ -2955,7 +2797,7 @@ Please tailor the hint complexity to match the student's performance level and y
                 title: deckConfig.name,
                 description: deckConfig.description
             }],
-            aiMetadata: {
+            generatedMetadata: {
                 generationPlan: generationPlan,
                 userPatterns: {
                     currentAccuracy: patterns.currentPerformance.accuracy,
@@ -2971,10 +2813,10 @@ Please tailor the hint complexity to match the student's performance level and y
         // Save to generated decks
         this.saveNewGeneratedDeck(newDeck);
         
-        console.log('✨ AI Generated Advanced GCSE deck:', newDeck.name);
+        console.log('✨ Generated Advanced GCSE deck:', newDeck.name);
         
         // Show smart notification
-        this.showAdvancedAINotification(newDeck, generationPlan);
+        this.showAdvancedAdaptiveNotification(newDeck, generationPlan);
     }
     
     createAdvancedDeckConfig(patterns, generationPlan) {
@@ -2985,7 +2827,7 @@ Please tailor the hint complexity to match the student's performance level and y
             'exam_focused': {
                 name: `${subject.replace('GCSE ', '')} - Exam Focus`,
                 reasonTitle: 'Exam Preparation Critical',
-                reasonDescription: 'AI detected approaching exams. These cards focus on high-yield exam topics.',
+                reasonDescription: 'Adaptive detected approaching exams. These cards focus on high-yield exam topics.',
                 description: 'Exam-focused practice targeting the most important topics for your upcoming GCSEs.',
                 cardTypes: ['exam-style', 'high-yield', 'past-paper'],
                 examBoard: 'AQA',
@@ -2994,7 +2836,7 @@ Please tailor the hint complexity to match the student's performance level and y
             'gap_filling': {
                 name: `${subject.replace('GCSE ', '')} - Knowledge Gaps`,
                 reasonTitle: 'Learning Gaps Identified',
-                reasonDescription: `AI found knowledge gaps in ${subject}. These cards address fundamental concepts you need to master.`,
+                reasonDescription: `Adaptive found knowledge gaps in ${subject}. These cards address fundamental concepts you need to master.`,
                 description: 'Targeted practice to fill identified knowledge gaps and build solid foundations.',
                 cardTypes: ['foundational', 'step-by-step', 'concept-building'],
                 examBoard: 'AQA',
@@ -3012,7 +2854,7 @@ Please tailor the hint complexity to match the student's performance level and y
             'reinforcement': {
                 name: `${subject.replace('GCSE ', '')} - Foundation Builder`,
                 reasonTitle: 'Building Strong Foundations',
-                reasonDescription: 'AI providing targeted support to strengthen your understanding.',
+                reasonDescription: 'Adaptive providing targeted support to strengthen your understanding.',
                 description: 'Carefully scaffolded practice to build confidence and understanding.',
                 cardTypes: ['foundation', 'reinforcement', 'confidence-building'],
                 examBoard: 'AQA',
@@ -3065,7 +2907,7 @@ Please tailor the hint complexity to match the student's performance level and y
     }
     
     getAssessmentObjectives(subject) {
-        return this.aiEngine.subjectSpecifications[subject]?.assessmentObjectives || {};
+        return {};
     }
     
     generateAdvancedGCSECards(deckConfig, patterns, generationPlan) {
@@ -3159,7 +3001,7 @@ Please tailor the hint complexity to match the student's performance level and y
         const variants = template.variants;
         if (!variants || variants.length === 0) return null;
         
-        // Advanced variant selection using AI
+        // Advanced variant selection using Adaptive
         const optimalVariant = this.selectOptimalVariant(variants, patterns, generationPlan);
         
         // Generate card content
@@ -3217,8 +3059,7 @@ Please tailor the hint complexity to match the student's performance level and y
         
         // Add exam-specific tips if relevant
         if (generationPlan.examFocus) {
-            const timeToExam = this.aiEngine.calculateTimeToExam();
-            personalizedBack += `<br>📅 <em>Exam in ${timeToExam.weeks} weeks - this topic is high-yield!</em>`;
+            personalizedBack += `<br>📅 <em>This topic is high-yield for your exam!</em>`;
         }
         
         // Add subject-specific encouragement
@@ -3300,34 +3141,34 @@ Please tailor the hint complexity to match the student's performance level and y
         return interleaved;
     }
     
-    showAdvancedAINotification(deck, generationPlan) {
+    showAdvancedAdaptiveNotification(deck, generationPlan) {
         // Create sophisticated notification with plan details
         const notification = document.createElement('div');
-        notification.className = 'advanced-ai-notification';
+        notification.className = 'advanced-generated-notification';
         
         const urgencyClass = generationPlan.urgency === 'high' ? 'urgent' : 'normal';
         const examFocusIcon = generationPlan.examFocus ? '🎯' : '🤖';
         
         notification.innerHTML = `
-            <div class="advanced-ai-notification-content ${urgencyClass}">
-                <div class="ai-notification-header">
-                    <span class="advanced-ai-badge">${examFocusIcon} Advanced AI</span>
+            <div class="advanced-generated-notification-content ${urgencyClass}">
+                <div class="generated-notification-header">
+                    <span class="advanced-generated-badge">${examFocusIcon} Advanced Adaptive</span>
                     <div class="confidence-meter">
                         <div class="confidence-fill" style="width: ${generationPlan.confidence * 100}%"></div>
                         <span class="confidence-text">${Math.round(generationPlan.confidence * 100)}% match</span>
                     </div>
-                    <button class="ai-notification-close" onclick="this.parentElement.parentElement.parentElement.remove()">✕</button>
+                    <button class="generated-notification-close" onclick="this.parentElement.parentElement.parentElement.remove()">✕</button>
                 </div>
                 <h4>${deck.name}</h4>
                 <div class="generation-details">
                     <div class="generation-reason">${deck.reason.description}</div>
                     <div class="generation-metadata">
-                        📊 ${deck.cards.length} cards • ${deck.aiMetadata.curriculumAlignment}
+                        📊 ${deck.cards.length} cards • ${deck.generatedMetadata.curriculumAlignment}
                         ${generationPlan.examFocus ? '<br>🎯 Exam-focused content' : ''}
                     </div>
                 </div>
-                <div class="ai-notification-actions">
-                    <button class="btn btn-ai btn-small ${urgencyClass}" onclick="viewGeneratedDeck('${deck.id}'); this.parentElement.parentElement.parentElement.remove();">
+                <div class="generated-notification-actions">
+                    <button class="btn btn-generated btn-small ${urgencyClass}" onclick="viewGeneratedDeck('${deck.id}'); this.parentElement.parentElement.parentElement.remove();">
                         📖 Study Now
                     </button>
                     <button class="btn btn-secondary btn-small" onclick="this.parentElement.parentElement.parentElement.remove();">
@@ -3405,7 +3246,7 @@ Please tailor the hint complexity to match the student's performance level and y
     }
     
     fallbackGeneration(profile) {
-        // Fallback generation if advanced AI fails
+        // Fallback generation if advanced Adaptive fails
         console.log('🔄 Using fallback generation');
         const basicDeck = {
             id: 'fallback_' + Date.now(),
@@ -3572,7 +3413,7 @@ Please tailor the hint complexity to match the student's performance level and y
         console.log('🎨 Generating personalized deck:', generationType);
         
         // Mark generation timestamp
-        localStorage.setItem('last-ai-generation', Date.now().toString());
+        localStorage.setItem('last-generated-generation', Date.now().toString());
         
         const deckConfig = this.createDeckConfig(patterns, profile, generationType);
         const cards = this.generateSmartCards(deckConfig, patterns, profile);
@@ -3583,7 +3424,7 @@ Please tailor the hint complexity to match the student's performance level and y
         }
         
         const newDeck = {
-            id: 'ai_generated_' + Date.now(),
+            id: 'generated_generated_' + Date.now(),
             name: deckConfig.name,
             subject: deckConfig.subject,
             difficulty: deckConfig.difficulty,
@@ -3600,7 +3441,7 @@ Please tailor the hint complexity to match the student's performance level and y
                 title: deckConfig.name,
                 description: deckConfig.description
             }],
-            aiMetadata: {
+            generatedMetadata: {
                 targetWeakness: patterns.knowledgeGaps[0]?.subject || null,
                 userAccuracy: patterns.currentAccuracy,
                 improvementTrend: patterns.improvementTrend,
@@ -3616,10 +3457,10 @@ Please tailor the hint complexity to match the student's performance level and y
         // Save to generated decks
         this.saveNewGeneratedDeck(newDeck);
         
-        console.log('✨ AI Generated new personalized deck:', newDeck.name);
+        console.log('✨ Generated new personalized deck:', newDeck.name);
         
         // Show notification to user
-        this.showAIGenerationNotification(newDeck);
+        this.showAdaptiveGenerationNotification(newDeck);
     }
     
     createDeckConfig(patterns, profile, generationType) {
@@ -3630,7 +3471,7 @@ Please tailor the hint complexity to match the student's performance level and y
                 difficulty: 'Beginner', // Start easier for weak areas
                 confidence: 0.95,
                 reasonTitle: 'Weakness Detected',
-                reasonDescription: `AI identified struggles in ${patterns.knowledgeGaps[0]?.subject}. These cards focus on foundational concepts.`,
+                reasonDescription: `Adaptive identified struggles in ${patterns.knowledgeGaps[0]?.subject}. These cards focus on foundational concepts.`,
                 description: 'Personalized practice targeting your challenging areas.',
                 cardTypes: ['foundational', 'step-by-step', 'reinforcement']
             },
@@ -3640,7 +3481,7 @@ Please tailor the hint complexity to match the student's performance level and y
                 difficulty: 'Advanced',
                 confidence: 0.88,
                 reasonTitle: 'Performance Plateau',
-                reasonDescription: 'AI detected stagnation. These varied challenges will reignite your learning momentum.',
+                reasonDescription: 'Adaptive detected stagnation. These varied challenges will reignite your learning momentum.',
                 description: 'Diverse, engaging content to overcome learning plateaus.',
                 cardTypes: ['challenge', 'creative', 'application']
             },
@@ -3671,7 +3512,7 @@ Please tailor the hint complexity to match the student's performance level and y
                 confidence: 0.95,
                 reasonTitle: 'Welcome Gift',
                 reasonDescription: 'A personalized starter deck created just for you based on your preferences!',
-                description: 'Your first AI-generated deck, tailored to your interests and confidence level.',
+                description: 'Your first Adaptive-generated deck, tailored to your interests and confidence level.',
                 cardTypes: ['foundational', 'welcome', 'comprehensive']
             }
         };
@@ -4131,23 +3972,23 @@ Please tailor the hint complexity to match the student's performance level and y
         // Update display
         this.renderGeneratedDecks(existingDecks);
         
-        console.log('💾 Saved new AI-generated deck:', newDeck.name);
+        console.log('💾 Saved new Adaptive-generated deck:', newDeck.name);
     }
     
-    showAIGenerationNotification(deck) {
+    showAdaptiveGenerationNotification(deck) {
         // Create notification element
         const notification = document.createElement('div');
-        notification.className = 'ai-notification';
+        notification.className = 'generated-notification';
         notification.innerHTML = `
-            <div class="ai-notification-content">
-                <div class="ai-notification-header">
-                    <span class="ai-badge">🤖 AI Generated</span>
-                    <button class="ai-notification-close" onclick="this.parentElement.parentElement.parentElement.remove()">✕</button>
+            <div class="generated-notification-content">
+                <div class="generated-notification-header">
+                    <span class="generated-badge">🤖 Generated</span>
+                    <button class="generated-notification-close" onclick="this.parentElement.parentElement.parentElement.remove()">✕</button>
                 </div>
                 <h4>${deck.name}</h4>
                 <p>${deck.reason.description}</p>
-                <div class="ai-notification-actions">
-                    <button class="btn btn-ai btn-small" onclick="viewGeneratedDeck('${deck.id}'); this.parentElement.parentElement.parentElement.remove();">
+                <div class="generated-notification-actions">
+                    <button class="btn btn-generated btn-small" onclick="viewGeneratedDeck('${deck.id}'); this.parentElement.parentElement.parentElement.remove();">
                         📖 Study Now
                     </button>
                     <button class="btn btn-secondary btn-small" onclick="this.parentElement.parentElement.parentElement.remove();">
@@ -4173,28 +4014,28 @@ Please tailor the hint complexity to match the student's performance level and y
         `;
         
         // Add animation keyframe if not exists
-        if (!document.getElementById('ai-notification-styles')) {
+        if (!document.getElementById('generated-notification-styles')) {
             const style = document.createElement('style');
-            style.id = 'ai-notification-styles';
+            style.id = 'generated-notification-styles';
             style.textContent = `
                 @keyframes slideIn {
                     from { transform: translateX(100%); opacity: 0; }
                     to { transform: translateX(0); opacity: 1; }
                 }
-                .ai-notification-header {
+                .generated-notification-header {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
                     margin-bottom: 10px;
                 }
-                .ai-badge {
+                .generated-badge {
                     background: rgba(255,255,255,0.2);
                     padding: 4px 8px;
                     border-radius: 12px;
                     font-size: 0.8em;
                     font-weight: bold;
                 }
-                .ai-notification-close {
+                .generated-notification-close {
                     background: none;
                     border: none;
                     color: white;
@@ -4208,24 +4049,24 @@ Please tailor the hint complexity to match the student's performance level and y
                     align-items: center;
                     justify-content: center;
                 }
-                .ai-notification-close:hover {
+                .generated-notification-close:hover {
                     background: rgba(255,255,255,0.2);
                 }
-                .ai-notification-content h4 {
+                .generated-notification-content h4 {
                     margin: 10px 0;
                     font-size: 1.1em;
                 }
-                .ai-notification-content p {
+                .generated-notification-content p {
                     margin: 10px 0;
                     opacity: 0.9;
                     line-height: 1.4;
                 }
-                .ai-notification-actions {
+                .generated-notification-actions {
                     display: flex;
                     gap: 10px;
                     margin-top: 15px;
                 }
-                .ai-notification-actions .btn {
+                .generated-notification-actions .btn {
                     flex: 1;
                     padding: 8px 12px;
                     font-size: 0.85em;
@@ -4245,22 +4086,7 @@ Please tailor the hint complexity to match the student's performance level and y
         }, 8000);
     }
     
-    startBackgroundAIMonitoring() {
-        // Check for AI opportunities every 5 minutes during active use
-        setInterval(() => {
-            const profile = JSON.parse(localStorage.getItem('ai-learning-profile') || '{}');
-            if (profile.preferences && profile.preferences.accuracyTrends.length >= 5) {
-                // Only run if user is actively using the app (last activity within 10 minutes)
-                const lastActivity = parseInt(localStorage.getItem('last-user-activity') || '0');
-                const timeSinceActivity = Date.now() - lastActivity;
-                
-                if (timeSinceActivity < 10 * 60 * 1000) { // 10 minutes
-                    this.checkForAIOpportunities(profile);
-                }
-            }
-        }, 5 * 60 * 1000); // 5 minutes
-        
-        // Track user activity
+    startBackgroundAdaptiveMonitoring() {
         this.trackUserActivity();
     }
     
@@ -4277,14 +4103,14 @@ Please tailor the hint complexity to match the student's performance level and y
         updateActivity(); // Initial activity
     }
     
-    checkForAIOpportunities(profile) {
+    checkForAdaptiveOpportunities(profile) {
         const patterns = this.analyzeUserPatterns(profile);
         
         // Check if user would benefit from new content
         const recommendation = this.shouldGenerateNewContent(patterns, profile);
         
         if (recommendation.recommend && recommendation.type !== 'consistency-reward') {
-            console.log('🎯 Background AI detected opportunity:', recommendation.reason);
+            console.log('🎯 Background Adaptive detected opportunity:', recommendation.reason);
             
             // Generate content in background (no immediate notification)
             setTimeout(() => {
@@ -4293,13 +4119,13 @@ Please tailor the hint complexity to match the student's performance level and y
         }
     }
     
-    // =================== END AI LEARNING SYSTEM ===================
+    // =================== END Adaptive LEARNING SYSTEM ===================
     
     // =================== ONBOARDING SYSTEM ===================
     
     isFirstTimeUser() {
         const hasVisited = localStorage.getItem('flashcards-first-visit');
-        const hasProfile = localStorage.getItem('ai-learning-profile');
+        const hasProfile = localStorage.getItem('generated-learning-profile');
         return !hasVisited || !hasProfile;
     }
     
@@ -4411,7 +4237,7 @@ Please tailor the hint complexity to match the student's performance level and y
         if (this.currentStep === 1) {
             this.generateConfidenceStep();
         } else if (this.currentStep === 4) {
-            this.generateAIPreview();
+            this.generateAdaptivePreview();
         }
         
         if (this.currentStep < this.totalSteps) {
@@ -4562,16 +4388,16 @@ Please tailor the hint complexity to match the student's performance level and y
         return icons[subject] || '📚';
     }
     
-    generateAIPreview() {
-        const container = document.getElementById('ai-preview');
+    generateAdaptivePreview() {
+        const container = document.getElementById('generated-preview');
         if (!container) return;
         
         const insights = this.generatePersonalizedInsights();
         
         container.innerHTML = `
-            <h4>🤖 Your Personalized AI Profile</h4>
+            <h4>🤖 Your Personalized Study Profile</h4>
             ${insights.map(insight => `
-                <div class="ai-preview-item">
+                <div class="generated-preview-item">
                     <span>${insight.icon}</span>
                     <span>${insight.text}</span>
                 </div>
@@ -4636,11 +4462,11 @@ Please tailor the hint complexity to match the student's performance level and y
     }
     
     completeOnboarding() {
-        // Create AI learning profile from onboarding data
-        const aiProfile = this.createInitialAIProfile();
+        // Create Adaptive learning profile from onboarding data
+        const aiProfile = this.createInitialAdaptiveProfile();
         
         // Save profile and mark as visited
-        localStorage.setItem('ai-learning-profile', JSON.stringify(aiProfile));
+        localStorage.setItem('generated-learning-profile', JSON.stringify(aiProfile));
         localStorage.setItem('flashcards-first-visit', Date.now().toString());
         localStorage.setItem('onboarding-completed', JSON.stringify(this.onboardingData));
         
@@ -4663,7 +4489,7 @@ Please tailor the hint complexity to match the student's performance level and y
         console.log('🎉 Onboarding completed!', this.onboardingData);
     }
     
-    createInitialAIProfile() {
+    createInitialAdaptiveProfile() {
         return {
             preferences: {
                 favoriteSubjects: this.onboardingData.subjects.reduce((acc, subject) => {
@@ -4731,7 +4557,7 @@ Please tailor the hint complexity to match the student's performance level and y
             <div class="welcome-content">
                 <h3>🎉 Welcome to FlashCards!!!!</h3>
                 <p>Your personalized learning journey begins now. I'm already creating your first custom deck!</p>
-                <button onclick="this.parentElement.parentElement.remove()" class="btn btn-ai">Get Started!</button>
+                <button onclick="this.parentElement.parentElement.remove()" class="btn btn-generated">Get Started!</button>
             </div>
         `;
         
@@ -5116,7 +4942,7 @@ Please tailor the hint complexity to match the student's performance level and y
         this.decks = this.decks.filter(deck => deck.id !== this.deckToDelete.id);
         this.saveDecks();
         this.renderDecks();
-        this.updateAILockStatus();
+        this.updateAdaptiveLockStatus();
         
         // Show notification
         this.showNotification(`"${this.deckToDelete.name}" deleted successfully`, 'info');
@@ -6053,7 +5879,7 @@ Please tailor the hint complexity to match the student's performance level and y
         `).join('');
     }
 
-    // AI Deck Generation System
+    // Adaptive Deck Generation System
     analyzeUserPatterns() {
         const sessions = this.loadSessionData();
         const learningData = this.learningData;
@@ -6157,218 +5983,24 @@ Please tailor the hint complexity to match the student's performance level and y
         });
     }
 
-    async generateAIDecks() {
+    async generateAdaptiveDecks() {
         const analysis = this.analyzeUserPatterns();
         
         if (!analysis) {
             return []; // Not enough data
         }
         
-        // Check if AI is available
-        if (!this.aiManagerReady || !this.aiManager) {
-            this.showNotification('AI unavailable, good luck!', 'error');
-            console.error('AI unavailable - cannot generate smart decks without AI');
-            return [];
-        }
-        
-        const generatedDecks = [];
-        
-        try {
-            // Generate different types of decks based on user patterns using AI
-            
-            // 1. Improvement Deck - Focus on weak areas
-            if (analysis.improvementAreas.length > 0) {
-                const improvementDeck = await this.generateAIImprovementDeck(analysis);
-                if (improvementDeck) generatedDecks.push(improvementDeck);
-            }
-            
-            // 2. Challenge Deck - Harder content for growth
-            if (analysis.challengeLevel !== 'challenging') {
-                const challengeDeck = await this.generateAIChallengeDeck(analysis);
-                if (challengeDeck) generatedDecks.push(challengeDeck);
-            }
-            
-            // 3. Review Deck - Reinforce strengths
-            if (analysis.strengths.length > 0) {
-                const reviewDeck = await this.generateAIReviewDeck(analysis);
-                if (reviewDeck) generatedDecks.push(reviewDeck);
-            }
-            
-            // 4. Quick Practice Deck - Short session based on study time preference
-            const quickDeck = await this.generateAIQuickPracticeDeck(analysis);
-            if (quickDeck) generatedDecks.push(quickDeck);
-            
-            return generatedDecks.slice(0, 4); // Limit to 4 decks
-        } catch (error) {
-            console.error('AI deck generation failed:', error);
-            this.showNotification('AI unavailable, good luck!', 'error');
-            return [];
-        }
-    }
-    
-    async generateAIImprovementDeck(analysis) {
-        const improvementSubject = analysis.improvementAreas[0];
-        
-        try {
-            const deckResult = await this.aiManager.generateDeck(
-                improvementSubject,
-                'beginner', // Easier for improvement
-                10, // Smaller deck for focused practice
-                { weakness: improvementSubject, type: 'improvement' }
-            );
-            
-            if (deckResult && (deckResult.cards || typeof deckResult === 'string')) {
-                return {
-                    id: `ai-improvement-${Date.now()}`,
-                    name: `${improvementSubject} - Focus Practice`,
-                    subject: improvementSubject,
-                    type: 'ai-generated',
-                    generatedAt: Date.now(),
-                    reason: {
-                        title: 'AI Improvement Focus',
-                        description: `AI-generated deck focusing on ${improvementSubject} to help boost your confidence in this area.`
-                    },
-                    confidence: 0.85,
-                    cards: deckResult.cards || this.parseAICardResponse(deckResult, 10),
-                    titleCards: [{
-                        title: `${improvementSubject} Practice Session`,
-                        content: `This AI-generated deck is specifically designed to help you improve in ${improvementSubject}. Take your time and focus on understanding each concept.`
-                    }],
-                    style: 'classic',
-                    color: 'red' // Red for improvement areas
-                };
-            }
-        } catch (error) {
-            console.error('❌ AI improvement deck generation failed:', error);
-        }
-        return null;
-    }
-    
-    async generateAIChallengeDeck(analysis) {
-        const preferredSubjects = Object.keys(analysis.preferredSubjects);
-        const subject = preferredSubjects[Math.floor(Math.random() * preferredSubjects.length)];
-        
-        try {
-            const deckResult = await this.aiManager.generateDeck(
-                subject,
-                'expert', // Harder for challenge
-                15,
-                { strength: subject, type: 'challenge' }
-            );
-            
-            if (deckResult && (deckResult.cards || typeof deckResult === 'string')) {
-                return {
-                    id: `ai-challenge-${Date.now()}`,
-                    name: `${subject} - AI Challenge Mode`,
-                    subject: subject,
-                    type: 'ai-generated',
-                    generatedAt: Date.now(),
-                    reason: {
-                        title: 'AI Level Up Challenge',
-                        description: `AI-generated advanced deck to push your ${subject} knowledge to the next level.`
-                    },
-                    confidence: 0.75,
-                    cards: deckResult.cards || this.parseAICardResponse(deckResult, 15),
-                    titleCards: [{
-                        title: `${subject} AI Challenge`,
-                        content: `Ready for an AI challenge? These advanced questions will test your mastery of ${subject} concepts.`
-                    }],
-                    style: 'classic',
-                    color: 'orange' // Orange for challenges
-                };
-            }
-        } catch (error) {
-            console.error('❌ AI challenge deck generation failed:', error);
-        }
-        return null;
-    }
-    
-    async generateAIReviewDeck(analysis) {
-        const strengths = analysis.strengths;
-        const subject = strengths[Math.floor(Math.random() * strengths.length)];
-        
-        try {
-            const deckResult = await this.aiManager.generateDeck(
-                subject,
-                'intermediate',
-                12,
-                { strength: subject, type: 'review' }
-            );
-            
-            if (deckResult && (deckResult.cards || typeof deckResult === 'string')) {
-                return {
-                    id: `ai-review-${Date.now()}`,
-                    name: `${subject} - AI Review Session`,
-                    subject: subject,
-                    type: 'ai-generated',
-                    generatedAt: Date.now(),
-                    reason: {
-                        title: 'AI Strength Reinforcement',
-                        description: `AI-generated deck to reinforce your strong ${subject} skills.`
-                    },
-                    confidence: 0.80,
-                    cards: deckResult.cards || this.parseAICardResponse(deckResult, 12),
-                    titleCards: [{
-                        title: `${subject} AI Review`,
-                        content: `Keep your ${subject} skills sharp with this AI-generated review session.`
-                    }],
-                    style: 'classic',
-                    color: 'green' // Green for strengths
-                };
-            }
-        } catch (error) {
-            console.error('❌ AI review deck generation failed:', error);
-        }
-        return null;
-    }
-    
-    async generateAIQuickPracticeDeck(analysis) {
-        const preferredSubjects = Object.keys(analysis.preferredSubjects);
-        const subject = preferredSubjects[0] || 'General Knowledge';
-        
-        try {
-            const deckResult = await this.aiManager.generateDeck(
-                subject,
-                'intermediate',
-                8, // Shorter deck
-                { type: 'quick_practice' }
-            );
-            
-            if (deckResult && (deckResult.cards || typeof deckResult === 'string')) {
-                return {
-                    id: `ai-quick-${Date.now()}`,
-                    name: `${subject} - AI Quick Session`,
-                    subject: subject,
-                    type: 'ai-generated',
-                    generatedAt: Date.now(),
-                    reason: {
-                        title: 'AI Quick Practice',
-                        description: `AI-generated focused 5-10 minute practice session in ${subject}.`
-                    },
-                    confidence: 0.88,
-                    cards: deckResult.cards || this.parseAICardResponse(deckResult, 8),
-                    titleCards: [{
-                        title: `Quick ${subject} AI Practice`,
-                        content: `A short but effective AI-generated practice session. Perfect for when you have just a few minutes to study!`
-                    }],
-                    style: 'classic',
-                    color: 'teal' // Teal for quick sessions
-                };
-            }
-        } catch (error) {
-            console.error('❌ AI quick practice deck generation failed:', error);
-        }
-        return null;
+        return [];
     }
     
     generateImprovementDeck(analysis) {
         const improvementSubject = analysis.improvementAreas[0];
         
         return {
-            id: `ai-improvement-${Date.now()}`,
+            id: `generated-improvement-${Date.now()}`,
             name: `${improvementSubject} - Focus Practice`,
             subject: improvementSubject,
-            type: 'ai-generated',
+            type: 'generated-generated',
             generatedAt: Date.now(),
             reason: {
                 title: 'Improvement Focus',
@@ -6390,10 +6022,10 @@ Please tailor the hint complexity to match the student's performance level and y
         const subject = preferredSubjects[Math.floor(Math.random() * preferredSubjects.length)];
         
         return {
-            id: `ai-challenge-${Date.now()}`,
+            id: `generated-challenge-${Date.now()}`,
             name: `${subject} - Challenge Mode`,
             subject: subject,
-            type: 'ai-generated',
+            type: 'generated-generated',
             generatedAt: Date.now(),
             reason: {
                 title: 'Level Up Challenge',
@@ -6414,10 +6046,10 @@ Please tailor the hint complexity to match the student's performance level and y
         const strengthSubject = analysis.strengths[0];
         
         return {
-            id: `ai-review-${Date.now()}`,
+            id: `generated-review-${Date.now()}`,
             name: `${strengthSubject} - Mastery Review`,
             subject: strengthSubject,
-            type: 'ai-generated',
+            type: 'generated-generated',
             generatedAt: Date.now(),
             reason: {
                 title: 'Reinforce Mastery',
@@ -6439,10 +6071,10 @@ Please tailor the hint complexity to match the student's performance level and y
         const subjectNames = subjects.join(', ');
         
         return {
-            id: `ai-mixed-${Date.now()}`,
+            id: `generated-mixed-${Date.now()}`,
             name: `Mixed Practice: ${subjectNames}`,
             subject: 'Mixed Topics',
-            type: 'ai-generated',
+            type: 'generated-generated',
             generatedAt: Date.now(),
             reason: {
                 title: 'Cross-Subject Practice',
@@ -6464,10 +6096,10 @@ Please tailor the hint complexity to match the student's performance level and y
         const subject = preferredSubjects[0] || 'General Knowledge';
         
         return {
-            id: `ai-quick-${Date.now()}`,
+            id: `generated-quick-${Date.now()}`,
             name: `${subject} - Quick Session`,
             subject: subject,
-            type: 'ai-generated',
+            type: 'generated-generated',
             generatedAt: Date.now(),
             reason: {
                 title: 'Perfect for Short Sessions',
@@ -6509,7 +6141,7 @@ Please tailor the hint complexity to match the student's performance level and y
     }
     
     getCardTemplates(type, subject, analysis) {
-        // This would ideally use AI/ML to generate contextual questions
+        // This would ideally use Adaptive/ML to generate contextual questions
         // For demo purposes, I'll create adaptive templates based on user patterns
         
         // Intelligent template generation based on deck name and subject
@@ -6554,7 +6186,7 @@ Please tailor the hint complexity to match the student's performance level and y
         const generatedSection = document.getElementById('generated-decks-section');
         const statusElement = document.getElementById('generation-status');
         const gridElement = document.getElementById('generated-decks-grid');
-        const lockOverlay = document.getElementById('ai-lock-overlay');
+        const lockOverlay = document.getElementById('generated-lock-overlay');
         
         // Always show the section and content - no more restrictions
         if (generatedSection) generatedSection.style.display = 'block';
@@ -6565,7 +6197,7 @@ Please tailor the hint complexity to match the student's performance level and y
         
         // Show generation process
         setTimeout(async () => {
-            const generatedDecks = await this.generateAIDecks();
+            const generatedDecks = await this.generateAdaptiveDecks();
             
             if (generatedDecks.length > 0) {
                 statusElement.style.display = 'none';
@@ -6578,7 +6210,7 @@ Please tailor the hint complexity to match the student's performance level and y
                     </div>
                 `;
             }
-        }, 1500); // Simulate AI processing time
+        }, 1500); // Simulate Adaptive processing time
     }
     
     renderGeneratedDecks(generatedDecks) {
@@ -6593,7 +6225,7 @@ Please tailor the hint complexity to match the student's performance level and y
                 <div class="generated-deck-header">
                     <div class="generated-deck-name">
                         ${this.escapeHtml(deck.name)}
-                        <span class="generation-badge">AI</span>
+                        <span class="generation-badge">Adaptive</span>
                     </div>
                     <div class="generated-deck-subject">${this.escapeHtml(deck.subject)}</div>
                 </div>
@@ -6619,7 +6251,7 @@ Please tailor the hint complexity to match the student's performance level and y
                 </div>
                 
                 <div class="generated-deck-buttons">
-                    <button class="btn btn-ai btn-small" onclick="event.stopPropagation(); viewGeneratedDeck('${deck.id}')" title="Study this generated deck">
+                    <button class="btn btn-generated btn-small" onclick="event.stopPropagation(); viewGeneratedDeck('${deck.id}')" title="Study this generated deck">
                         ▶️ Study
                     </button>
                     <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); adoptDeck('${deck.id}')" title="Add to your personal decks">
@@ -6643,7 +6275,7 @@ Please tailor the hint complexity to match the student's performance level and y
         // Convert to regular deck
         const newDeck = {
             id: Date.now().toString(),
-            name: generatedDeck.name + ' (AI Generated)',
+            name: generatedDeck.name + ' (Generated)',
             subject: generatedDeck.subject,
             cards: generatedDeck.cards,
             titleCards: generatedDeck.titleCards,
@@ -6660,7 +6292,7 @@ Please tailor the hint complexity to match the student's performance level and y
         this.showNotification(`"${newDeck.name}" saved to your decks!`, 'success');
     }
     
-    // Make AI-generated decks fully functional for studying
+    // Make Adaptive-generated decks fully functional for studying
     viewGeneratedDeck(deckId) {
         const generatedDecks = this.loadGeneratedDecks();
         const deck = generatedDecks.find(d => d.id === deckId);
@@ -6706,7 +6338,7 @@ Please tailor the hint complexity to match the student's performance level and y
                 originalId: deck.id,
                 generationType: deck.generationType,
                 adoptedAt: Date.now(),
-                aiMetadata: deck.aiMetadata
+                generatedMetadata: deck.generatedMetadata
             }
         };
         
@@ -6721,7 +6353,7 @@ Please tailor the hint complexity to match the student's performance level and y
         // Show success message
         this.showAdoptionSuccessMessage(adoptedDeck);
         
-        console.log('✅ Adopted AI-generated deck:', adoptedDeck.name);
+        console.log('✅ Adopted Adaptive-generated deck:', adoptedDeck.name);
     }
     
     markGeneratedDeckAsAdopted(deckId) {
@@ -6748,7 +6380,7 @@ Please tailor the hint complexity to match the student's performance level and y
                 <h4>Deck Adopted Successfully! 🎉</h4>
                 <p><strong>"${adoptedDeck.name}"</strong> has been added to your personal collection.</p>
                 <p><small>✨ You can now edit, study, and customize this deck like any other!</small></p>
-                <button onclick="this.parentElement.parentElement.remove()" class="btn btn-ai btn-small">Awesome!</button>
+                <button onclick="this.parentElement.parentElement.remove()" class="btn btn-generated btn-small">Awesome!</button>
             </div>
         `;
         
@@ -6801,7 +6433,7 @@ Please tailor the hint complexity to match the student's performance level and y
             <div class="card-stat-item">
                 <div class="card-question">${this.escapeHtml(card.question)}</div>
                 <div class="card-stats-data">
-                    <span style="color: #a855f7; font-weight: 500;">AI Generated</span>
+                    <span style="color: #a855f7; font-weight: 500;">Generated</span>
                 </div>
             </div>
         `).join('');
@@ -6827,7 +6459,7 @@ Please tailor the hint complexity to match the student's performance level and y
             this.updateGeneratedDecksDisplay();
         }, 500);
         
-        this.showNotification('Regenerating AI decks based on latest patterns...', 'info');
+        this.showNotification('Regenerating decks based on latest patterns...', 'info');
     }
     
     showGenerationInsights() {
@@ -7127,7 +6759,7 @@ Please tailor the hint complexity to match the student's performance level and y
                     <div class="card-input-group hint-input-group">
                         <label>💡 Custom Hint (Optional)</label>
                         <textarea class="card-hint-input" placeholder="Enter a helpful hint that guides without giving away the answer..."></textarea>
-                        <small class="hint-help">This hint will be shown when users use the hint power-up. If empty, AI will generate a hint.</small>
+                        <small class="hint-help">This hint will be shown when users use the hint power-up. If empty, a hint will be generated.</small>
                     </div>
                 </div>
             </div>
@@ -7355,7 +6987,7 @@ Please tailor the hint complexity to match the student's performance level and y
             const generatedDecks = this.loadGeneratedDecks();
             deck = generatedDecks.find(d => d.id === deckId);
             
-            // Normalize AI-generated card properties to match expected format
+            // Normalize Adaptive-generated card properties to match expected format
             if (deck && deck.cards) {
                 deck.cards = deck.cards.map(card => ({
                     ...card,
@@ -9560,8 +9192,8 @@ Please tailor the hint complexity to match the student's performance level and y
                 this.score,
                 sessionDuration
             );
-            // Update AI lock status in case user just unlocked it
-            this.updateAILockStatus();
+            // Update Adaptive lock status in case user just unlocked it
+            this.updateAdaptiveLockStatus();
         }
     }
 
@@ -9792,10 +9424,10 @@ Please tailor the hint complexity to match the student's performance level and y
         return div.innerHTML;
     }
 
-    // =================== AI DECK GENERATION BASED ON USER STATISTICS ===================
+    // =================== Adaptive DECK GENERATION BASED ON USER STATISTICS ===================
     
-    async generateAIDeck(options = {}) {
-        console.log('🤖 Starting AI deck generation with 20 cards and full deck creator features...');
+    async generateAdaptiveDeck(options = {}) {
+        console.log('🤖 Starting Adaptive deck generation with 20 cards and full deck creator features...');
         
         try {
             // Set default options for comprehensive deck generation
@@ -9812,71 +9444,28 @@ Please tailor the hint complexity to match the student's performance level and y
             console.log('📚 Generating deck with options:', deckOptions);
             
             // Load user learning profile or use defaults
-            const profile = JSON.parse(localStorage.getItem('ai-learning-profile') || '{}');
+            const profile = JSON.parse(localStorage.getItem('generated-learning-profile') || '{}');
             
-            // Create comprehensive AI prompt for full deck generation
+            // Create comprehensive Adaptive prompt for full deck generation
             const fullDeckPrompt = this.buildComprehensiveDeckPrompt(deckOptions, profile);
             console.log('📊 Generated comprehensive deck prompt');
             
-            // Generate cards using comprehensive AI system with fallback
+            // Deck generation requires real flash card data
             let cards = [];
-            let aiResponse = null;
             
-            // Try AI Manager first (uses WebLLM, Ollama, etc.)
-            if (this.aiManagerReady && this.aiManager) {
-                try {
-                    console.log('🤖 Using AI Manager for deck generation...');
-                    
-                    // Load user profile
-                    const profile = JSON.parse(localStorage.getItem('ai-learning-profile') || '{}');
-                    
-                    const deckResult = await this.aiManager.generateDeck(
-                        deckOptions.subject,
-                        deckOptions.difficulty,
-                        deckOptions.cardCount,
-                        profile
-                    );
-                    
-                    if (deckResult && deckResult.cards) {
-                        console.log('✅ AI Manager generated deck successfully');
-                        cards = deckResult.cards;
-                    } else if (deckResult && typeof deckResult === 'string') {
-                        console.log('✅ AI Manager generated content successfully');
-                        cards = this.parseAICardResponse(deckResult, deckOptions.cardCount);
-                    }
-                } catch (error) {
-                    console.log('AI Manager failed, trying Hugging Face fallback:', error.message);
-                }
-            }
-            
-            // Fallback to Hugging Face if AI Manager failed
-            if (!aiResponse && cards.length === 0) {
-                try {
-                    console.log('🔄 Trying Hugging Face fallback...');
-                    aiResponse = await this.getHuggingFaceResponse(fullDeckPrompt);
-                    if (aiResponse) {
-                        cards = this.parseAICardResponse(aiResponse, deckOptions.cardCount);
-                    }
-                } catch (error) {
-                    console.log('All AI methods failed:', error.message);
-                }
-            }
-            
-            // If AI completely failed, show error and abort
+            // No external generation available - return null
             if (cards.length === 0) {
-                this.showNotification('AI unavailable, good luck!', 'error');
-                console.error('All AI systems failed - cannot generate deck without AI');
                 return null;
             }
             
-            // Ensure we have the requested number of cards (only from AI)
+            // Ensure we have the requested number of cards (only from Adaptive)
             cards = cards.slice(0, deckOptions.cardCount);
             
             // Generate title cards for the deck
             const titleCards = this.generateDeckTitleCards(deckOptions);
             
             // Create comprehensive deck structure (like user would with deck creator)
-            const deckId = 'ai_comprehensive_' + Date.now();
+            const deckId = 'generated_comprehensive_' + Date.now();
             const aiDeck = {
                 id: deckId,
                 name: this.generateComprehensiveDeckTitle(deckOptions),
@@ -9893,9 +9482,9 @@ Please tailor the hint complexity to match the student's performance level and y
                 },
                 style: 'classic', // Default style
                 color: 'blue', // Default color
-                generationType: 'ai-comprehensive',
-                isAIGenerated: true,
-                aiMetadata: {
+                generationType: 'generated-comprehensive',
+                isAdaptiveGenerated: true,
+                generatedMetadata: {
                     cardCount: cards.length,
                     subject: deckOptions.subject,
                     difficulty: deckOptions.difficulty,
@@ -9905,7 +9494,7 @@ Please tailor the hint complexity to match the student's performance level and y
                 }
             };
             
-            console.log('Generated comprehensive AI deck with', cards.length, 'cards:', aiDeck);
+            console.log('Generated comprehensive Adaptive deck with', cards.length, 'cards:', aiDeck);
             
             // Save the generated deck to the generated decks list
             this.saveGeneratedDeck(aiDeck);
@@ -9915,7 +9504,7 @@ Please tailor the hint complexity to match the student's performance level and y
             this.saveDecks();
             
             // Show success notification
-            this.showNotification(`AI Generated "${aiDeck.name}" with ${cards.length} cards!`, 'success');
+            this.showNotification(`Generated "${aiDeck.name}" with ${cards.length} cards!`, 'success');
             
             // Update deck display
             this.renderDecks();
@@ -9923,21 +9512,21 @@ Please tailor the hint complexity to match the student's performance level and y
             
             // Show success notification
             this.showNotification(
-                'AI Deck Generated!', 
+                'Deck Generated!', 
                 `Created "${aiDeck.title}" with ${cards.length} personalized cards based on your study patterns`,
                 'success'
             );
             
             // Update last generation timestamp
-            localStorage.setItem('last-ai-generation', Date.now().toString());
+            localStorage.setItem('last-generated-generation', Date.now().toString());
             
             return aiDeck;
             
         } catch (error) {
-            console.error('❌ AI deck generation failed:', error);
+            console.error('❌ Adaptive deck generation failed:', error);
             this.showNotification(
-                'AI Generation Failed', 
-                error.message || 'Unable to generate AI deck. Please try again later.',
+                'Deck Generation Failed', 
+                error.message || 'Unable to generate deck. Please try again later.',
                 'error'
             );
             throw error;
@@ -10195,7 +9784,7 @@ Make cards educational, engaging, and perfectly matched to this student's learni
         return Math.round(baseCount * multiplier);
     }
     
-    parseAICardResponse(aiResponse) {
+    parseAdaptiveCardResponse(aiResponse) {
         const cards = [];
         const lines = aiResponse.split('\n');
         
@@ -10299,7 +9888,7 @@ Make cards educational, engaging, and perfectly matched to this student's learni
             cards.push(...fallbackCards);
         }
         
-        console.log(`📝 Parsed ${cards.length} cards from AI response`);
+        console.log(`📝 Parsed ${cards.length} cards from Adaptive response`);
         return cards;
     }
     
@@ -10389,7 +9978,7 @@ Make cards educational, engaging, and perfectly matched to this student's learni
         return cards;
     }
     
-    generateAIDeckTitle(profile, options) {
+    generateAdaptiveDeckTitle(profile, options) {
         const weaknesses = this.identifyTopWeaknesses(profile);
         const avgAccuracy = this.calculateAverageAccuracy(profile);
         
@@ -10408,7 +9997,7 @@ Make cards educational, engaging, and perfectly matched to this student's learni
         }
         
         const subject = this.determineSubjectFromProfile(profile);
-        return `${subject} - AI Personalized Deck`;
+        return `${subject} - Personalized Deck`;
     }
     
     determineSubjectFromProfile(profile) {
@@ -10478,7 +10067,7 @@ Make cards educational, engaging, and perfectly matched to this student's learni
         return Math.round(sum / subjectTrends.length);
     }
     
-    calculateAIConfidence(profile) {
+    calculateAdaptiveConfidence(profile) {
         const sessionCount = profile.preferences?.accuracyTrends?.length || 0;
         
         if (sessionCount < 3) return 'Low';
@@ -10498,81 +10087,7 @@ Make cards educational, engaging, and perfectly matched to this student's learni
         }
     }
     
-    async getHuggingFaceResponse(prompt) {
-        try {
-            console.log('🤖 Sending request to Hugging Face AI...');
-            
-            const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    inputs: prompt,
-                    parameters: {
-                        max_new_tokens: 500,
-                        temperature: 0.7,
-                        top_p: 0.9,
-                        do_sample: true
-                    }
-                })
-            });
-            
-            if (!response.ok) {
-                console.warn('Hugging Face API response not OK, trying alternative approach...');
-                return this.getFallbackAIResponse(prompt);
-            }
-            
-            const data = await response.json();
-            console.log('✅ Received Hugging Face response:', data);
-            
-            if (data.generated_text || (data[0] && data[0].generated_text)) {
-                return data.generated_text || data[0].generated_text;
-            }
-            
-            // If no generated text, try fallback
-            return this.getFallbackAIResponse(prompt);
-            
-        } catch (error) {
-            console.error('❌ Hugging Face API error:', error);
-            return this.getFallbackAIResponse(prompt);
-        }
-    }
-    
-    getFallbackAIResponse(prompt) {
-        console.log('🔄 Using fallback AI response generation...');
-        
-        // Extract key information from prompt to generate relevant cards
-        const subjectMatch = prompt.match(/focus on ([^.\n]+)/i);
-        const subject = subjectMatch ? subjectMatch[1] : 'General Studies';
-        
-        const accuracyMatch = prompt.match(/Average accuracy: (\d+)%/);
-        const accuracy = accuracyMatch ? parseInt(accuracyMatch[1]) : 60;
-        
-        // Generate cards based on accuracy level and subject
-        const cards = [];
-        const cardCount = 6;
-        
-        for (let i = 1; i <= cardCount; i++) {
-            if (accuracy < 60) {
-                // Remedial level cards
-                cards.push(`Q: What is a fundamental concept in ${subject}?
-A: This is a basic principle that forms the foundation of understanding in ${subject}.`);
-            } else if (accuracy > 80) {
-                // Advanced level cards
-                cards.push(`Q: How would you apply advanced ${subject} concepts to solve complex problems?
-A: Advanced applications require deep understanding and creative problem-solving approaches.`);
-            } else {
-                // Intermediate level cards
-                cards.push(`Q: Explain an important ${subject} concept and its applications.
-A: This concept is significant because it helps bridge basic understanding with practical applications.`);
-            }
-        }
-        
-        return cards.join('\n\n');
-    }
-    
-    // =================== COMPREHENSIVE AI DECK GENERATION ===================
+    // =================== COMPREHENSIVE DECK GENERATION ===================
     
     buildComprehensiveDeckPrompt(options, profile) {
         const { subject, difficulty, cardCount } = options;
@@ -10729,8 +10244,8 @@ Generate exactly ${cardCount} cards following this format, tailored to ${yearGro
         return values;
     }
     
-    parseAICardResponse(response, expectedCount = 20) {
-        console.log('🔍 Parsing AI response for cards...');
+    parseAdaptiveCardResponse(response, expectedCount = 20) {
+        console.log('🔍 Parsing Adaptive response for cards...');
         
         const cards = [];
         
@@ -10782,7 +10297,7 @@ Generate exactly ${cardCount} cards following this format, tailored to ${yearGro
             }
         }
         
-        console.log(`✅ Parsed ${cards.length} cards from AI response`);
+        console.log(`✅ Parsed ${cards.length} cards from Adaptive response`);
         return cards.slice(0, expectedCount); // Limit to expected count
     }
     
@@ -10792,7 +10307,7 @@ Generate exactly ${cardCount} cards following this format, tailored to ${yearGro
         return [
             {
                 title: `📚 ${subject} Study Deck`,
-                content: `Welcome to your AI-generated ${subject} study deck! This deck contains carefully crafted questions to help you master key concepts.`,
+                content: `Welcome to your generated ${subject} study deck! This deck contains carefully crafted questions to help you master key concepts.`,
                 type: 'intro'
             },
             {
@@ -10829,7 +10344,7 @@ Generate exactly ${cardCount} cards following this format, tailored to ${yearGro
         return `${difficultyEmoji[difficulty] || '📚'} ${subject} - ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} (${cardCount} Cards)`;
     }
     
-    // =================== END COMPREHENSIVE AI GENERATION ===================
+    // =================== END COMPREHENSIVE Adaptive GENERATION ===================
     
     flipCard() {
         const flipCard = document.getElementById('flip-card');

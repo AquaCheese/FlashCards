@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="styles.css?v=20251001leveling">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="gcse_ai_engine.js"></script>
 </head>
 <body>
     <div class="app">
@@ -92,7 +91,7 @@
                         </div>
                     </div>
 
-                    <!-- AI Generated Decks Section -->
+                    <!-- Generated Decks Section -->
                     <div class="generated-decks-section" id="generated-decks-section">
                         <div class="section-header">
                             <div>
@@ -110,7 +109,7 @@
                         </div>
 
                         <!-- Lock Overlay -->
-                        <div class="ai-lock-overlay" id="ai-lock-overlay">
+                        <div class="generated-lock-overlay" id="generated-lock-overlay">
                             <div class="lock-content">
                                 <div class="lock-icon">🔒</div>
                                 <div class="lock-info">
@@ -276,28 +275,28 @@
                             </div>
                         </div>
                         
-                        <!-- AI Generation Section -->
-                        <div class="ai-generation-section">
+                        <!-- Deck Generation Section -->
+                        <div class="generation-section">
                             <div class="section-header">
-                                <h3>🤖 AI Deck Generation</h3>
+                                <h3>✨ Deck Generation</h3>
                             </div>
-                            <p class="section-description">Generate personalized flashcards based on your study statistics and performance patterns.</p>
-                            <div class="ai-generation-options">
-                                <div class="ai-option">
-                                    <button type="button" class="btn btn-ai" onclick="generateAIDeck()">
-                                        <span>✨</span> Generate Smart Deck
+                            <p class="section-description">Generate personalised flashcards based on your study statistics and performance patterns.</p>
+                            <div class="generated-generation-options">
+                                <div class="generated-option">
+                                    <button type="button" class="btn btn-generated" onclick="generateAdaptiveDeck()">
+                                        <span>✨</span> Generate Deck
                                     </button>
-                                    <p class="ai-option-desc">Creates cards targeting your weak areas and learning patterns</p>
+                                    <p class="generated-option-desc">Creates cards targeting your weak areas and learning patterns</p>
                                 </div>
-                                <div class="ai-option">
-                                    <button type="button" class="btn btn-ai-subject" onclick="generateSubjectSpecificDeck()">
+                                <div class="generated-option">
+                                    <button type="button" class="btn btn-generated-subject" onclick="generateSubjectSpecificDeck()">
                                         <span>🎯</span> Generate for Subject
                                     </button>
-                                    <p class="ai-option-desc">Creates cards for the selected GCSE subject above</p>
+                                    <p class="generated-option-desc">Creates cards for the selected GCSE subject above</p>
                                 </div>
                             </div>
-                            <div class="ai-requirements" id="ai-requirements">
-                                <p>📊 <strong>Requirements:</strong> Complete at least 2 study sessions to unlock AI generation</p>
+                            <div class="generated-requirements" id="generated-requirements">
+                                <p>📊 <strong>Requirements:</strong> Complete at least 2 study sessions to unlock deck generation</p>
                             </div>
                         </div>
                         
@@ -928,12 +927,12 @@
                         <div class="shop-item">
                             <div class="shop-item-icon">💡</div>
                             <div class="shop-item-content">
-                                <h3>AI Hints</h3>
-                                <p>Get intelligent hints that guide you to the answer without giving it away</p>
+                                <h3>Study Hints</h3>
+                                <p>Get helpful hints that guide you to the answer without giving it away</p>
                                 <div class="shop-item-features">
-                                    <span>� Personalized guidance</span>
+                                    <span>🎯 Personalized guidance</span>
                                     <span>📚 Educational approach</span>
-                                    <span>🧠 Smart analysis</span>
+                                    <span>🧩 Clear explanations</span>
                                 </div>
                                 <div class="shop-item-footer">
                                     <div class="shop-price">100 💰</div>
@@ -1221,37 +1220,37 @@
     <!-- Hidden file input for importing decks -->
     <input type="file" id="import-file-input" accept=".flashdeck" style="display: none;">
 
-    <!-- AI Generation Insights Modal -->
+    <!-- Deck Generation Insights Modal -->
     <div class="modal-overlay" id="generation-insights-modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>🤖 How AI Deck Generation Works</h3>
+                <h3>How Deck Generation Works</h3>
                 <button class="modal-close" onclick="closeGenerationInsights()">✕</button>
             </div>
             <div class="modal-body">
-                <div class="ai-explanation">
-                    <div class="ai-step">
+                <div class="generated-explanation">
+                    <div class="generated-step">
                         <div class="step-icon">📊</div>
                         <div class="step-content">
                             <h4>Pattern Analysis</h4>
                             <p>We analyze your study sessions, accuracy rates, response times, and preferred subjects to understand your learning style.</p>
                         </div>
                     </div>
-                    <div class="ai-step">
+                    <div class="generated-step">
                         <div class="step-icon">🧠</div>
                         <div class="step-content">
                             <h4>Smart Content Creation</h4>
                             <p>Based on your patterns, we generate questions that match your difficulty level and focus on areas where you need practice.</p>
                         </div>
                     </div>
-                    <div class="ai-step">
+                    <div class="generated-step">
                         <div class="step-icon">🎯</div>
                         <div class="step-content">
                             <h4>Personalized Recommendations</h4>
                             <p>Each generated deck is tailored to your learning goals, preferred subjects, and optimal challenge level.</p>
                         </div>
                     </div>
-                    <div class="ai-step">
+                    <div class="generated-step">
                         <div class="step-icon">🔄</div>
                         <div class="step-content">
                             <h4>Continuous Learning</h4>
@@ -1335,7 +1334,7 @@
                 </div>
                 
                 <div class="learning-insights" id="learning-insights">
-                    <!-- AI insights will be populated here -->
+                    <!-- Insights will be populated here -->
                 </div>
             </div>
         </div>
@@ -1354,7 +1353,7 @@
                 <!-- Step 1: Study Interests -->
                 <div class="onboarding-step" id="step-1">
                     <h3>What subjects interest you? 📚</h3>
-                    <p>Select all that apply - this helps our AI create relevant content for you.</p>
+                    <p>Select all that apply so we can tailor your study experience.</p>
                     <div class="subject-grid">
                         <!-- GCSE Core Subjects -->
                         <div class="subject-card core-subject" data-subject="GCSE Mathematics" data-level="core">
@@ -1439,7 +1438,7 @@
                 <!-- Step 2: Confidence Levels -->
                 <div class="onboarding-step" id="step-2" style="display: none;">
                     <h3>How confident do you feel in these subjects? 💪</h3>
-                    <p>This helps our AI choose the right difficulty level for you.</p>
+                    <p>This helps us choose the right difficulty level for you.</p>
                     <div class="confidence-subjects" id="confidence-subjects">
                         <!-- Dynamic content based on selected subjects -->
                     </div>
@@ -1511,16 +1510,16 @@
                 <div class="onboarding-step" id="step-final" style="display: none;">
                     <div class="completion-content">
                         <div class="completion-icon">✨</div>
-                        <h3>Perfect! Your AI is ready! 🤖</h3>
-                        <p>Based on your preferences, our AI will:</p>
-                        <ul class="ai-features">
+                        <h3>Perfect! Your study profile is ready!</h3>
+                        <p>Based on your preferences, we will:</p>
+                        <ul class="generated-features">
                             <li>🎯 Generate personalized study decks</li>
                             <li>📊 Adapt difficulty to your confidence levels</li>
                             <li>⏰ Suggest optimal study sessions</li>
                             <li>🧠 Learn from your performance and improve</li>
                         </ul>
-                        <div class="ai-preview" id="ai-preview">
-                            <!-- Dynamic AI insights preview -->
+                        <div class="generated-preview" id="generated-preview">
+                            <!-- Dynamic insights preview -->
                         </div>
                     </div>
                 </div>
@@ -1541,13 +1540,6 @@
         </div>
     </div>
 
-    <!-- AI System Scripts -->
-    <script src="unlimited_ai_engine.js"></script>
-    <script src="webllm_setup.js"></script>
-    <script src="ollama_setup.js"></script>
-    <script src="ai_manager.js"></script>
-    <script src="gcse_ai_engine.js"></script>
-    
     <!-- Main Application Script -->
     <script src="script.js?v=20251001achievementfix"></script>
     <script src="debug_storage.js"></script>
