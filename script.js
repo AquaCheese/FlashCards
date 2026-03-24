@@ -11896,26 +11896,6 @@ Please tailor the hint complexity to match the student's performance level and y
         div.textContent = text;
         return div.innerHTML;
     }
-
-
-        // Remove flipped class and update display
-        flipCard.classList.remove('flipped');
-        
-        // Update display with next card or finish study
-        if (this.currentCards.length === 0) {
-            this.finishStudy();
-        } else {
-            setTimeout(() => {
-                this.displayCard();
-                this.sessionStartTime = Date.now(); // Reset timer for next card
-            }, 300); // Small delay for smooth transition
-        }
-    }
-    
-    // Alias for compatibility
-    displayCard() {
-        this.showCurrentCard();
-    }
 }
 
 // All global functions are now defined at the top of the file
