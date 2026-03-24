@@ -290,15 +290,6 @@ window.updateAnswerNumbers = function(element) {
 
 // Additional global functions for HTML onclick handlers
 
-window.useHint = function() {
-    console.log('useHint called via app.useHint()');
-    if (app && app.useHint) {
-        app.useHint();
-    } else {
-        console.log('App not ready or useHint method missing');
-    }
-};
-
 window.useSkipCard = function() {
     console.log('useSkipCard called via app.useSkipCard()');
     if (app && app.useSkipCard) {
@@ -6369,9 +6360,6 @@ Please tailor the hint complexity to match the student's performance level and y
         return div.innerHTML;
     }
 
-
-
-
     createGeneratedDeckCard(deck) {
         const card = document.createElement('div');
         card.className = `deck-card generated-deck ${deck.isAdopted ? 'adopted' : ''}`;
@@ -11890,6 +11878,8 @@ Please tailor the hint complexity to match the student's performance level and y
         
         return matrix[str2.length][str1.length];
     }
+
+    updateGeneratedDecksDisplay() {}
 
     escapeHtml(text) {
         const div = document.createElement('div');
